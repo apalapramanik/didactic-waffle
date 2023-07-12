@@ -3,6 +3,7 @@ import numpy as np
 import rospy
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
+from std_msgs.msg import String, Float32
 
 import torch
 
@@ -17,6 +18,12 @@ bridge = CvBridge()
 
 # Publisher for the annotated image
 annotated_image_pub = rospy.Publisher('annotated', Image, queue_size=10)
+
+# Publisher for the distance
+distance_pub = rospy.Publisher('distance_topic', Float32, queue_size=10)
+
+# Publisher for the depth image
+depth_pub = rospy.Publisher('depth_topic', Image, queue_size=10)
 
 # Callback function for processing the camera image
 def image_callback(msg):
@@ -46,6 +53,8 @@ def image_callback(msg):
         # Calculate the distance to the object
         object_depth = np.median(depth_image[int(y1):int(y2), int(x1):int(x2)])
         label = f"{object_depth:.2f}m"
+        distance_pub.publish(object_depth)
+        depth_pub.publish(bridge.cv2_to_imgmsg(depth_image, encoding='passthrough'))
 
         # Draw a rectangle around the object
         cv2.rectangle(color_image, (int(x1), int(y1)), (int(x2), int(y2)), (252, 119, 30), 2)
@@ -54,7 +63,8 @@ def image_callback(msg):
         cv2.putText(color_image, label, (int(x1), int(y1)-10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (252, 119, 30), 2)
 
         # Print the object's class and distance
-        rospy.loginfo(f"{model.names[int(class_id)]}: Object detected")
+        # rospy.loginfo(f"{model.names[int(class_id)]}: Object detected")
+        rospy.loginfo(f"Class ID: {class_id},  Distance: {object_depth:.2f}m")
 
     # Convert the annotated image back to ROS Image message
     annotated_image_msg = bridge.cv2_to_imgmsg(color_image, encoding='bgr8')
