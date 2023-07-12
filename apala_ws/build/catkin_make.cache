@@ -1,0 +1,2 @@
+
+-DCATKIN_DEVEL_PREFIX=/home/apramani/didactic-waffle/apala_ws/devel -DCMAKE_INSTALL_PREFIX=/home/apramani/didactic-waffle/apala_ws/install -G Unix Makefiles
