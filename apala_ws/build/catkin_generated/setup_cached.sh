@@ -7,7 +7,4 @@
 # new environment variables
 
 # modified environment variables
-export CMAKE_PREFIX_PATH="/home/apramani/didactic-waffle/apala_ws/devel:$CMAKE_PREFIX_PATH"
 export PWD='/home/apramani/didactic-waffle/apala_ws/build'
-export ROSLISP_PACKAGE_DIRECTORIES='/home/apramani/didactic-waffle/apala_ws/devel/share/common-lisp'
-export ROS_PACKAGE_PATH='/home/apramani/didactic-waffle/apala_ws/src:/opt/ros/noetic/share'
