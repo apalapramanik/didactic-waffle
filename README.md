@@ -17,3 +17,6 @@ Modify launch file (position of tb3, world file name)
 
 Launch gazebo environment: ``` roslaunch turtlebot3_gazebo tb3.launch ```
 
+Launch navigation:``` roslaunch turtlebot3_navigation turtlebot3_navigation.launch map_file:=/home/apramani/didactic-waffle/apala_ws/src/turtlebot3/turtlebot3_navigation/maps/map.yaml```
+
+
