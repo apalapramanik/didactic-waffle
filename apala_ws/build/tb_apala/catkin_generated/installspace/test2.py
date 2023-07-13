@@ -54,7 +54,7 @@ def image_callback(msg):
     gray_image = cv2.cvtColor(color_image, cv2.COLOR_BGR2GRAY)
 
     # Load the depth image (assuming it's published on a separate topic)
-    depth_image_msg = rospy.wait_for_message('/camera/depth/image_raw', Image)
+    depth_image_msg = rospy.wait_for_message('camera/depth/image_raw', Image)
     depth_image = bridge.imgmsg_to_cv2(depth_image_msg, desired_encoding='passthrough')
 
     # Convert the depth image to meters (if needed)
@@ -90,7 +90,7 @@ def image_callback(msg):
     annotated_image_pub.publish(annotated_image_msg)
 
 # Subscribe to the camera image topic
-rospy.Subscriber('/camera/rgb/image_raw', Image, image_callback)
+rospy.Subscriber('camera/rgb/image_raw', Image, image_callback)
 
 # Spin ROS
 rospy.spin()
@@ -109,7 +109,7 @@ def image_callback(msg):
     gray_image = cv2.cvtColor(color_image, cv2.COLOR_BGR2GRAY)
 
     # Load the depth image (assuming it's published on a separate topic)
-    depth_image_msg = rospy.wait_for_message('/camera/depth/image_raw', Image)
+    depth_image_msg = rospy.wait_for_message('camera/depth/image_raw', Image)
     depth_image = bridge.imgmsg_to_cv2(depth_image_msg, desired_encoding='passthrough')
 
     # Convert the depth image to meters (if needed)

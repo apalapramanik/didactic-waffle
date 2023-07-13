@@ -10,10 +10,15 @@ import torch
 class ObjectDetectionNode:
     def __init__(self):
         # Load the YOLOv5 model
-        self.model = torch.hub.load('ultralytics/yolov5', 'yolov5m', pretrained=True)
+        self.model = torch.hub.load('ultralytics/yolov5', 'yolov5s', pretrained=True)
         
         # Initialize the CvBridge
         self.bridge = CvBridge()
+        
+        # Subscribe to the camera image topic
+        rospy.Subscriber('/camera/rgb/image_raw', Image, self.image_callback)
+        
+        
 
         # Publisher for the annotated image
         self.annotated_image_pub = rospy.Publisher('annotated_image', Image, queue_size=10)
@@ -30,8 +35,7 @@ class ObjectDetectionNode:
         # Publisher for the depth
         self.depth_pub = rospy.Publisher('depth_topic', Image, queue_size=10)
 
-        # Subscribe to the camera image topic
-        rospy.Subscriber('/camera/rgb_image_raw', Image, self.image_callback)
+       
 
 
 
@@ -43,13 +47,13 @@ class ObjectDetectionNode:
         depth_scale = 0.0010000000474974513
 
         # Convert the color image to grayscale (if needed)
-        gray_image = cv2.cvtColor(color_image, cv2.COLOR_BGR2GRAY)
+        # gray_image = cv2.cvtColor(color_image, cv2.COLOR_BGR2GRAY)
 
         # Load the depth image (assuming it's published on a separate topic)
         depth_image_msg = rospy.wait_for_message('/camera/depth/image_raw', Image)
         depth_image = self.bridge.imgmsg_to_cv2(depth_image_msg, desired_encoding='passthrough')
 
-        # Convert the depth image to meters (if needed)
+        # # Convert the depth image to meters (if needed)
         depth_image = depth_image * depth_scale
 
         # Detect objects using YOLOv5
@@ -68,6 +72,9 @@ class ObjectDetectionNode:
 
             # Draw the bounding box
             cv2.putText(color_image, label, (int(x1), int(y1)-10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (252, 119, 30), 2)
+            # cv2.putText(color_image, (int(x1), int(y1)-10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (252, 119, 30), 2)
+            # cv2.rectangle(color_image, (int(x1), int(y1)), (int(x2), int(y2)), (252, 119, 30), 2)
+
 
             # Publish the class ID, class name, distance, and depth
             self.class_id_pub.publish(str(class_id))
@@ -82,8 +89,8 @@ class ObjectDetectionNode:
         self.annotated_image_pub.publish(annotated_image_msg)
 
         # Show the annotated image
-        # cv2.imshow("Annotated Image", color_image)
-        # cv2.waitKey(1)
+        cv2.imshow("Annotated Image", color_image)
+        cv2.waitKey(1)
 
       
 def main(): 

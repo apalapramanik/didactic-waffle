@@ -60,3 +60,15 @@ if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_
   file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/tb_apala" TYPE PROGRAM FILES "/home/apramani/didactic-waffle/apala_ws/build/tb_apala/catkin_generated/installspace/test3.py")
 endif()
 
+if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/tb_apala" TYPE PROGRAM FILES "/home/apramani/didactic-waffle/apala_ws/build/tb_apala/catkin_generated/installspace/test4.py")
+endif()
+
+if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/tb_apala" TYPE PROGRAM FILES "/home/apramani/didactic-waffle/apala_ws/build/tb_apala/catkin_generated/installspace/test5.py")
+endif()
+
+if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/tb_apala" TYPE PROGRAM FILES "/home/apramani/didactic-waffle/apala_ws/build/tb_apala/catkin_generated/installspace/test6.py")
+endif()
+
