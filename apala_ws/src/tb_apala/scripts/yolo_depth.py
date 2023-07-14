@@ -4,11 +4,13 @@ import rospy
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 from std_msgs.msg import String, Float32
+from visualization_msgs.msg import Marker
 
 import torch
 
 class ObjectDetectionNode:
     def __init__(self):
+        
         # Load the YOLOv5 model
         self.model = torch.hub.load('ultralytics/yolov5', 'yolov5s', pretrained=True)
 
@@ -19,26 +21,15 @@ class ObjectDetectionNode:
         self.color_image = None
         self.depth_image = None
 
-        # Subscribe to the color image topic
+        # Subscribes to the color and depth image topics
         rospy.Subscriber('/camera/rgb/image_raw', Image, self.color_image_callback)
-
-        # Subscribe to the depth image topic
         rospy.Subscriber('/camera/depth/image_raw', Image, self.depth_image_callback)
 
-        # Publisher for the annotated image
+        # Publishers 
         self.annotated_image_pub = rospy.Publisher('annotated_image', Image, queue_size=10)
-
-        # Publisher for the class ID
         self.class_id_pub = rospy.Publisher('class_id_topic', String, queue_size=10)
-
-        # Publisher for the class name
         self.class_name_pub = rospy.Publisher('class_name_topic', String, queue_size=10)
-
-        # Publisher for the distance
-        self.distance_pub = rospy.Publisher('distance_topic', Float32, queue_size=10)
-
-        # Publisher for the depth
-        self.depth_pub = rospy.Publisher('depth_topic', Image, queue_size=10)
+        self.depth_pub = rospy.Publisher('depth_topic', Float32, queue_size=10)
 
     def color_image_callback(self, msg):
         # Convert ROS Image to OpenCV image
@@ -51,16 +42,14 @@ class ObjectDetectionNode:
     def depth_image_callback(self, msg):
         # Convert ROS Image to OpenCV image
         self.depth_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='passthrough')
-        # print(self.depth_image)
 
     def detect_objects(self):
-        # Set the depth scale (if needed)
-        depth_scale = 0.0010000000474974513
+        # Set the depth scale
+        # depth_scale = 0.0010000000474974513
+        depth_scale = 0.001
 
-        # Convert the depth image to meters (if needed)
-        self.depth_image = self.depth_image * depth_scale ##
-        print(self.depth_image)
-        
+        # Convert the depth image to meters
+        depth_image = self.depth_image * depth_scale
 
         # Detect objects using YOLOv5
         results = self.model(self.color_image)
@@ -69,22 +58,37 @@ class ObjectDetectionNode:
         for result in results.xyxy[0]:
             x1, y1, x2, y2, confidence, class_id = result
 
-            # Calculate the distance to the object
-            object_depth = np.median(self.depth_image[int(y1):int(y2), int(x1):int(x2)]) ##
-            print(object_depth)
-            label = f"{object_depth:.2f}m"
+            # Calculate the center of the bounding box
+            center_x = (x1 + x2) / 2
+            center_y = (y1 + y2) / 2
+            
+
+            # Calculate the depth at the center of the bounding box
+            object_depth = depth_image[int(center_y), int(center_x)]
+            
+            # Calculate the minimum depth within the region covered by the bounding box
+            # object_depth = np.min(depth_image[int(y1):int(y2), int(x1):int(x2)])
+
+            # Convert the depth from the depth scale to meters  
+            object_depth = object_depth.item() * depth_scale           
+            formatted_depth = "{:.3e}m".format(object_depth) 
+            # print("depth: ", formatted_depth)
+            label = str(formatted_depth)
+            print("label:", label)
+            
 
             # Draw a rectangle around the object
             cv2.rectangle(self.color_image, (int(x1), int(y1)), (int(x2), int(y2)), (252, 119, 30), 2)
 
-            # Draw the bounding box
+            # Add text for depth
             cv2.putText(self.color_image, label, (int(x1), int(y1)-10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (252, 119, 30), 2)
+           
 
             # Publish the class ID, class name, distance, and depth
             self.class_id_pub.publish(str(class_id))
             self.class_name_pub.publish(self.model.names[int(class_id)])
-            self.distance_pub.publish(object_depth)
-            self.depth_pub.publish(self.bridge.cv2_to_imgmsg(self.depth_image, encoding='passthrough')) ##
+            self.depth_pub.publish(object_depth)
+            
 
         # Convert the annotated image back to ROS Image message
         annotated_image_msg = self.bridge.cv2_to_imgmsg(self.color_image, encoding='bgr8')
@@ -95,6 +99,9 @@ class ObjectDetectionNode:
         # Show the annotated image
         cv2.imshow("Annotated Image", self.color_image)
         cv2.waitKey(1)
+        
+        
+       
 
 def main():
     rospy.init_node('Depth_calculation', anonymous=False)    
