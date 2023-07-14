@@ -2,5 +2,6 @@ turtlebot3/
 turtlebot3_msgs/
 turtlebot3_simulations/
 extra_files/
-build/
-devel/
+
+yolov5m.pt
+yolov5s.pt

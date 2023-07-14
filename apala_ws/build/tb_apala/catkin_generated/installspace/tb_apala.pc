@@ -1,8 +1,0 @@
-prefix=/home/apramani/didactic-waffle/apala_ws/install
-
-Name: tb_apala
-Description: Description of tb_apala
-Version: 0.0.0
-Cflags: 
-Libs: -L${prefix}/lib 
-Requires: 
