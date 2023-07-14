@@ -109,25 +109,25 @@ class ObjectDetectionNode:
             self.depth_pub.publish(object_depth)
             
              # Create the marker message
-            marker = Marker()
-            marker.header.frame_id = 'camera_rgb_optical_frame'  # Replace with the appropriate frame ID
-            marker.type = Marker.SPHERE
-            marker.action = Marker.ADD
-            marker.pose.position.x = (x1 + x2) / 2  # Bounding box center x-coordinate
-            marker.pose.position.y = (y1 + y2) / 2  # Bounding box center y-coordinate
-            marker.pose.position.z = object_depth  # Depth calculated
+            # marker = Marker()
+            # marker.header.frame_id = 'camera_rgb_optical_frame'  # Replace with the appropriate frame ID
+            # marker.type = Marker.SPHERE
+            # marker.action = Marker.ADD
+            # marker.pose.position.x = (x1 + x2) / 2  # Bounding box center x-coordinate
+            # marker.pose.position.y = (y1 + y2) / 2  # Bounding box center y-coordinate
+            # marker.pose.position.z = object_depth  # Depth calculated
 
-            # Set the marker size and color
-            marker.scale.x = 0.5  # Adjust the marker size as needed
-            marker.scale.y = 0.5
-            marker.scale.z = 0.5
-            marker.color.a = 1.0  # Fully opaque
-            marker.color.r = 1.0  # Red color
-            marker.color.g = 0.0
-            marker.color.b = 0.0
+            # # Set the marker size and color
+            # marker.scale.x = 0.5  # Adjust the marker size as needed
+            # marker.scale.y = 0.5
+            # marker.scale.z = 0.5
+            # marker.color.a = 1.0  # Fully opaque
+            # marker.color.r = 1.0  # Red color
+            # marker.color.g = 0.0
+            # marker.color.b = 0.0
             
-            # Publish the marker
-            self.marker_pub.publish(marker)
+            # # Publish the marker
+            # self.marker_pub.publish(marker)
 
         
 
