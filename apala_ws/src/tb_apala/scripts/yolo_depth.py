@@ -5,6 +5,7 @@ from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 from std_msgs.msg import String, Float32
 from visualization_msgs.msg import Marker
+from tb_apala.msg import yolodepth
 
 import torch
 
@@ -27,10 +28,11 @@ class ObjectDetectionNode:
 
         # Publishers 
         self.annotated_image_pub = rospy.Publisher('annotated_image', Image, queue_size=10)
-        self.class_id_pub = rospy.Publisher('class_id_topic', String, queue_size=10)
-        self.class_name_pub = rospy.Publisher('class_name_topic', String, queue_size=10)
-        self.depth_pub = rospy.Publisher('depth_topic', Float32, queue_size=10)
+        self.yolo_info_pub = rospy.Publisher('yolo_depth_topic', yolodepth, queue_size=10)
 
+        #create custom msg instance
+        self.yolo_depth_msg = yolodepth()
+        
     def color_image_callback(self, msg):
         # Convert ROS Image to OpenCV image
         self.color_image = self.bridge.imgmsg_to_cv2(msg, "bgr8")
@@ -57,6 +59,7 @@ class ObjectDetectionNode:
         # Process the results
         for result in results.xyxy[0]:
             x1, y1, x2, y2, confidence, class_id = result
+            # print(type(confidence))
 
             # Calculate the center of the bounding box
             center_x = (x1 + x2) / 2
@@ -70,28 +73,31 @@ class ObjectDetectionNode:
             # object_depth = np.min(depth_image[int(y1):int(y2), int(x1):int(x2)])
 
             # Convert the depth from the depth scale to meters  
-            object_depth = object_depth.item() * depth_scale           
-            formatted_depth = "{:.3e}m".format(object_depth) 
-            # print("depth: ", formatted_depth)
-            label = str(formatted_depth)
-            print("label:", label)
+            object_depth = object_depth.item() * depth_scale  
             
+            
+            # Publish the class ID, class name, depth and confidence
+            self.yolo_depth_msg.label = self.model.names[int(class_id)]
+            self.yolo_depth_msg.depth = object_depth            
+            self.yolo_depth_msg.confidence = confidence
+            self.yolo_info_pub.publish(self.yolo_depth_msg) 
+                     
+            object_depth = "{:.3e}m".format(object_depth) 
+            depth = str(object_depth)      
 
             # Draw a rectangle around the object
             cv2.rectangle(self.color_image, (int(x1), int(y1)), (int(x2), int(y2)), (252, 119, 30), 2)
 
             # Add text for depth
-            cv2.putText(self.color_image, label, (int(x1), int(y1)-10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (252, 119, 30), 2)
-           
+            cv2.putText(self.color_image, depth, (int(x1), int(y1)-10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (252, 119, 30), 2)
+            cv2.putText(self.color_image, self.model.names[int(class_id)] , (int(x1), int(y1)-10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (252, 119, 30), 2)
 
-            # Publish the class ID, class name, distance, and depth
-            self.class_id_pub.publish(str(class_id))
-            self.class_name_pub.publish(self.model.names[int(class_id)])
-            self.depth_pub.publish(object_depth)
+            
             
 
         # Convert the annotated image back to ROS Image message
         annotated_image_msg = self.bridge.cv2_to_imgmsg(self.color_image, encoding='bgr8')
+        annotated_image_msg.header.frame_id = 'camera_rgb_optical_frame'  # Replace 'camera_frame' with the actual frame ID
 
         # Publish the annotated image
         self.annotated_image_pub.publish(annotated_image_msg)

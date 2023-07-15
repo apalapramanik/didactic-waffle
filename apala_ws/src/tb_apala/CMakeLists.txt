@@ -7,14 +7,38 @@ project(tb_apala)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS
+find_package(catkin REQUIRED 
+  COMPONENTS
+  interactive_markers
+  pluginlib
+  pcl_ros
+  pcl_conversions
+  rosbag
+  tf2_ros
+  tf2_eigen
+  tf2_geometry_msgs
+  cv_bridge
   roscpp
   rospy
+  sensor_msgs
   std_msgs
+  message_generation
+  geometry_msgs
 )
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
+find_package(Eigen3 REQUIRED)
+
+
+#Eigen 3.2 (Wily) only provides EIGEN3_INCLUDE_DIR, not EIGEN3_INCLUDE_DIRS
+
+if(NOT EIGEN3_INCLUDE_DIRS)
+  set(EIGEN3_INCLUDE_DIRS $(EIGEN3_INCLUDE_DIRS))
+endif()
+
+
+
 
 
 ## Uncomment this if the package has a setup.py. This macro ensures
@@ -47,11 +71,24 @@ find_package(catkin REQUIRED COMPONENTS
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
-# add_message_files(
-#   FILES
-#   Message1.msg
-#   Message2.msg
-# )
+ add_message_files(
+  FILES
+  H_detection.msg
+  stop.msg
+  Meannn.msg
+  Deviation.msg 
+  position.msg
+  BoundingBoxes.msg
+  Boundingbox.msg
+  Plot.msg
+  distance.msg
+  BooleanStamped.msg
+  FloatStamped.msg
+  IntegerStamped.msg
+  Sample.msg
+  ListStamped.msg
+  yolodepth.msg
+ )
 
 ## Generate services in the 'srv' folder
 # add_service_files(
@@ -67,11 +104,13 @@ find_package(catkin REQUIRED COMPONENTS
 #   Action2.action
 # )
 
-## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#   DEPENDENCIES
-#   std_msgs
-# )
+# Generate added messages and services with any dependencies listed here
+ generate_messages(
+   DEPENDENCIES
+   std_msgs
+   sensor_msgs
+
+ )
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -102,11 +141,18 @@ find_package(catkin REQUIRED COMPONENTS
 ## LIBRARIES: libraries you create in this project that dependent projects also need
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
-catkin_package(
+#catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES tb_apala
 #  CATKIN_DEPENDS roscpp rospy std_msgs
 #  DEPENDS system_lib
+#)
+catkin_package(
+#  INCLUDE_DIRS ${THIS_PACKAGE_INCLUDE_DIRS}
+ LIBRARIES  interactivity_utils
+ CATKIN_DEPENDS cv_bridge roscpp rospy sensor_msgs std_msgs message_runtime interactive_markers
+ DEPENDS  EIGEN3
+
 )
 
 ###########
@@ -120,6 +166,19 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
+include_directories(SYSTEM
+  ${THIS_PACKAGE_INCLUDE_DIRS}
+  ${Boost_INCLUDE_DIR}
+  ${EIGEN3_INCLUDE_DIRS}
+  ${OpenCV_LIBRARY_DIRS}  
+  ${PCL_LIBRARY_DIRS}
+)
+include_directories(${catkin_INCLUDE_DIRS} include/Scheduler)
+link_directories(
+  ${catkin_LIBRARY_DIRS}
+  ${OpenCV_LIBRARY_DIRS}
+  ${PCL_LIBRARY_DIRS}
+)
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
 #   src/${PROJECT_NAME}/tb_apala.cpp
@@ -163,6 +222,10 @@ catkin_install_python(PROGRAMS
     scripts/test6.py scripts/yolo_depth.py
    DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
  )
+ 
+add_executable(organize src/organize.cpp)
+target_link_libraries(organize ${catkin_LIBRARIES} pcl_visualization)
+add_dependencies(organize tb_apala_generate_messages_cpp)
 
 ## Mark executables for installation
 ## See http://docs.ros.org/melodic/api/catkin/html/howto/format1/building_executables.html
