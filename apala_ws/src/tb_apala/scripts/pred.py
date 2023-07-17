@@ -207,7 +207,7 @@ class FilterEstimator:
                                                 hx=ukf_estimator.measurement_function,
                                                 fx=ukf_estimator.state_transition_function,
                                                 points=points)
-        ukf_estimator.ukf.x = np.array([50, 50, 0, 0])  # Initial state [x, y, vx, vy]
+        ukf_estimator.ukf.x = np.array([prediction_points[0][0], prediction_points[0][1], 0, 0])  # Initial state [x, y, vx, vy]
         ukf_estimator.ukf.Q = Q
         ukf_estimator.ukf.R = R
 
@@ -234,7 +234,7 @@ class FilterEstimator:
         ensemble_size = 200  # Number of ensemble members
 
         # Set the initial state and covariance
-        initial_state = np.array([50, 50, 0, 0])
+        initial_state = np.array([prediction_points[0][0], prediction_points[0][1], 0, 0])
         initial_covariance = np.eye(state_size) * 0.1
 
         enkf_estimator.enkf = EnsembleKalmanFilter(x=initial_state, P=initial_covariance, dim_z=measurement_size,
@@ -285,6 +285,7 @@ class FilterEstimator:
 
     
 if __name__ == "__main__":
+    
     prediction_points = [(50, 50), (100, 100), (150, 100), (200, 100)]
     steps = 5
 
@@ -292,7 +293,7 @@ if __name__ == "__main__":
     filter_estimator = FilterEstimator(prediction_points, steps)
 
     # Call the main function with the desired filter type
-    filter_type = "kf"  # Change this to the desired filter type
+    filter_type = "ukf"  # Change this to the desired filter type
     filter_estimator.main(filter_type)
 
 
