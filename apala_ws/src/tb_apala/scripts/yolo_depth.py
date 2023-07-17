@@ -86,18 +86,18 @@ class ObjectDetectionNode:
             depth = str(object_depth)      
 
             # Draw a rectangle around the object
-            cv2.rectangle(self.color_image, (int(x1), int(y1)), (int(x2), int(y2)), (252, 119, 30), 2)
+            cv2.rectangle(self.color_image, (int(x1), int(y1)), (int(x2), int(y2)), (153, 26, 25), 2)
 
             # Add text for depth
-            cv2.putText(self.color_image, depth, (int(x1), int(y1)-10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (252, 119, 30), 2)
-            cv2.putText(self.color_image, self.model.names[int(class_id)] , (int(x1), int(y1)-10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (252, 119, 30), 2)
+            cv2.putText(self.color_image, depth, (int(x1), int(y1)-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (153, 26, 25), 1)
+            cv2.putText(self.color_image, self.model.names[int(class_id)] , (int(x1), int(y1)-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (153, 26, 25), 1)
 
             
             
 
         # Convert the annotated image back to ROS Image message
         annotated_image_msg = self.bridge.cv2_to_imgmsg(self.color_image, encoding='bgr8')
-        annotated_image_msg.header.frame_id = 'camera_rgb_optical_frame'  # Replace 'camera_frame' with the actual frame ID
+        annotated_image_msg.header.frame_id = 'camera_rgb_optical_frame'  
 
         # Publish the annotated image
         self.annotated_image_pub.publish(annotated_image_msg)
