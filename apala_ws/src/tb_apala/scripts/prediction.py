@@ -6,6 +6,8 @@ from filterpy.kalman import UnscentedKalmanFilter
 from filterpy.kalman import MerweScaledSigmaPoints
 from filterpy.kalman import EnsembleKalmanFilter
 
+
+
 #*************** KALMAN FILTER *******************************************************************************************
 
 # Initialize Kalman filter parameters
@@ -164,7 +166,7 @@ def measurement_function(x):
 # Initialize EnKF
 state_size = 4  # State size [x, y, vx, vy]
 measurement_size = 2  # Measurement size (X and Y coordinates)
-ensemble_size = 100  # Number of ensemble members
+ensemble_size = 200  # Number of ensemble members
 
 # Set the initial state and covariance
 initial_state = np.array([50, 50, 0, 0])
