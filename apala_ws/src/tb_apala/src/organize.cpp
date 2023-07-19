@@ -4,6 +4,7 @@
 #include <tb_apala/Boundingbox.h>
 // #include <testrobots/newBoundingbox.h>
 #include <tb_apala/Plot.h>
+#include <tb_apala/yolodepth.h>
 
 #include <string>
 #include <vector>
@@ -17,6 +18,7 @@
 
 // ROS Topics
 #include <sensor_msgs/Image.h>
+#include <std_msgs/String.h>
 #include <sensor_msgs/PointCloud2.h> 
 #include <pcl_ros/point_cloud.h>  
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
@@ -80,6 +82,7 @@ using namespace std;
 using namespace std::chrono;
 using namespace std::chrono_literals;
 int start;
+std::string cp_flag;
 
 //****************************************************declarations************************************************
 
@@ -132,6 +135,7 @@ pcl::PointCloud<pcl::PointXYZ>::Ptr passfiltered_again (new pcl::PointCloud<pcl:
 pcl::PointCloud<pcl::PointXYZ>::Ptr passfiltered_pclXYZ (new pcl::PointCloud<pcl::PointXYZ>);   
 
 //function declarations:
+void cp_flag_callback(std_msgs::String msg);
 void extractObject(pcl::PointCloud<pcl::PointXYZ>::Ptr crop_cloud_ptr);
 int counter = 0 ;
 
@@ -151,9 +155,9 @@ void save_pcd(sensor_msgs::PointCloud2 ros_msg, int counter,string file_name ){
 void callback(const sensor_msgs::PointCloud2ConstPtr& cloud_msg) { 
    
 
-   if (cp_flag == 'yes')//if human is present 
+   if (cp_flag == "yes")//if human is present 
    {
-      
+      ROS_INFO("Processing Cloud now....");
       //start timer
       auto start1 = high_resolution_clock::now(); 
       pcl_conversions::toPCL(*cloud_msg, *inputCloud);
@@ -230,7 +234,7 @@ void callback(const sensor_msgs::PointCloud2ConstPtr& cloud_msg) {
    }
    else
    {
-      std::cout<<"NO HUMAN FOUND"<<endl;
+      ROS_INFO("NO human found");
    }
    
 
@@ -280,9 +284,9 @@ void human_callback(tb_apala::Plot data){
    
 }
 
-void cp_flag_callback(tb_apala::yolodepth data){
-   cp_flag = data.value
-   print("flag:", cp_flag)
+void cp_flag_callback(std_msgs::String str){
+   cp_flag = str.data;
+   
 }
 
 ////////////////////////***************main function**********************///////////////////////////////////////////////

@@ -117,7 +117,8 @@ class ObjectDetectionNode:
         else:
             # Find the closest person to compare distances
             closest_person = min(persons, key=lambda x: x[2])
-            print("closest person distance:", closest_person[2])
+            # print("closest person distance:", closest_person[2])
+            rospy.loginfo("closest person distance: %f", closest_person[2])
             if len(other_objects) > 0:
                 for obj in other_objects:
                     if obj[2] < closest_person[2]:
