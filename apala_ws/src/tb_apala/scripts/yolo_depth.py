@@ -112,21 +112,26 @@ class ObjectDetectionNode:
                 # print(len(other_objects))
 
         # If no person is detected, publish "no" and return
-        if len(persons) == 0:
-            self.cloud_processing_pub.publish("noooo")
+        if len(persons) == 0 and len(other_objects) == 0:
+            self.cloud_processing_pub.publish("no")  
+            
+        elif len(persons)> 0 and len(other_objects) == 0:  
+            self.cloud_processing_pub.publish("yes") 
+            
+        elif len(persons)== 0 and len(other_objects) > 0:
+            self.cloud_processing_pub.publish("no")    
         else:
             # Find the closest person to compare distances
             closest_person = min(persons, key=lambda x: x[2])
             # print("closest person distance:", closest_person[2])
-            rospy.loginfo("closest person distance: %f", closest_person[2])
-            if len(other_objects) > 0:
-                for obj in other_objects:
-                    if obj[2] < closest_person[2]:
-                        # print("object_distance:", obj[2], "person distance:", closest_person[2])
-                        self.cloud_processing_pub.publish("no")
-                    else:
-                        # print("object_distance:", obj[2], "person distance:", closest_person[2])
-                        self.cloud_processing_pub.publish("yes") 
+            rospy.loginfo("closest person distance: %f", closest_person[2])           
+            for obj in other_objects:
+                if obj[2] < closest_person[2]:
+                    # print("object_distance:", obj[2], "person distance:", closest_person[2])
+                    self.cloud_processing_pub.publish("no")
+                else:
+                    # print("object_distance:", obj[2], "person distance:", closest_person[2])
+                    self.cloud_processing_pub.publish("yes") 
                 
 
         # Convert the annotated image back to ROS Image message
