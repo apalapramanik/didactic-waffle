@@ -105,7 +105,7 @@ endif()
 # )
 
 # Generate added messages and services with any dependencies listed here
- generate_messages(
+generate_messages(
    DEPENDENCIES
    std_msgs
    sensor_msgs
@@ -219,7 +219,7 @@ link_directories(
 ## Mark executable scripts (Python etc.) for installation
 ## in contrast to setup.py, you can choose the destination
 catkin_install_python(PROGRAMS
-    scripts/test6.py scripts/yolo_depth.py
+    scripts/yolo_depth.py
    DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
  )
  

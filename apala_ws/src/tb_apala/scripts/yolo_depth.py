@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+import math
 import rospy
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
@@ -29,9 +30,11 @@ class ObjectDetectionNode:
         # Publishers 
         self.annotated_image_pub = rospy.Publisher('annotated_image', Image, queue_size=10)
         self.yolo_info_pub = rospy.Publisher('yolo_depth_topic', yolodepth, queue_size=10)
+        self.cloud_processing_pub = rospy.Publisher('cp_flag', String, queue_size=10)
 
         #create custom msg instance
         self.yolo_depth_msg = yolodepth()
+        
         
     def color_image_callback(self, msg):
         # Convert ROS Image to OpenCV image
@@ -45,6 +48,8 @@ class ObjectDetectionNode:
         # Convert ROS Image to OpenCV image
         self.depth_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='passthrough')
 
+    
+        
     def detect_objects(self):
         # Set the depth scale
         # depth_scale = 0.0010000000474974513
@@ -55,6 +60,11 @@ class ObjectDetectionNode:
 
         # Detect objects using YOLOv5
         results = self.model(self.color_image)
+        
+        # Lists to store information about detected persons and other objects
+        persons = []
+        other_objects = []
+
 
         # Process the results
         for result in results.xyxy[0]:
@@ -77,6 +87,7 @@ class ObjectDetectionNode:
             
             
             # Publish the class ID, class name, depth and confidence
+            self.yolo_depth_msg.class_id = int(class_id)
             self.yolo_depth_msg.label = self.model.names[int(class_id)]
             self.yolo_depth_msg.depth = object_depth            
             self.yolo_depth_msg.confidence = confidence
@@ -91,8 +102,32 @@ class ObjectDetectionNode:
             # Add text for depth
             cv2.putText(self.color_image, depth, (int(x1), int(y1)-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (153, 26, 25), 1)
             cv2.putText(self.color_image, self.model.names[int(class_id)] , (int(x1), int(y1)-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (153, 26, 25), 1)
-
             
+            # Check if the detected object is a person (class_id 0 for 'person')
+            if int(class_id) == 0:
+                persons.append((center_x, center_y, object_depth))
+            else:
+                other_objects.append((center_x, center_y, object_depth))
+
+        # If no person is detected, publish "no" and return
+        if not persons:
+            self.cloud_processing_pub.publish("no")
+            return
+
+        # Find the closest person to compare distances
+        closest_person = min(persons, key=lambda x: x[2])
+        print("closest person distance:", closest_person)
+
+        # Check distances of other objects and publish the result
+        for obj in other_objects:
+            if obj[2] < closest_person[2]:
+                print("object_distance:", obj[2], "person distance:", closest_person[2])
+                self.cloud_processing_pub.publish("no")
+            else:
+               print("object_distance:", obj[2], "person distance:", closest_person[2])
+               self.cloud_processing_pub.publish("yes") 
+                
+      
             
 
         # Convert the annotated image back to ROS Image message
@@ -107,6 +142,9 @@ class ObjectDetectionNode:
         cv2.waitKey(1)
         
         
+# Function to calculate Euclidean distance between two points
+def calculate_distance( point1, point2):
+    return math.sqrt((point2[0] - point1[0]) ** 2 + (point2[1] - point1[1]) ** 2)
        
 
 def main():
