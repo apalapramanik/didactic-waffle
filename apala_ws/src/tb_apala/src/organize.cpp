@@ -151,7 +151,7 @@ void save_pcd(sensor_msgs::PointCloud2 ros_msg, int counter,string file_name ){
 void callback(const sensor_msgs::PointCloud2ConstPtr& cloud_msg) { 
    
 
-   if (start == 1)//if human is present 
+   if (cp_flag == 'yes')//if human is present 
    {
       
       //start timer
@@ -280,6 +280,11 @@ void human_callback(tb_apala::Plot data){
    
 }
 
+void cp_flag_callback(tb_apala::yolodepth data){
+   cp_flag = data.value
+   print("flag:", cp_flag)
+}
+
 ////////////////////////***************main function**********************///////////////////////////////////////////////
 
 int main(int argc, char **argv)
@@ -291,6 +296,7 @@ int main(int argc, char **argv)
    //subscribe
    ros::Subscriber yolo_sub = nh.subscribe("H_Detection_msg", 10, human_callback);
    ros::Subscriber PCLsub = nh.subscribe(PCL_TOPIC, 10, callback);
+   ros::Subscriber cp_flag_sub = nh.subscribe("cp_flag", 10, cp_flag_callback);
 
    //set frame_id
    
