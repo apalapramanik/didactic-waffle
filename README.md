@@ -19,6 +19,8 @@ Launch gazebo environment: ``` roslaunch turtlebot3_gazebo scene1.launch ```
 
 Launch navigation:``` roslaunch turtlebot3_navigation turtlebot3_navigation.launch map_file:=/home/apramani/didactic-waffle/apala_ws/src/turtlebot3/turtlebot3_navigation/maps/map.yaml```
 
-Launch yolov5 : ``` rosrun apala_ws test6.py ```
+Launch yolov5 : ``` rosrun tb_apala yolo_depth.py ```
+
+Launch cloud processing: ``` rosrun tb_apala organize ```
 
 
