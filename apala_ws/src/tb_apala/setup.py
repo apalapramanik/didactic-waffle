@@ -8,5 +8,10 @@ setup_args = generate_distutils_setup(
     packages=['get_model'],
     package_dir={'': 'pointnet2_cls_msg'},
 )
+setup_args = generate_distutils_setup(
+    packages=['PointViewGCN'],
+    package_dir={'': 'PintView_GCN'},
+)
+
 
 setup(**setup_args)
