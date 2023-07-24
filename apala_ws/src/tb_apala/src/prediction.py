@@ -6,9 +6,26 @@ from sensor_msgs.msg import PointCloud2 as pc2
 from std_msgs.msg import String
 import quaternion # https://github.com/moble/quaternion
 from nav_msgs.msg import Odometry
+from marker import marker
+import ros_numpy
+
+from cv2 import HuMoments
+import rospy
+from array import array
+from cmath import isnan, nan, sqrt
+from os import device_encoding
+from numpy import NaN, cov, poly
+from sklearn.cluster import DBSCAN
+
+import matplotlib.pyplot as plt
+from matplotlib.patches import Polygon
+from matplotlib.collections import PatchCollection
+import seaborn as sns
+
 
 
 filter_type = 'kalman'
+steps = 5
 
 odom_pose = []
 odom_or = []
@@ -85,10 +102,102 @@ class predict:
             trans_array.pop(0)
             trans_array.append(translation)
             
-        
+    
+
+
+            
         
     def cloud_callback(self, data):
         if self.flag == 'yes':
             
+            #convert point cloud to numpy array:
+            pcl_np = ros_numpy.point_cloud2.pointcloud2_to_xyz_array(data, remove_nans=False) 
+            
         
+            #create a 2D array out of this pcl_np without the y values which are 0 after projection
+            xzarray = []
+            height, width = pcl_np.shape
+            x_values = []
+            z_values = []
+            for i in range(0,height):
+                    point = pcl_np[i]
+                    x = point[0]
+                    z = point[2]
+                    x_values.append(x)
+                    z_values.append(z)
+                    value = [x,z]
+                    xzarray.append(value)
+            
         
+            
+            # find mean and covariance for the XZ array:
+            xz_np_array = np.array(xzarray)
+            mean2D = xz_np_array.mean(axis=1)
+            cov_xz = np.cov(xz_np_array)      
+            
+            # compute DBSCAN - change eps and min_samples as required, eps: min distance between points
+            # learn more from - https://scikit-learn.org/stable/modules/generated/sklearn.cluster.DBSCAN.html
+            
+            
+            
+            #start db scan:
+            DBSCAN_cluster = DBSCAN(eps=0.5, min_samples=30).fit(xz_np_array) #0.5, 30
+            labels = DBSCAN_cluster.labels_
+            components = DBSCAN_cluster.components_ #copy of each core sample found by training
+            # feature = DBSCAN_cluster.n_features_in_ #number of features seen during fit
+            
+        
+            
+            for i in range(len(components)):
+                
+                meanx, meanz, transform_array = transform(i, f'useful_cluster{i}', f'x_array{i}', f'z_array{i}',
+                                                          f'transform_array_{i}', components, f'position_msg{i}', f'pose_pub{i}' )
+                
+                filter_estimator = FilterEstimator(transform_array, steps)
+                filter_estimator.main(filter_type)
+                
+                
+                marker.publish_human_marker(f'human{i}', cord_x = meanx, cord_y = 0.0, cord_z = meanz)
+                    
+                
+                    
+                    
+def transform(i, cluster_name, x_array, z_array, transform_array, components, position_msg, pose_pub):
+    cluster_name.append(components[i])
+    point = components[i] 
+    x_array.append(point[0])
+    z_array.append(point[1])
+
+    #get mean of cluster for human position:
+    meanx = np.nanmean(x_array)
+    meanz = np.nanmean(z_array)
+    
+    #get x,z position cordinates for kf:
+    pos1 = [meanx,meanz,0.0] 
+    # human1_array.append(pos1)
+    # np.savetxt("org1.txt", human1_array, delimiter=",")
+    
+
+    #add position to array and transform:
+    if len(transform_array)<15:
+        if len(transform_array)==0:
+            transform_array.append(pos1)
+            
+        else:
+            for i in range(len(transform_array)):
+                transform_array[i] = quaternion.rotate_vectors(q_rot,transform_array[i]) + translation
+            transform_array.append(pos1)
+        
+    else:
+        transform_array.pop(0)
+        for i in range(len(transform_array)):
+                transform_array[i] = quaternion.rotate_vectors(q_rot,transform_array[i]) + translation
+        transform_array.append(pos1)
+        
+    # publish current human position
+    # position_msg.header = data.header
+    position_msg.x = meanx #pos1_trans[0] #meanx1
+    position_msg.z = meanz #pos1_trans[1]#meanz1
+    pose_pub.publish(position_msg)
+    
+    return meanx, meanz, transform_array
