@@ -1,4 +1,5 @@
-from eval_pred import *
+from marker_publisher import marker
+from eval_pred import FilterEstimator
 import numpy as np
 import math
 import rospy
@@ -6,7 +7,7 @@ from sensor_msgs.msg import PointCloud2 as pc2
 from std_msgs.msg import String
 import quaternion # https://github.com/moble/quaternion
 from nav_msgs.msg import Odometry
-from marker import marker
+
 import ros_numpy
 
 from cv2 import HuMoments
@@ -128,8 +129,6 @@ class predict:
                     value = [x,z]
                     xzarray.append(value)
             
-        
-            
             # find mean and covariance for the XZ array:
             xz_np_array = np.array(xzarray)
             mean2D = xz_np_array.mean(axis=1)
@@ -138,27 +137,27 @@ class predict:
             # compute DBSCAN - change eps and min_samples as required, eps: min distance between points
             # learn more from - https://scikit-learn.org/stable/modules/generated/sklearn.cluster.DBSCAN.html
             
-            
-            
             #start db scan:
             DBSCAN_cluster = DBSCAN(eps=0.5, min_samples=30).fit(xz_np_array) #0.5, 30
             labels = DBSCAN_cluster.labels_
             components = DBSCAN_cluster.components_ #copy of each core sample found by training
             # feature = DBSCAN_cluster.n_features_in_ #number of features seen during fit
             
-        
-            
             for i in range(len(components)):
                 
                 meanx, meanz, transform_array = transform(i, f'useful_cluster{i}', f'x_array{i}', f'z_array{i}',
                                                           f'transform_array_{i}', components, f'position_msg{i}', f'pose_pub{i}' )
+                marker.publish_human_marker(f'human{i}', cord_x = meanx, cord_y = 0.0, cord_z = meanz)
                 
                 filter_estimator = FilterEstimator(transform_array, steps)
-                filter_estimator.main(filter_type)
+                predictions_array, error = filter_estimator.main(filter_type)
                 
+                for pt in range(len(predictions_array)):
+                    marker.publish_prediction_marker(f'pred_human{i}', cord_x= predictions_array[i][0], cord_y=0.0, cord_z= predictions_array[i][1])
                 
-                marker.publish_human_marker(f'human{i}', cord_x = meanx, cord_y = 0.0, cord_z = meanz)
-                    
+                print("prediction error:", error)
+            
+
                 
                     
                     
@@ -201,3 +200,14 @@ def transform(i, cluster_name, x_array, z_array, transform_array, components, po
     pose_pub.publish(position_msg)
     
     return meanx, meanz, transform_array
+
+def main():
+        
+        
+        rospy.init_node('clustering_prediction_node', anonymous=False)         
+        pr = predict()        
+        while not rospy.is_shutdown():
+            rospy.spin()      
+            
+if __name__ == '__main__':
+    main()   
