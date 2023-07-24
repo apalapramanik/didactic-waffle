@@ -155,21 +155,22 @@ class FilterEstimator:
     def __init__(self, prediction_points, steps):
         self.prediction_points = prediction_points
         self.steps = steps
-        self.predictions_array = []
+        
 
     def kf_caller(self):
         kf_estimator = KalmanFilterEstimator()
-        for x, y in prediction_points:
+        self.predictions_array = []
+        for x, y,z in self.prediction_points:
             predicted_x, predicted_y = kf_estimator.predict_correct(x, y)
             # print(f"Initial Point (x, y) = ({x}, {y})")
             # print(f"KF Predicted Point:", predicted_x, predicted_y)
-        error = self.euclidean_distance(x, y, predicted_x, predicted_y)
+            error = self.euclidean_distance(x, y, predicted_x, predicted_y)
         # print("error:", error)
-        for i in range(steps):
+        for i in range(self.steps):
             predicted_x, predicted_y = kf_estimator.predict_correct(predicted_x, predicted_y)
-            self.predictions_array.append(predicted_x, predicted_y)
-        #     print(f"Point {i + 1}: (x, y) = ({predicted_x}, {predicted_y})")
-        # print("\n")
+            self.predictions_array.append([predicted_x, predicted_y])
+            print(f"Point {i + 1}: (x, y) = ({predicted_x}, {predicted_y})")
+        # print("hereee")
         return self.predictions_array, error
  
     def ekf_caller(self):  
@@ -178,16 +179,16 @@ class FilterEstimator:
         ekf_estimator = ExtendedKalmanFilterEstimator()
 
         # Loop for each point in the input array
-        for x, y in prediction_points:
+        for x, y in self.prediction_points:
             # print(f"Point: ({x}, {y})")
 
             # Extended Kalman Filter
             ekf_predicted_x, ekf_predicted_y = ekf_estimator.predict_correct(x, y)
             # print(f"EKF Predicted state after correction: (x, y) = ({ekf_predicted_x}, {ekf_predicted_y})")
-        error = self.euclidean_distance(x, y, ekf_predicted_x, ekf_predicted_y)
+            error = self.euclidean_distance(x, y, ekf_predicted_x, ekf_predicted_y)
         # print("error:", error)
             # Generate 5 more predictions using the Extended Kalman Filter
-        for _ in range(steps):
+        for _ in range(self.steps):
             ekf_predicted_x, ekf_predicted_y = ekf_estimator.predict_correct(ekf_predicted_x, ekf_predicted_y)
             self.predictions_array.append(ekf_predicted_x, ekf_predicted_y)
             # print(f"Additional EKF Prediction: (x, y) = ({ekf_predicted_x}, {ekf_predicted_y})")
@@ -212,12 +213,12 @@ class FilterEstimator:
                                                 hx=ukf_estimator.measurement_function,
                                                 fx=ukf_estimator.state_transition_function,
                                                 points=points)
-        ukf_estimator.ukf.x = np.array([prediction_points[0][0], prediction_points[0][1], 0, 0])  # Initial state [x, y, vx, vy]
+        ukf_estimator.ukf.x = np.array([self.prediction_points[0][0], self.prediction_points[0][1], 0, 0])  # Initial state [x, y, vx, vy]
         ukf_estimator.ukf.Q = Q
         ukf_estimator.ukf.R = R
 
         # Loop for each point in the input array
-        for x, y in prediction_points:
+        for x, y in self.prediction_points:
             # print(f"Point: ({x}, {y})")
             #Unscented Kalman Filter
             ukf_predicted_x, ukf_predicted_y = ukf_estimator.predict_correct(x, y)
@@ -225,7 +226,7 @@ class FilterEstimator:
         error = self.euclidean_distance(x, y, ukf_predicted_x, ukf_predicted_y)
         # print("error:", error)
         # Generate 5 more predictions using the Unscented Kalman Filter
-        for _ in range(steps):
+        for _ in range(self.steps):
             ukf_predicted_x, ukf_predicted_y = ukf_estimator.predict_correct(ukf_predicted_x, ukf_predicted_y)
             self.predictions_array.append( ukf_predicted_x, ukf_predicted_y)
             # print(f"Additional UKF Prediction: (x, y) = ({ukf_predicted_x}, {ukf_predicted_y})")
@@ -242,7 +243,7 @@ class FilterEstimator:
         ensemble_size = 200  # Number of ensemble members
 
         # Set the initial state and covariance
-        initial_state = np.array([prediction_points[0][0], prediction_points[0][1], 0, 0])
+        initial_state = np.array([self.prediction_points[0][0], self.prediction_points[0][1], 0, 0])
         initial_covariance = np.eye(state_size) * 0.1
 
         enkf_estimator.enkf = EnsembleKalmanFilter(x=initial_state, P=initial_covariance, dim_z=measurement_size,
@@ -254,7 +255,7 @@ class FilterEstimator:
         enkf_estimator.enkf.R = np.diag([0.1, 0.1])  # Measurement noise covariance
 
         # Loop for each point in the input array
-        for x, y in prediction_points:
+        for x, y in self.prediction_points:
             # print(f"Point: ({x}, {y})")
             # Ensemble Kalman Filter
             enkf_predicted_x, enkf_predicted_y = enkf_estimator.predict_correct(x, y)
@@ -262,7 +263,7 @@ class FilterEstimator:
         error = self.euclidean_distance(x, y, enkf_predicted_x, enkf_predicted_y)
         # print("error:", error)
         # Generate 5 more predictions using the Ensemble Kalman Filter
-        for _ in range(steps):
+        for _ in range(self.steps):
             enkf_predicted_x, enkf_predicted_y = enkf_estimator.predict_correct(enkf_predicted_x, enkf_predicted_y)
             self.predictions_array.append( enkf_predicted_x, enkf_predicted_y)
             # print(f"Additional EnKF Prediction: (x, y) = ({enkf_predicted_x}, {enkf_predicted_y})")
@@ -271,7 +272,7 @@ class FilterEstimator:
     def euclidean_distance(self, x1, y1, x2, y2):
         return np.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
        
-    def main(self, filter_type):
+    def pred(self, filter_type):
         if filter_type == "kf":
             print("Kalman Filter:")
             self.kf_caller()
@@ -294,17 +295,17 @@ class FilterEstimator:
 
 
     
-if __name__ == "__main__":
+# if __name__ == "__main__":
     
-    prediction_points = [(50, 50), (100, 100), (150, 100), (200, 100)]
-    steps = 5
+#     prediction_points = [(50, 50), (100, 100), (150, 100), (200, 100)]
+#     steps = 5
 
-    # Create an instance of FilterEstimator
-    filter_estimator = FilterEstimator(prediction_points, steps)
+#     # Create an instance of FilterEstimator
+#     filter_estimator = FilterEstimator(prediction_points, steps)
 
-    # Call the main function with the desired filter type
-    filter_type = "ukf"  # Change this to the desired filter type
-    filter_estimator.main(filter_type)
+#     # Call the main function with the desired filter type
+#     filter_type = "ukf"  # Change this to the desired filter type
+#     filter_estimator.pred(filter_type)
 
 
 

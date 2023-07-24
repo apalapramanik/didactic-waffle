@@ -18,6 +18,12 @@ from filterpy.kalman import EnsembleKalmanFilter
 import pandas as pd
 import struct
 from visualization_msgs.msg import Marker
+from marker_publisher import marker
+from eval_pred import FilterEstimator
+
+
+
+
 
 # import ros_numpy
 
@@ -36,12 +42,13 @@ import seaborn as sns
 
 
 
-filter_type = 'kalman'
+filter_type = "kf"
 steps = 5
 
 odom_pose = []
 odom_or = []
 rot_array = []
+trans_array = []
 transform_array1 = []
 transform_array2 = []
 transform_array3 = []
@@ -60,6 +67,8 @@ class predict:
         
         self.pred_human1 = rospy.Publisher("prediction_h1", position,queue_size=1)
         self.pred_human2 = rospy.Publisher("prediction_h2", position,queue_size=1)
+        
+        self.flag = "no"
         
     def cp_flag_callback(self, msg):
         self.flag = msg.data
@@ -226,13 +235,17 @@ class predict:
                     position_msg1.z = meanz1 #pos1_trans[1]#meanz1
                     self.pose_human1.publish(position_msg1)
                     
-                    marker.publish_human_marker(cord_x = meanx1, cord_y = 0.0, cord_z = meanz1)
-                     
+                    marker.publish_human_marker(name = "human1", cord_x = meanx1, cord_y = 0.0, cord_z = meanz1)
+                    
                     filter_estimator = FilterEstimator(transform_array1, steps)
-                    predictions_array, error = filter_estimator.main(filter_type)
+                    predictions_array= filter_estimator.kf_caller()
+                    
+                    for point in predictions_array:
+                        print(point)
                     
                     for pt in range(len(predictions_array)):
-                        marker.publish_prediction_marker("pred_human2", cord_x= predictions_array[i][0], cord_y=0.0, cord_z= predictions_array[i][1])
+                        point = predictions_array[pt]
+                        marker.publish_prediction_marker(name = "pred_human2", cord_x= point[0], cord_y=0.0, cord_z= point[1])
                     
                     print("prediction error:", error)
                 
@@ -274,65 +287,20 @@ class predict:
                     position_msg2.z = meanz2 #pos2_trans[1] #meanz2
                     self.pose_human2.publish(position_msg2)
                     
-                    marker.publish_human_marker(cord_x = meanx1, cord_y = 0.0, cord_z = meanz1)
+                    marker.publish_human_marker(name = "human2", cord_x = meanx1, cord_y = 0.0, cord_z = meanz1)
                      
                     filter_estimator = FilterEstimator(transform_array2, steps)
-                    predictions_array, error = filter_estimator.main(filter_type)
+                    # filter_estimator.pred(filter_type)
+                    predictions_array, error = filter_estimator.pred(filter_type)
                     
                     for pt in range(len(predictions_array)):
-                        marker.publish_prediction_marker("pred_human2", cord_x= predictions_array[i][0], cord_y=0.0, cord_z= predictions_array[i][1])
+                        marker.publish_prediction_marker(name = "pred_human2", cord_x= predictions_array[pt][0], cord_y=0.0, cord_z= predictions_array[pt][1])
                     
-                    print("prediction error:", error)
+                    # print("prediction error:", error)
                     
                 
             
-           
-            
 
-                
-                    
-                    
-# def transform(transform_array, components, position_msg, pose_pub):
-#     cluster = []
-    
-#     cluster_name.append(components[i])
-#     point = components[i] 
-#     x_array.append(point[0])
-#     z_array.append(point[1])
-
-#     #get mean of cluster for human position:
-#     meanx = np.nanmean(x_array)
-#     meanz = np.nanmean(z_array)
-    
-#     #get x,z position cordinates for kf:
-#     pos1 = [meanx,meanz,0.0] 
-#     # human1_array.append(pos1)
-#     # np.savetxt("org1.txt", human1_array, delimiter=",")
-    
-
-#     #add position to array and transform:
-#     if len(transform_array)<15:
-#         if len(transform_array)==0:
-#             transform_array.append(pos1)
-            
-#         else:
-#             for i in range(len(transform_array)):
-#                 transform_array[i] = quaternion.rotate_vectors(q_rot,transform_array[i]) + translation
-#             transform_array.append(pos1)
-        
-#     else:
-#         transform_array.pop(0)
-#         for i in range(len(transform_array)):
-#                 transform_array[i] = quaternion.rotate_vectors(q_rot,transform_array[i]) + translation
-#         transform_array.append(pos1)
-        
-#     # publish current human position
-#     # position_msg.header = data.header
-#     position_msg.x = meanx #pos1_trans[0] #meanx1
-#     position_msg.z = meanz #pos1_trans[1]#meanz1
-#     pose_pub.publish(position_msg)
-    
-    # return meanx, meanz, transform_array
     
 def pointcloud2_to_array( point_cloud):
     points_list = []
@@ -699,7 +667,7 @@ class FilterEstimator:
     def euclidean_distance(self, x1, y1, x2, y2):
         return np.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
        
-    def main(self, filter_type):
+    def pred(self, filter_type):
         if filter_type == "kf":
             print("Kalman Filter:")
             self.kf_caller()
