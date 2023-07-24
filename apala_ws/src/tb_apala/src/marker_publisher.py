@@ -3,6 +3,8 @@ import rospy
 from tb_apala.msg import position
 
 class marker:
+    def __init__(self):
+        pass
     
     def publish_human_marker(name, cord_x, cord_y, cord_z):
         
