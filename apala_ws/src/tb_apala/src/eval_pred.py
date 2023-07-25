@@ -14,12 +14,20 @@ class BaseFilter:
     def predict_correct(self, x, y):
         pass
     
+
     
 class KalmanFilterEstimator(BaseFilter):
     def __init__(self):
         # Initialize Kalman filter parameters
         self.kalman = cv2.KalmanFilter(4, 2)  # 4 states (x, y, vx, vy), 2 measurements (x, y)
+
+        # Set the initial state covariance matrix
+        # self.kalman.errorCovPost = np.eye(4, dtype=np.float32) * 1e-5
+
+        # Measurement matrix: maps the predicted state to the measurements (x, y)
         self.kalman.measurementMatrix = np.array([[1, 0, 0, 0], [0, 1, 0, 0]], np.float32)
+
+        # Transition matrix: maps the previous state to the predicted state (including velocities)
         self.kalman.transitionMatrix = np.array([[1, 0, 1, 0], [0, 1, 0, 1], [0, 0, 1, 0], [0, 0, 0, 1]], np.float32)
 
     def predict_correct(self, x, y):
@@ -32,7 +40,7 @@ class KalmanFilterEstimator(BaseFilter):
 
         # Access the updated state
         updated_state = self.kalman.statePost
-        predicted_x, predicted_y = int(updated_state[0, 0]), int(updated_state[1, 0])
+        predicted_x, predicted_y = updated_state[0, 0], updated_state[1, 0]
 
         return predicted_x, predicted_y
     
@@ -157,17 +165,19 @@ class FilterEstimator:
         self.steps = steps
         
 
+    
+    
     def kf_caller(self):
         kf_estimator = KalmanFilterEstimator()
         self.predictions_array = []
         
         for x, y,z in self.prediction_points:
             predicted_x, predicted_y = kf_estimator.predict_correct(x, y)
-            # print(f"Initial Point (x, y) = ({x}, {y})")
-            # print(f"KF Predicted Point:", predicted_x, predicted_y)
+            print(f"Initial Point (x, y) = ({x}, {y})")
+            print(f"KF Predicted Point:", predicted_x, predicted_y)
             pred_array1 = []
             pred_array1.append([predicted_x, predicted_y])
-            np.savetxt("pred1.txt", pred_array1, delimiter=",")
+            # np.savetxt("pred1.txt", pred_array1, delimiter=",")
             error = self.euclidean_distance(x, y, predicted_x, predicted_y)
         # print("error:", error)
         for i in range(self.steps):
@@ -177,34 +187,43 @@ class FilterEstimator:
         # print("hereee")
         return self.predictions_array, error
  
+    
+    
+    
     def ekf_caller(self):  
     
         # Create ExtendedKalmanFilterEstimator instance
         ekf_estimator = ExtendedKalmanFilterEstimator()
+        self.predictions_array = []
 
         # Loop for each point in the input array
-        for x, y in self.prediction_points:
-            # print(f"Point: ({x}, {y})")
+        for x, y, z in self.prediction_points:
+            print(f"Point: ({x}, {y})")
 
             # Extended Kalman Filter
             ekf_predicted_x, ekf_predicted_y = ekf_estimator.predict_correct(x, y)
-            # print(f"EKF Predicted state after correction: (x, y) = ({ekf_predicted_x}, {ekf_predicted_y})")
+            print(f"EKF Predicted state after correction: (x, y) = ({ekf_predicted_x}, {ekf_predicted_y})")
             error = self.euclidean_distance(x, y, ekf_predicted_x, ekf_predicted_y)
             pred_array1 = []
             pred_array1.append([ekf_predicted_x, ekf_predicted_y])
-            np.savetxt("pred1.txt", pred_array1, delimiter=",")
+            # np.savetxt("pred1.txt", pred_array1, delimiter=",")
             # Generate 5 more predictions using the Extended Kalman Filter
         for _ in range(self.steps):
             ekf_predicted_x, ekf_predicted_y = ekf_estimator.predict_correct(ekf_predicted_x, ekf_predicted_y)
-            self.predictions_array.append(ekf_predicted_x, ekf_predicted_y)
+            self.predictions_array.append([ekf_predicted_x, ekf_predicted_y])
             # print(f"Additional EKF Prediction: (x, y) = ({ekf_predicted_x}, {ekf_predicted_y})")
         return self.predictions_array, error
         
+   
+   
+   
+   
     def ukf_caller(self):
     
         
         # Create UnscentedKalmanFilterEstimator instance
         ukf_estimator = UnscentedKalmanFilterEstimator()
+        self.predictions_array = []
 
         # Initialize UKF with sigma points
         sigma = 0.1
@@ -224,27 +243,32 @@ class FilterEstimator:
         ukf_estimator.ukf.R = R
 
         # Loop for each point in the input array
-        for x, y in self.prediction_points:
-            # print(f"Point: ({x}, {y})")
+        for x, y, z in self.prediction_points:
+            print(f"Point: ({x}, {y})")
             #Unscented Kalman Filter
             ukf_predicted_x, ukf_predicted_y = ukf_estimator.predict_correct(x, y)
-            # print(f"UKF Predicted state after correction: (x, y) = ({ukf_predicted_x}, {ukf_predicted_y})")
+            print(f"UKF Predicted state after correction: (x, y) = ({ukf_predicted_x}, {ukf_predicted_y})")
             pred_array1 = []
             pred_array1.append([ukf_predicted_x, ukf_predicted_y])
-            np.savetxt("pred1.txt", pred_array1, delimiter=",")
+            # np.savetxt("pred1.txt", pred_array1, delimiter=",")
         error = self.euclidean_distance(x, y, ukf_predicted_x, ukf_predicted_y)
         # print("error:", error)
         # Generate 5 more predictions using the Unscented Kalman Filter
         for _ in range(self.steps):
             ukf_predicted_x, ukf_predicted_y = ukf_estimator.predict_correct(ukf_predicted_x, ukf_predicted_y)
-            self.predictions_array.append( ukf_predicted_x, ukf_predicted_y)
+            self.predictions_array.append( [ukf_predicted_x, ukf_predicted_y])
             # print(f"Additional UKF Prediction: (x, y) = ({ukf_predicted_x}, {ukf_predicted_y})")
         return self.predictions_array, error
+    
+    
+    
+    
     
     
     def enkf_caller(self):
         # Create EnsembleKalmanFilterEstimator instance
         enkf_estimator = EnsembleKalmanFilterEstimator()
+        self.predictions_array = []
 
         # Initialize EnKF
         state_size = 4  # State size [x, y, vx, vy]
@@ -264,20 +288,20 @@ class FilterEstimator:
         enkf_estimator.enkf.R = np.diag([0.1, 0.1])  # Measurement noise covariance
 
         # Loop for each point in the input array
-        for x, y in self.prediction_points:
-            # print(f"Point: ({x}, {y})")
+        for x, y, z in self.prediction_points:
+            print(f"Point: ({x}, {y})")
             # Ensemble Kalman Filter
             enkf_predicted_x, enkf_predicted_y = enkf_estimator.predict_correct(x, y)
-            # print(f"EnKF Predicted state after correction: (x, y) = ({enkf_predicted_x}, {enkf_predicted_y})")
+            print(f"EnKF Predicted state after correction: (x, y) = ({enkf_predicted_x}, {enkf_predicted_y})")
             pred_array1 = []
             pred_array1.append([ enkf_predicted_x, enkf_predicted_y])
-            np.savetxt("pred1.txt", pred_array1, delimiter=",")
+            # np.savetxt("pred1.txt", pred_array1, delimiter=",")
         error = self.euclidean_distance(x, y, enkf_predicted_x, enkf_predicted_y)
         # print("error:", error)
         # Generate 5 more predictions using the Ensemble Kalman Filter
         for _ in range(self.steps):
             enkf_predicted_x, enkf_predicted_y = enkf_estimator.predict_correct(enkf_predicted_x, enkf_predicted_y)
-            self.predictions_array.append( enkf_predicted_x, enkf_predicted_y)
+            self.predictions_array.append([enkf_predicted_x, enkf_predicted_y])
             # print(f"Additional EnKF Prediction: (x, y) = ({enkf_predicted_x}, {enkf_predicted_y})")
         return self.predictions_array, error
         

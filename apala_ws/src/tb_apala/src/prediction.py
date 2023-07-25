@@ -5,8 +5,6 @@
     
     
 """
-
-
 import numpy as np
 import rospy
 from sensor_msgs.msg import PointCloud2 as pc2
@@ -26,6 +24,7 @@ from cmath import isnan, nan, sqrt
 from os import device_encoding
 from numpy import NaN, cov, poly
 from sklearn.cluster import DBSCAN
+# import ros_numpy
 
 
 
@@ -53,12 +52,9 @@ class predict:
         rospy.Subscriber("cp_flag", String, self.cp_flag_callback, queue_size=10 )
         rospy.Subscriber("odom", Odometry, self.odom_callback,queue_size=10)
         
+        #publishers
         self.pose_human1 = rospy.Publisher("position_h1", position,queue_size=1)
         self.pose_human2 = rospy.Publisher("position_h2", position,queue_size=1)
-        
-        # self.pred_human1 = rospy.Publisher("prediction_h1", position,queue_size=1)
-        # self.pred_human2 = rospy.Publisher("prediction_h2", position,queue_size=1)
-        
         self.pred1_array = rospy.Publisher("pred1_array",Float32MultiArray,queue_size=10)
         self.pred2_array = rospy.Publisher("pred2_array",Float32MultiArray,queue_size=10)
         
@@ -125,11 +121,7 @@ class predict:
             trans_array.pop(0)
             trans_array.append(translation)
             
-    
-
-
-            
-        
+         
     def cloud_callback(self, data):
         
         position_msg1 = position()
@@ -142,7 +134,9 @@ class predict:
         if self.flag == 'yes':
             
             #convert point cloud to numpy array:
-            pcl_np = pointcloud2_to_array(data)
+            pcl_np = pointcloud2_to_numpy(data)
+            # print(pcl_np)
+            
             
             #create a 2D array out of this pcl_np without the y values which are 0 after projection
             xzarray = []
@@ -188,7 +182,7 @@ class predict:
             # x3 = []
             # z3 = []
             
-            rospy.loginfo("Predicting now")
+            # rospy.loginfo("Predicting now")
                 
             for i in range(len(components)):
                 if labels[i] == 0 :
@@ -202,9 +196,9 @@ class predict:
                     meanz1 = np.nanmean(z1)
                     
                     #get x,z position cordinates for kf:
-                    pos1 = [meanx1,meanz1,0.0] #check x, y, z order
-                    human1_array.append(pos1)
-                    np.savetxt("org1.txt", human1_array, delimiter=",")
+                    pos1 = [meanx1,meanz1, 0.0] #check x, y, z order
+                    # human1_array.append(pos1)
+                    # np.savetxt("org1.txt", human1_array, delimiter=",")
                     
         
                     #add position to array and transform:
@@ -232,13 +226,14 @@ class predict:
                     marker.publish_human_marker(name = "human1", cord_x = meanx1, cord_y = 0.0, cord_z = meanz1)
                     
                     filter_estimator1 = FilterEstimator(transform_array1, steps)
-                    predictions_array1, error1= filter_estimator1.kf_caller()
+                    predictions_array1, error1= filter_estimator1.enkf_caller()
                     
                 
-                    
-                    for pt in range(len(predictions_array1)):
+                    b = 0
+                    for pt in range(len(predictions_array1)):                        
                         point = predictions_array1[pt]
-                        marker.publish_prediction_marker(name = "pred_human2", cord_x= point[0], cord_y=0.0, cord_z= point[1])
+                        b = b+1
+                        marker.publish_prediction_marker(b, name = "pred_human1", cord_x= point[0], cord_y=0.0, cord_z= point[1])
                         
                      
                     pred1_distance_array = []
@@ -264,8 +259,8 @@ class predict:
                     
                     #get x,z position cordinates:
                     pos2 = [meanx2,meanz2,0.0] 
-                    human2_array.append(pos2)
-                    np.savetxt("org2.txt", human2_array, delimiter=",")
+                    # human2_array.append(pos2)
+                    # np.savetxt("org2.txt", human2_array, delimiter=",")
                     
                     # add positions to array and transform :
                     if len(transform_array2)<15:
@@ -296,8 +291,10 @@ class predict:
                     # filter_estimator.pred(filter_type)
                     predictions_array2, error2= filter_estimator2.kf_caller()
                     
-                    for pt in range(len(predictions_array2)):
-                        marker.publish_prediction_marker(name = "pred_human2", cord_x= predictions_array2[pt][0], cord_y=0.0, cord_z= predictions_array2[pt][1])
+                    a = 0
+                    for pt in range(len(predictions_array2)):  
+                        a = a+1                     
+                        marker.publish_prediction_marker(a, name = "pred_human2", cord_x= predictions_array2[pt][0], cord_y=0.0, cord_z= predictions_array2[pt][1])
                     
                     pred2_distance_array = []
 
@@ -309,42 +306,23 @@ class predict:
                     pred2_array_msg.data = pred2_distance_array
                     self.pred2_array.publish(pred2_array_msg)   
                     
-                rospy.loginfo("Prediction done!")
+                # rospy.loginfo("Prediction done!")
             
 
-    
-def pointcloud2_to_array( point_cloud):
-    
-    points_list = []
 
-    # Get the fields and their offsets from the PointCloud2 message
-    fields = point_cloud.fields
-    point_step = point_cloud.point_step
+def pointcloud2_to_numpy(pointcloud_msg):
+    # Convert the PointCloud2 message to a NumPy array
+    numpy_array = np.frombuffer(pointcloud_msg.data, dtype=np.float32).reshape(-1, pointcloud_msg.point_step // 4)
 
-    # Iterate over the points in the PointCloud2 data
-    for i in range(0, len(point_cloud.data), point_step):
-        point = point_cloud.data[i:i + point_step]
+    # Extract x, y, and z coordinates
+    x = numpy_array[:, 0]
+    y = numpy_array[:, 1]
+    z = numpy_array[:, 2]
 
-        # Unpack the data based on field types and offsets
-        x = struct.unpack_from('f', point, fields[0].offset)[0]
-        y = struct.unpack_from('f', point, fields[1].offset)[0]
-        z = struct.unpack_from('f', point, fields[2].offset)[0]
+    # Create a NumPy array with x, y, z coordinates
+    points = np.column_stack((x, y, z))
 
-        # Assuming RGB fields exist (fields[3], fields[4], and fields[5])
-        if len(fields) >= 6:
-            r = struct.unpack_from('B', point, fields[3].offset)[0]
-            g = struct.unpack_from('B', point, fields[4].offset)[0]
-            b = struct.unpack_from('B', point, fields[5].offset)[0]
-        else:
-            # If RGB fields are not available, use default values
-            r, g, b = 255, 255, 255
-
-        # points_list.append([x, y, z, r, g, b])
-        points_list.append([x, y, z])
-        # rospy.loginfo("Converting point cloud to list")
-
-    return np.array(points_list, dtype=np.float32)
-
+    return points
 
 def main():
         rospy.init_node('clustering_prediction_node', anonymous=False)         

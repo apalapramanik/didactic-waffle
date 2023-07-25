@@ -35,15 +35,15 @@ class marker:
         #publish marker at current mean position of human:
         human_marker.publish(prediction_marker_cube)
         
-    def publish_prediction_marker(name, cord_x, cord_y, cord_z):
-        
+    def publish_prediction_marker(a, name, cord_x, cord_y, cord_z):
+       
         prediction_marker = rospy.Publisher(name, Marker, queue_size=0)
         pred_marker_cube = Marker()
         
         pred_marker_cube.header.stamp = rospy.Time.now()
         pred_marker_cube.header.frame_id = "camera_rgb_optical_frame"
         pred_marker_cube.ns = "basic_shapes_1"
-        pred_marker_cube.id = 1
+        pred_marker_cube.id = a
         pred_marker_cube.type = 1
         pred_marker_cube.pose.position.x = cord_x 
         pred_marker_cube.pose.position.y = cord_y
