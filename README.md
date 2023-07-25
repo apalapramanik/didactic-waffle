@@ -31,4 +31,8 @@ Launch cloud processing:
 
 ``` rosrun tb_apala organize ```
 
+Launch prediction node:
+
+``` rosrun tb_apala prediction.py ```
+
 
