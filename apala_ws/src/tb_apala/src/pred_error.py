@@ -5,6 +5,8 @@ from sklearn.metrics import mean_squared_error
 original_points = np.loadtxt("org_ukf2.txt", delimiter=",")
 predicted_points = np.loadtxt("pred_ukf2.txt", delimiter=",")
 
+
+
 x = [p[0] for p in original_points[5:]]
 y = [p[1] for p in original_points[5:]]
 
