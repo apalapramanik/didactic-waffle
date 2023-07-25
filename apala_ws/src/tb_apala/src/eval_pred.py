@@ -173,12 +173,12 @@ class FilterEstimator:
         
         for x, y,z in self.prediction_points:
             predicted_x, predicted_y = kf_estimator.predict_correct(x, y)
-            print(f"Initial Point (x, y) = ({x}, {y})")
-            print(f"KF Predicted Point:", predicted_x, predicted_y)
+            # print(f"Initial Point (x, y) = ({x}, {y})")
+            # print(f"KF Predicted Point:", predicted_x, predicted_y)
             pred_array1 = []
             pred_array1.append([predicted_x, predicted_y])
-            # np.savetxt("pred1.txt", pred_array1, delimiter=",")
-            error = self.euclidean_distance(x, y, predicted_x, predicted_y)
+            np.savetxt("pred_kf.txt", pred_array1, delimiter=",")
+        error = self.euclidean_distance(x, y, predicted_x, predicted_y)
         # print("error:", error)
         for i in range(self.steps):
             predicted_x, predicted_y = kf_estimator.predict_correct(predicted_x, predicted_y)
@@ -198,15 +198,16 @@ class FilterEstimator:
 
         # Loop for each point in the input array
         for x, y, z in self.prediction_points:
-            print(f"Point: ({x}, {y})")
+            # print(f"Point: ({x}, {y})")
 
             # Extended Kalman Filter
             ekf_predicted_x, ekf_predicted_y = ekf_estimator.predict_correct(x, y)
-            print(f"EKF Predicted state after correction: (x, y) = ({ekf_predicted_x}, {ekf_predicted_y})")
-            error = self.euclidean_distance(x, y, ekf_predicted_x, ekf_predicted_y)
+            # print(f"EKF Predicted state after correction: (x, y) = ({ekf_predicted_x}, {ekf_predicted_y})")
+            
             pred_array1 = []
             pred_array1.append([ekf_predicted_x, ekf_predicted_y])
-            # np.savetxt("pred1.txt", pred_array1, delimiter=",")
+            np.savetxt("pred_ekf.txt", pred_array1, delimiter=",")
+        error = self.euclidean_distance(x, y, ekf_predicted_x, ekf_predicted_y)
             # Generate 5 more predictions using the Extended Kalman Filter
         for _ in range(self.steps):
             ekf_predicted_x, ekf_predicted_y = ekf_estimator.predict_correct(ekf_predicted_x, ekf_predicted_y)
@@ -244,13 +245,13 @@ class FilterEstimator:
 
         # Loop for each point in the input array
         for x, y, z in self.prediction_points:
-            print(f"Point: ({x}, {y})")
+            # print(f"Point: ({x}, {y})")
             #Unscented Kalman Filter
             ukf_predicted_x, ukf_predicted_y = ukf_estimator.predict_correct(x, y)
-            print(f"UKF Predicted state after correction: (x, y) = ({ukf_predicted_x}, {ukf_predicted_y})")
+            # print(f"UKF Predicted state after correction: (x, y) = ({ukf_predicted_x}, {ukf_predicted_y})")
             pred_array1 = []
             pred_array1.append([ukf_predicted_x, ukf_predicted_y])
-            # np.savetxt("pred1.txt", pred_array1, delimiter=",")
+            np.savetxt("pred_ukf.txt", pred_array1, delimiter=",")
         error = self.euclidean_distance(x, y, ukf_predicted_x, ukf_predicted_y)
         # print("error:", error)
         # Generate 5 more predictions using the Unscented Kalman Filter
@@ -289,13 +290,13 @@ class FilterEstimator:
 
         # Loop for each point in the input array
         for x, y, z in self.prediction_points:
-            print(f"Point: ({x}, {y})")
+            # print(f"Point: ({x}, {y})")
             # Ensemble Kalman Filter
             enkf_predicted_x, enkf_predicted_y = enkf_estimator.predict_correct(x, y)
-            print(f"EnKF Predicted state after correction: (x, y) = ({enkf_predicted_x}, {enkf_predicted_y})")
+            # print(f"EnKF Predicted state after correction: (x, y) = ({enkf_predicted_x}, {enkf_predicted_y})")
             pred_array1 = []
             pred_array1.append([ enkf_predicted_x, enkf_predicted_y])
-            # np.savetxt("pred1.txt", pred_array1, delimiter=",")
+            np.savetxt("pred_enkf.txt", pred_array1, delimiter=",")
         error = self.euclidean_distance(x, y, enkf_predicted_x, enkf_predicted_y)
         # print("error:", error)
         # Generate 5 more predictions using the Ensemble Kalman Filter

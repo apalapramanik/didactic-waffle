@@ -3,7 +3,6 @@
     Project: Autonomous Robot in Construction site
     Advised by: Dr.Dung Hoang Tran, Dr.Kyungki Kim
     
-    
 """
 import numpy as np
 import rospy
@@ -197,8 +196,8 @@ class predict:
                     
                     #get x,z position cordinates for kf:
                     pos1 = [meanx1,meanz1, 0.0] #check x, y, z order
-                    # human1_array.append(pos1)
-                    # np.savetxt("org1.txt", human1_array, delimiter=",")
+                    human1_array.append(pos1)
+                    np.savetxt("org1.txt", human1_array, delimiter=",")
                     
         
                     #add position to array and transform:
@@ -227,6 +226,20 @@ class predict:
                     
                     filter_estimator1 = FilterEstimator(transform_array1, steps)
                     predictions_array1, error1= filter_estimator1.enkf_caller()
+                    
+                    #for evaluation:
+                    filter_estimator11 = FilterEstimator(transform_array2, steps)
+                    predictions_array122, error12= filter_estimator11.kf_caller()
+                    
+                    filter_estimator12 = FilterEstimator(transform_array2, steps)
+                    predictions_array123, error13= filter_estimator12.ekf_caller()
+                    
+                    filter_estimator13 = FilterEstimator(transform_array2, steps)
+                    predictions_array124, error14= filter_estimator13.ukf_caller()
+                    
+                    filter_estimator14 = FilterEstimator(transform_array2, steps)
+                    predictions_array125, error15= filter_estimator14.enkf_caller()
+                    
                     
                 
                     b = 0
@@ -259,8 +272,8 @@ class predict:
                     
                     #get x,z position cordinates:
                     pos2 = [meanx2,meanz2,0.0] 
-                    # human2_array.append(pos2)
-                    # np.savetxt("org2.txt", human2_array, delimiter=",")
+                    human2_array.append(pos2)
+                    np.savetxt("org2.txt", human2_array, delimiter=",")
                     
                     # add positions to array and transform :
                     if len(transform_array2)<15:
@@ -288,8 +301,22 @@ class predict:
                     marker.publish_human_marker(name = "human2", cord_x = meanx1, cord_y = 0.0, cord_z = meanz1)
                      
                     filter_estimator2 = FilterEstimator(transform_array2, steps)
-                    # filter_estimator.pred(filter_type)
                     predictions_array2, error2= filter_estimator2.kf_caller()
+                    
+                    
+                    #for evaluation:
+                    filter_estimator21 = FilterEstimator(transform_array2, steps)
+                    predictions_array21, error21= filter_estimator21.kf_caller()
+                    
+                    filter_estimator22 = FilterEstimator(transform_array2, steps)
+                    predictions_array22, error22= filter_estimator22.ekf_caller()
+                    
+                    filter_estimator23 = FilterEstimator(transform_array2, steps)
+                    predictions_array23, error23= filter_estimator23.ukf_caller()
+                    
+                    filter_estimator24 = FilterEstimator(transform_array2, steps)
+                    predictions_array24, error24= filter_estimator24.enkf_caller()
+                    
                     
                     a = 0
                     for pt in range(len(predictions_array2)):  
