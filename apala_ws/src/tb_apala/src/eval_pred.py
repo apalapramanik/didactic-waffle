@@ -169,7 +169,7 @@ class FilterEstimator:
         for i in range(self.steps):
             predicted_x, predicted_y = kf_estimator.predict_correct(predicted_x, predicted_y)
             self.predictions_array.append([predicted_x, predicted_y])
-            print(f"Point {i + 1}: (x, y) = ({predicted_x}, {predicted_y})")
+            # print(f"Point {i + 1}: (x, y) = ({predicted_x}, {predicted_y})")
         # print("hereee")
         return self.predictions_array, error
  
