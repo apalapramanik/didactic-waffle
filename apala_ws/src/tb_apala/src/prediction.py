@@ -196,8 +196,8 @@ class predict:
                     
                     #get x,z position cordinates for kf:
                     pos1 = [meanx1,meanz1, 0.0] #check x, y, z order
-                    human1_array.append(pos1)
-                    np.savetxt("org1.txt", human1_array, delimiter=",")
+                    # human1_array.append(pos1)
+                    # np.savetxt("org1.txt", human1_array, delimiter=",")
                     
         
                     #add position to array and transform:
@@ -226,19 +226,20 @@ class predict:
                     
                     filter_estimator1 = FilterEstimator(transform_array1, steps)
                     predictions_array1, error1= filter_estimator1.enkf_caller()
+                    rospy.loginfo("Prediction done!")
                     
-                    #for evaluation:
-                    filter_estimator11 = FilterEstimator(transform_array2, steps)
-                    predictions_array122, error12= filter_estimator11.kf_caller()
+                    # for evaluation:
+                    # filter_estimator11 = FilterEstimator(transform_array2, steps)
+                    # predictions_array122, error12= filter_estimator11.kf_caller()
                     
-                    filter_estimator12 = FilterEstimator(transform_array2, steps)
-                    predictions_array123, error13= filter_estimator12.ekf_caller()
+                    # filter_estimator12 = FilterEstimator(transform_array2, steps)
+                    # predictions_array123, error13= filter_estimator12.ekf_caller()
                     
-                    filter_estimator13 = FilterEstimator(transform_array2, steps)
-                    predictions_array124, error14= filter_estimator13.ukf_caller()
+                    # filter_estimator13 = FilterEstimator(transform_array2, steps)
+                    # predictions_array124, error14= filter_estimator13.ukf_caller()
                     
-                    filter_estimator14 = FilterEstimator(transform_array2, steps)
-                    predictions_array125, error15= filter_estimator14.enkf_caller()
+                    # filter_estimator14 = FilterEstimator(transform_array2, steps)
+                    # predictions_array125, error15= filter_estimator14.enkf_caller()
                     
                     
                 
