@@ -27,13 +27,7 @@ import struct
 from visualization_msgs.msg import Marker
 from marker_publisher import marker
 from eval_pred import FilterEstimator
-
-
-
-
-
-# import ros_numpy
-
+from std_msgs.msg import Float32MultiArray
 from cv2 import HuMoments
 import rospy
 from array import array
@@ -72,8 +66,11 @@ class predict:
         self.pose_human1 = rospy.Publisher("position_h1", position,queue_size=1)
         self.pose_human2 = rospy.Publisher("position_h2", position,queue_size=1)
         
-        self.pred_human1 = rospy.Publisher("prediction_h1", position,queue_size=1)
-        self.pred_human2 = rospy.Publisher("prediction_h2", position,queue_size=1)
+        # self.pred_human1 = rospy.Publisher("prediction_h1", position,queue_size=1)
+        # self.pred_human2 = rospy.Publisher("prediction_h2", position,queue_size=1)
+        
+        self.pred1_array = rospy.Publisher("pred1_array",Float32MultiArray,queue_size=10)
+        self.pred2_array = rospy.Publisher("pred2_array",Float32MultiArray,queue_size=10)
         
         self.flag = "no"
         
@@ -146,21 +143,17 @@ class predict:
     def cloud_callback(self, data):
         
         position_msg1 = position()
-        # prediction_msg1 = position()
+        pred1_array_msg = Float32MultiArray()   
         position_msg2 = position()
-        # prediction_msg2 = position()
-        # position_msg3 = position()
-        # prediction_msg3 = position()
+        pred2_array_msg = Float32MultiArray()
+ 
           
             
         if self.flag == 'yes':
             
             #convert point cloud to numpy array:
-            # pcl_np = ros_numpy.point_cloud2.pointcloud2_to_xyz_array(data, remove_nans=False) 
             pcl_np = pointcloud2_to_array(data)
-            # print(pcl_np.shape)
             
-        
             #create a 2D array out of this pcl_np without the y values which are 0 after projection
             xzarray = []
             height, width = pcl_np.shape
@@ -174,16 +167,17 @@ class predict:
                     z_values.append(z)
                     value = [x,z]
                     xzarray.append(value)
-                   
-            
-            # find mean and covariance for the XZ array:
+                
             xz_np_array = np.array(xzarray)
-            # print(xz_np_array.shape)
-            # mean2D = xz_np_array.mean(axis=1)
-            # cov_xz = np.cov(xz_np_array)      
+    
             
-            # compute DBSCAN - change eps and min_samples as required, eps: min distance between points
-            # learn more from - https://scikit-learn.org/stable/modules/generated/sklearn.cluster.DBSCAN.html
+            ''' 
+            compute DBSCAN - change eps and min_samples as required,
+            eps: min distance between points
+            learn more from - 
+            https://scikit-learn.org/stable/modules/generated/sklearn.cluster.DBSCAN.html 
+            
+            '''
             
             #start db scan:
             DBSCAN_cluster = DBSCAN(eps=0.5, min_samples=30).fit(xz_np_array) #0.5, 30
@@ -193,8 +187,7 @@ class predict:
             rospy.loginfo("Clustered point cloud")
             
             
-             # useful cluster has human with label 0, might change if more humans are added
-            # x and y are points needed for plotting       
+             
             useful_cluster1 = []
             useful_cluster2 = []
             # useful_cluster3 = []
@@ -220,7 +213,6 @@ class predict:
                     
                     #get x,z position cordinates for kf:
                     pos1 = [meanx1,meanz1,0.0] #check x, y, z order
-                    # pos1 = [meanx1,meanz1]
                     # human1_array.append(pos1)
                     # np.savetxt("org1.txt", human1_array, delimiter=",")
                     
@@ -257,9 +249,19 @@ class predict:
                     for pt in range(len(predictions_array1)):
                         point = predictions_array1[pt]
                         marker.publish_prediction_marker(name = "pred_human2", cord_x= point[0], cord_y=0.0, cord_z= point[1])
-                    
-            #         print("prediction error:", error)
-                
+                        
+                     
+                    pred1_distance_array = []
+
+
+                    for x in predictions_array1:
+                        pred1_distance = ((x[0]**2 + x[1]**2)**0.5)
+                        pred1_distance_array.append(pred1_distance)
+                   
+                    pred1_array_msg.data = pred1_distance_array
+                    self.pred1_array.publish(pred1_array_msg)   
+                            
+         
                 if labels[i] == 1 :
                     useful_cluster2.append(components[i])
                     point2 = components[i] 
@@ -307,7 +309,15 @@ class predict:
                     for pt in range(len(predictions_array2)):
                         marker.publish_prediction_marker(name = "pred_human2", cord_x= predictions_array2[pt][0], cord_y=0.0, cord_z= predictions_array2[pt][1])
                     
-                    # print("prediction error:", error)
+                    pred2_distance_array = []
+
+
+                    for y in predictions_array2:
+                        pred2_distance = ((y[0]**2 + y[1]**2)**0.5)
+                        pred2_distance_array.append(pred2_distance)
+                   
+                    pred2_array_msg.data = pred2_distance_array
+                    self.pred2_array.publish(pred2_array_msg)   
                     
                 rospy.loginfo("Prediction done!")
             
@@ -356,211 +366,6 @@ if __name__ == '__main__':
     main()   
     
 
-# class marker:
-#     def __init__(self):
-#         pass
-    
-#     def publish_human_marker(name, cord_x, cord_y, cord_z):
-        
-#         human_marker = rospy.Publisher(name, Marker, queue_size=0)
-#         prediction_marker_cube = Marker()
-    
-        
-#         prediction_marker_cube.header.stamp = rospy.Time.now()
-#         prediction_marker_cube.header.frame_id = "camera_rgb_optical_frame"
-#         prediction_marker_cube.ns = "basic_shapes_1"
-#         prediction_marker_cube.id = 1
-#         prediction_marker_cube.type = 1
-#         prediction_marker_cube.pose.position.x = cord_x 
-#         prediction_marker_cube.pose.position.y = cord_y
-#         prediction_marker_cube.pose.position.z = cord_z 
-#         prediction_marker_cube.pose.orientation.x = 1.0
-#         prediction_marker_cube.pose.orientation.y =  1.0
-#         prediction_marker_cube.pose.orientation.z = 0.0
-#         prediction_marker_cube.pose.orientation.w = 0.0
-#         prediction_marker_cube.scale.x = 0.7
-#         prediction_marker_cube.scale.y = 0.7
-#         prediction_marker_cube.scale.z = 0.7
-#         prediction_marker_cube.color.a = 1.0
-#         prediction_marker_cube.color.r = 1.0
-#         prediction_marker_cube.color.g = 0.0
-#         prediction_marker_cube.color.b = 0.0
-        
-#         #publish marker at current mean position of human:
-#         human_marker.publish(prediction_marker_cube)
-        
-#     def publish_prediction_marker(name, cord_x, cord_y, cord_z):
-        
-#         prediction_marker = rospy.Publisher(name, Marker, queue_size=0)
-#         pred_marker_cube = Marker()
-        
-#         pred_marker_cube.header.stamp = rospy.Time.now()
-#         pred_marker_cube.header.frame_id = "camera_rgb_optical_frame"
-#         pred_marker_cube.ns = "basic_shapes_1"
-#         pred_marker_cube.id = 1
-#         pred_marker_cube.type = 1
-#         pred_marker_cube.pose.position.x = cord_x 
-#         pred_marker_cube.pose.position.y = cord_y
-#         pred_marker_cube.pose.position.z = cord_z 
-#         pred_marker_cube.pose.orientation.x = 1.0
-#         pred_marker_cube.pose.orientation.y =  1.0
-#         pred_marker_cube.pose.orientation.z = 0.0
-#         pred_marker_cube.pose.orientation.w = 0.0
-#         pred_marker_cube.scale.x = 0.7
-#         pred_marker_cube.scale.y = 0.7
-#         pred_marker_cube.scale.z = 0.7
-#         pred_marker_cube.color.a = 1.0
-#         pred_marker_cube.color.r = 0.0
-#         pred_marker_cube.color.g = 1.0
-#         pred_marker_cube.color.b = 0.0
-        
-#         #publish marker at predicted positions of human:
-#         prediction_marker.publish( pred_marker_cube)
-        
-# class BaseFilter:
-#     def __init__(self):
-#         pass
-
-#     def predict_correct(self, x, y):
-#         pass
-    
-    
-# class KalmanFilterEstimator(BaseFilter):
-#     def __init__(self):
-#         # Initialize Kalman filter parameters
-#         self.kalman = cv2.KalmanFilter(4, 2)  # 4 states (x, y, vx, vy), 2 measurements (x, y)
-#         self.kalman.measurementMatrix = np.array([[1, 0, 0, 0], [0, 1, 0, 0]], np.float32)
-#         self.kalman.transitionMatrix = np.array([[1, 0, 1, 0], [0, 1, 0, 1], [0, 0, 1, 0], [0, 0, 0, 1]], np.float32)
-
-#     def predict_correct(self, x, y):
-#         # Predict the next state
-#         predicted_state = self.kalman.predict()
-
-#         # Update the state based on new measurements
-#         measurement = np.array([[x], [y]], np.float32)
-#         self.kalman.correct(measurement)
-
-#         # Access the updated state
-#         updated_state = self.kalman.statePost
-#         predicted_x, predicted_y = int(updated_state[0, 0]), int(updated_state[1, 0])
-
-#         return predicted_x, predicted_y
-
-# class ExtendedKalmanFilterEstimator(BaseFilter):
-#     def __init__(self):
-#         # Define the state transition function (linear motion model)
-#         self.dt = 1.0  # Time step
-#         self.ekf = ExtendedKalmanFilter(dim_x=4, dim_z=2)  # 4 states (x, y, vx, vy), 2 measurements (x, y)
-#         self.ekf.x = np.array([50, 50, 0, 0])  # Initial state [x, y, vx, vy]
-#         self.ekf.F = np.array([[1, 0, self.dt, 0],
-#                               [0, 1, 0, self.dt],
-#                               [0, 0, 1, 0],
-#                               [0, 0, 0, 1]])  # State transition matrix
-
-#     def state_transition_function(self, x):
-#         # State transition function for the Extended Kalman Filter
-#         # Assume constant velocity model with 4 states (x, y, vx, vy)
-#         F = np.array([[1, 0, self.dt, 0],
-#                       [0, 1, 0, self.dt],
-#                       [0, 0, 1, 0],
-#                       [0, 0, 0, 1]])
-#         return np.dot(F, x)
-
-#     def measurement_function(self, x):
-#         # Measurement function for the Extended Kalman Filter (linear measurement model)
-#         return np.array([x[0], x[1]])  # Measurement is just X and Y
-
-#     def measurement_jacobian(self, x):
-#         # Jacobian of the measurement function for the Extended Kalman Filter
-#         return np.array([[1, 0, 0, 0],
-#                          [0, 1, 0, 0]])  # Measurement matrix for both X and Y
-
-#     def predict_correct(self, x, y):
-#         # Predict the next state
-#         self.ekf.predict()
-
-#         # Update with the new measurements (X and Y)
-#         z = np.array([x, y])
-#         HJacobian = self.measurement_jacobian(self.ekf.x)
-#         Hx = self.measurement_function(self.ekf.x)
-#         self.ekf.update(z, HJacobian=self.measurement_jacobian, Hx=self.measurement_function)
-
-#         # Access the updated state
-#         predicted_x, predicted_y = self.ekf.x[0], self.ekf.x[1]
-#         predicted_vx, predicted_vy = self.ekf.x[2], self.ekf.x[3]
-
-#         return predicted_x, predicted_y
-
-# class UnscentedKalmanFilterEstimator(BaseFilter):
-#     def __init__(self):
-#         # Define the state transition function (constant velocity model)
-#         self.dt = 1.0  # Time step
-#         self.ukf = None  # Initialize UKF instance
-
-#     def state_transition_function(self, x, dt):  # Add dt as an argument
-#         # State transition function for the Unscented Kalman Filter
-#         F = np.array([[1, 0, dt, 0],
-#                       [0, 1, 0, dt],
-#                       [0, 0, 1, 0],
-#                       [0, 0, 0, 1]])
-#         return np.dot(F, x)
-
-#     def measurement_function(self, x):
-#         # Measurement function for the Unscented Kalman Filter (linear measurement model for both X and Y)
-#         H = np.array([[1, 0, 0, 0],
-#                       [0, 1, 0, 0]])  # Measurement matrix for both X and Y
-#         return np.dot(H, x)
-
-#     def predict_correct(self, x, y):
-#         # Predict the next state
-#         self.ukf.predict()
-
-#         # Update with the new measurements (X and Y)
-#         z = np.array([x, y])
-#         self.ukf.update(z)
-
-#         # Access the updated state
-#         predicted_x, predicted_y = self.ukf.x[0], self.ukf.x[1]
-#         predicted_vx, predicted_vy = self.ukf.x[2], self.ukf.x[3]
-
-#         return predicted_x, predicted_y
- 
-# class EnsembleKalmanFilterEstimator(BaseFilter):
-#     def __init__(self):
-#         # Define the state transition function (constant velocity model)
-#         self.dt = 1.0  # Time step
-#         self.enkf = None  # Initialize EnKF instance
-
-#     def state_transition_function(self, x, dt):
-#         # State transition function for the Ensemble Kalman Filter
-#         F = np.array([[1, 0, dt, 0],
-#                       [0, 1, 0, dt],
-#                       [0, 0, 1, 0],
-#                       [0, 0, 0, 1]])
-#         return np.dot(F, x)
-
-#     def measurement_function(self, x):
-#         # Measurement function for the Ensemble Kalman Filter (linear measurement model for both X and Y)
-#         H = np.array([[1, 0, 0, 0],
-#                       [0, 1, 0, 0]])  # Measurement matrix for both X and Y
-#         return np.dot(H, x)
-
-#     def predict_correct(self, x, y):
-#         # Predict the next state
-#         self.enkf.predict()
-
-#         # Update with the new measurements (X and Y)
-#         z = np.array([x, y])
-#         self.enkf.update(z)
-
-#         # Access the updated state
-#         predicted_x, predicted_y = self.enkf.x[0], self.enkf.x[1]
-#         predicted_vx, predicted_vy = self.enkf.x[2], self.enkf.x[3]
-
-#         return predicted_x, predicted_y
-
-
-# class FilterEstimator:
     def __init__(self, prediction_points, steps):
         self.prediction_points = prediction_points
         self.steps = steps
