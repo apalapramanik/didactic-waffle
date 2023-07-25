@@ -6,8 +6,8 @@ import actionlib
 import math
 from actionlib_msgs.msg import *
 from geometry_msgs.msg import Pose, Point, Quaternion
-from testrobots.msg import position
-from testrobots.msg import distance
+from tb_apala.msg import position
+from tb_apala.msg import distance
 from nav_msgs.msg import Odometry
 from move_base_msgs.msg import MoveBaseActionFeedback, MoveBaseAction
 from timeit import default_timer as timer
@@ -19,18 +19,18 @@ class move_forward():
         
         self.x_cord1 = nan
         self.x_cord2 = nan
-        self.x_cord3 = nan
+        # self.x_cord3 = nan
         self.dist1 = nan
         self.dist2 = nan
-        self.dist3 = nan
+        # self.dist3 = nan
 
         rospy.Subscriber("position_h1",position,self.position1_callback,queue_size=1)
         rospy.Subscriber("position_h2",position,self.position2_callback,queue_size=1)
-        rospy.Subscriber("position_h3",position,self.position3_callback,queue_size=1)
+        # rospy.Subscriber("position_h3",position,self.position3_callback,queue_size=1)
         rospy.Subscriber("move_base/feedback",MoveBaseActionFeedback,self.feed_cb,queue_size=1)
         self.distance_human1 = rospy.Publisher("distance_from_human1", distance,queue_size=1)
         self.distance_human2 = rospy.Publisher("distance_from_human2", distance,queue_size=1)
-        self.distance_human3 = rospy.Publisher("distance_from_human3", distance,queue_size=1)
+        # self.distance_human3 = rospy.Publisher("distance_from_human3", distance,queue_size=1)
         self.goal_sent = False        
         self.move_base = actionlib.SimpleActionClient("move_base", MoveBaseAction)
         rospy.loginfo("Wait for the action server to come up")
@@ -47,10 +47,10 @@ class move_forward():
         self.z_cord2 = data.z
         self.y_cord2 = 0.0
         
-    def position3_callback(self,data): 
-        self.x_cord3 = data.x
-        self.z_cord3 = data.z
-        self.y_cord3 = 0.0
+    # def position3_callback(self,data): 
+    #     self.x_cord3 = data.x
+    #     self.z_cord3 = data.z
+    #     self.y_cord3 = 0.0
     
     def to_goal(self, pos, quat, or_x,or_y,or_z):
         
@@ -111,22 +111,22 @@ class move_forward():
             distance_from_human2.distance = self.dist2
             self.distance_human2.publish(distance_from_human2)
             
-        if isnan(self.x_cord3) :
-            distance_from_human3 = distance()
-            print("NO HUMAN 3 ON CAMERA, CAN'T CALCULATE DISTANCE")
-            distance_from_human3.distance = 1.26
-            self.distance_human3.publish(distance_from_human1)
+        # if isnan(self.x_cord3) :
+        #     distance_from_human3 = distance()
+        #     print("NO HUMAN 3 ON CAMERA, CAN'T CALCULATE DISTANCE")
+        #     distance_from_human3.distance = 1.26
+        #     self.distance_human3.publish(distance_from_human1)
        
-        else: 
+        # else: 
             
-            distance_from_human3 = distance()
-            self.dist3 = math.sqrt((self.x_cord3)**2 + (self.y_cord3)**2 + (self.z_cord3)**2)
-            print("dist 3:",self.dist3)
-            distance_from_human3.distance = self.dist3
-            self.distance_human3.publish(distance_from_human3)
+        #     distance_from_human3 = distance()
+        #     self.dist3 = math.sqrt((self.x_cord3)**2 + (self.y_cord3)**2 + (self.z_cord3)**2)
+        #     print("dist 3:",self.dist3)
+        #     distance_from_human3.distance = self.dist3
+        #     self.distance_human3.publish(distance_from_human3)
             
             
-        if(self.dist1<1) or (self.dist2<1) or (self.dist3<1):
+        if(self.dist1<1) or (self.dist2<1) : #or (self.dist3<1):
             self.stop()
             rospy.loginfo("CANCEL CURRRENT GOAL")
                 

@@ -8,21 +8,13 @@
 
 
 import numpy as np
-import math
 import rospy
 from sensor_msgs.msg import PointCloud2 as pc2
 from std_msgs.msg import String
 import quaternion # https://github.com/moble/quaternion
 from nav_msgs.msg import Odometry
-import cv2
 import numpy as np
 from tb_apala.msg import position
-from filterpy.monte_carlo import systematic_resample
-from filterpy.kalman import ExtendedKalmanFilter
-from filterpy.kalman import UnscentedKalmanFilter
-from filterpy.kalman import MerweScaledSigmaPoints
-from filterpy.kalman import EnsembleKalmanFilter
-import pandas as pd
 import struct
 from visualization_msgs.msg import Marker
 from marker_publisher import marker
@@ -30,16 +22,11 @@ from eval_pred import FilterEstimator
 from std_msgs.msg import Float32MultiArray
 from cv2 import HuMoments
 import rospy
-from array import array
 from cmath import isnan, nan, sqrt
 from os import device_encoding
 from numpy import NaN, cov, poly
 from sklearn.cluster import DBSCAN
 
-import matplotlib.pyplot as plt
-from matplotlib.patches import Polygon
-from matplotlib.collections import PatchCollection
-import seaborn as sns
 
 
 
@@ -53,6 +40,9 @@ trans_array = []
 transform_array1 = []
 transform_array2 = []
 transform_array3 = []
+
+human1_array = []
+human2_array = []
 
 
 class predict:
@@ -213,8 +203,8 @@ class predict:
                     
                     #get x,z position cordinates for kf:
                     pos1 = [meanx1,meanz1,0.0] #check x, y, z order
-                    # human1_array.append(pos1)
-                    # np.savetxt("org1.txt", human1_array, delimiter=",")
+                    human1_array.append(pos1)
+                    np.savetxt("org1.txt", human1_array, delimiter=",")
                     
         
                     #add position to array and transform:
@@ -274,8 +264,8 @@ class predict:
                     
                     #get x,z position cordinates:
                     pos2 = [meanx2,meanz2,0.0] 
-                    # human2_array.append(pos2)
-                    # np.savetxt("org2.txt", human2_array, delimiter=",")
+                    human2_array.append(pos2)
+                    np.savetxt("org2.txt", human2_array, delimiter=",")
                     
                     # add positions to array and transform :
                     if len(transform_array2)<15:
@@ -366,141 +356,3 @@ if __name__ == '__main__':
     main()   
     
 
-    def __init__(self, prediction_points, steps):
-        self.prediction_points = prediction_points
-        self.steps = steps
-        self.predictions_array = []
-
-    def kf_caller(self):
-        kf_estimator = KalmanFilterEstimator()
-        for x, y in self.prediction_points:
-            predicted_x, predicted_y = kf_estimator.predict_correct(x, y)
-            # print(f"Initial Point (x, y) = ({x}, {y})")
-            # print(f"KF Predicted Point:", predicted_x, predicted_y)
-        error = self.euclidean_distance(x, y, predicted_x, predicted_y)
-        # print("error:", error)
-        for i in range(steps):
-            predicted_x, predicted_y = kf_estimator.predict_correct(predicted_x, predicted_y)
-            self.predictions_array.append(predicted_x, predicted_y)
-        #     print(f"Point {i + 1}: (x, y) = ({predicted_x}, {predicted_y})")
-        # print("\n")
-        return self.predictions_array, error
- 
-    def ekf_caller(self):  
-    
-        # Create ExtendedKalmanFilterEstimator instance
-        ekf_estimator = ExtendedKalmanFilterEstimator()
-
-        # Loop for each point in the input array
-        for x, y in self.prediction_points:
-            # print(f"Point: ({x}, {y})")
-
-            # Extended Kalman Filter
-            ekf_predicted_x, ekf_predicted_y = ekf_estimator.predict_correct(x, y)
-            # print(f"EKF Predicted state after correction: (x, y) = ({ekf_predicted_x}, {ekf_predicted_y})")
-        error = self.euclidean_distance(x, y, ekf_predicted_x, ekf_predicted_y)
-        # print("error:", error)
-            # Generate 5 more predictions using the Extended Kalman Filter
-        for _ in range(steps):
-            ekf_predicted_x, ekf_predicted_y = ekf_estimator.predict_correct(ekf_predicted_x, ekf_predicted_y)
-            self.predictions_array.append(ekf_predicted_x, ekf_predicted_y)
-            # print(f"Additional EKF Prediction: (x, y) = ({ekf_predicted_x}, {ekf_predicted_y})")
-        return self.predictions_array, error
-        
-    def ukf_caller(self):
-    
-        
-        # Create UnscentedKalmanFilterEstimator instance
-        ukf_estimator = UnscentedKalmanFilterEstimator()
-
-        # Initialize UKF with sigma points
-        sigma = 0.1
-        points = MerweScaledSigmaPoints(n=4, alpha=sigma, beta=2, kappa=0)
-
-        # Define process noise covariance (Q) and measurement noise covariance (R)
-        Q = np.diag([0.01, 0.01, 0.01, 0.01])  # Process noise covariance
-        R = np.diag([0.1, 0.1])  # Measurement noise covariance
-
-        # Initialize UKF
-        ukf_estimator.ukf = UnscentedKalmanFilter(dim_x=4, dim_z=2, dt=1.0,
-                                                hx=ukf_estimator.measurement_function,
-                                                fx=ukf_estimator.state_transition_function,
-                                                points=points)
-        ukf_estimator.ukf.x = np.array([self.prediction_points[0][0], self.prediction_points[0][1], 0, 0])  # Initial state [x, y, vx, vy]
-        ukf_estimator.ukf.Q = Q
-        ukf_estimator.ukf.R = R
-
-        # Loop for each point in the input array
-        for x, y in self.prediction_points:
-            # print(f"Point: ({x}, {y})")
-            #Unscented Kalman Filter
-            ukf_predicted_x, ukf_predicted_y = ukf_estimator.predict_correct(x, y)
-            # print(f"UKF Predicted state after correction: (x, y) = ({ukf_predicted_x}, {ukf_predicted_y})")
-        error = self.euclidean_distance(x, y, ukf_predicted_x, ukf_predicted_y)
-        # print("error:", error)
-        # Generate 5 more predictions using the Unscented Kalman Filter
-        for _ in range(steps):
-            ukf_predicted_x, ukf_predicted_y = ukf_estimator.predict_correct(ukf_predicted_x, ukf_predicted_y)
-            self.predictions_array.append( ukf_predicted_x, ukf_predicted_y)
-            # print(f"Additional UKF Prediction: (x, y) = ({ukf_predicted_x}, {ukf_predicted_y})")
-        return self.predictions_array, error
-    
-    
-    def enkf_caller(self):
-        # Create EnsembleKalmanFilterEstimator instance
-        enkf_estimator = EnsembleKalmanFilterEstimator()
-
-        # Initialize EnKF
-        state_size = 4  # State size [x, y, vx, vy]
-        measurement_size = 2  # Measurement size (X and Y coordinates)
-        ensemble_size = 200  # Number of ensemble members
-
-        # Set the initial state and covariance
-        initial_state = np.array([self.prediction_points[0][0], self.prediction_points[0][1], 0, 0])
-        initial_covariance = np.eye(state_size) * 0.1
-
-        enkf_estimator.enkf = EnsembleKalmanFilter(x=initial_state, P=initial_covariance, dim_z=measurement_size,
-                                                dt=1.0, N=ensemble_size, hx=enkf_estimator.measurement_function,
-                                                fx=enkf_estimator.state_transition_function)
-
-        # Define process noise covariance (Q) and measurement noise covariance (R)
-        enkf_estimator.enkf.Q = np.diag([0.01, 0.01, 0.01, 0.01])  # Process noise covariance
-        enkf_estimator.enkf.R = np.diag([0.1, 0.1])  # Measurement noise covariance
-
-        # Loop for each point in the input array
-        for x, y in self.prediction_points:
-            # print(f"Point: ({x}, {y})")
-            # Ensemble Kalman Filter
-            enkf_predicted_x, enkf_predicted_y = enkf_estimator.predict_correct(x, y)
-            # print(f"EnKF Predicted state after correction: (x, y) = ({enkf_predicted_x}, {enkf_predicted_y})")
-        error = self.euclidean_distance(x, y, enkf_predicted_x, enkf_predicted_y)
-        # print("error:", error)
-        # Generate 5 more predictions using the Ensemble Kalman Filter
-        for _ in range(steps):
-            enkf_predicted_x, enkf_predicted_y = enkf_estimator.predict_correct(enkf_predicted_x, enkf_predicted_y)
-            self.predictions_array.append( enkf_predicted_x, enkf_predicted_y)
-            # print(f"Additional EnKF Prediction: (x, y) = ({enkf_predicted_x}, {enkf_predicted_y})")
-        return self.predictions_array, error
-        
-    def euclidean_distance(self, x1, y1, x2, y2):
-        return np.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
-       
-    def pred(self, filter_type):
-        if filter_type == "kf":
-            print("Kalman Filter:")
-            self.kf_caller()
-
-        elif filter_type == "ekf":
-            print("\nExtended Kalman Filter:")
-            self.ekf_caller()
-
-        elif filter_type == "ukf":
-            print("\nUnscented Kalman Filter:")
-            self.ukf_caller()
-
-        elif filter_type == "enkf":
-            print("\nEnsemble Kalman Filter:")
-            self.enkf_caller()
-
-        else:
-            print("Invalid filter type!")
