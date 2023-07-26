@@ -154,64 +154,83 @@ if __name__ == '__main__':
         
         """
        
-        orientation = [-0.001809, 0.002350, 3.101696]
-        position = {'x': 7.713411, 'y' : 0.519357} 
-        quaternion = {'r1' : 0.001, 'r2' : 0.000, 'r3' : -0.481, 'r4' : 0.877} #run command : rosrun tf tf_echo /map /base_link
-        rospy.loginfo("Go to (%s, %s) pose", position['x'], position['y'])
-        start = timer()
-        success = navigator.to_goal(position, quaternion, orientation[0],orientation[1], orientation[2])
+        orientation1 = [0.158272, 0.003596, 2.648034]
+        position1 = {'x': 8.000262, 'y' : 0.158272} 
+        quaternion1 = {'r1' :-0.000, 'r2' : -0.000, 'r3' : 0.970, 'r4' : 0.245} #run command : rosrun tf tf_echo /map /base_link
+        
         
         """
         Location 2: 
         
         """
-        orientation = [-0.001809, 0.002350, 3.101696]
-        position = {'x': 7.713411, 'y' : 0.519357} 
-        quaternion = {'r1' : 0.001, 'r2' : 0.000, 'r3' : -0.481, 'r4' : 0.877} #run command : rosrun tf tf_echo /map /base_link
-        rospy.loginfo("Go to (%s, %s) pose", position['x'], position['y'])
-        start = timer()
-        success = navigator.to_goal(position, quaternion, orientation[0],orientation[1], orientation[2])
+        orientation2 = [-0.000063, 0.003518, -0.107634]
+        position2 = {'x': 9.542971, 'y' : -4.489363} 
+        quaternion2 = {'r1' : 0.000, 'r2' : 0.001, 'r3' : -0.109, 'r4' : 0.994} #run command : rosrun tf tf_echo /map /base_link
+     
         
         """
         Location 3: 
         
         """
         
-        orientation = [-0.001809, 0.002350, 3.101696]
-        position = {'x': 7.713411, 'y' : 0.519357} 
-        quaternion = {'r1' : 0.001, 'r2' : 0.000, 'r3' : -0.481, 'r4' : 0.877} #run command : rosrun tf tf_echo /map /base_link
-        rospy.loginfo("Go to (%s, %s) pose", position['x'], position['y'])
-        start = timer()
-        success = navigator.to_goal(position, quaternion, orientation[0],orientation[1], orientation[2])
+        orientation3 = [-0.000148, 0.003514, 1.100914]
+        position3 = {'x': 15.323753, 'y' : 0.079101} 
+        quaternion3 = {'r1' : -0.000, 'r2' : 0.000, 'r3' : 0.508, 'r4' : 0.861} #run command : rosrun tf tf_echo /map /base_link
         
         """
         Location 4: 
         
         """
         
-        orientation = [-0.001809, 0.002350, 3.101696]
-        position = {'x': 7.713411, 'y' : 0.519357} 
-        quaternion = {'r1' : 0.001, 'r2' : 0.000, 'r3' : -0.481, 'r4' : 0.877} #run command : rosrun tf tf_echo /map /base_link
+        orientation4 = [-0.000155, 0.003464, -1.043818]
+        position4 = {'x': 17.559071, 'y' :-5.762231} 
+        quaternion4 = {'r1' : 0.000, 'r2' : 0.000, 'r3' : -0.480, 'r4' : 0.877} #run command : rosrun tf tf_echo /map /base_link
+        
+        
+        """        
+        Location 5 :
+        
+        """
+        
+        orientation4 = [-0.000618, 0.002056, 3.040110]
+        position4 = {'x': 12.737008, 'y' :-5.354957} 
+        quaternion4 = {'r1' : 0.001, 'r2' : -0.001, 'r3' : 0.999, 'r4' : 0.053} #run command : rosrun tf tf_echo /map /base_link
+        
+        
+        
+        """        
+        Location 6:
+        
+        """
+        
+        orientation4 = [0.000765, 0.003132, 2.965275]
+        position4 = {'x': 7.478013, 'y' :-6.061655} 
+        quaternion4 = {'r1' : -0.000, 'r2' : 0.000, 'r3' : 0.997, 'r4' : 0.079} #run command : rosrun tf tf_echo /map /base_link
+        
+        
+        
+        
         rospy.loginfo("Go to (%s, %s) pose", position['x'], position['y'])
         start = timer()
-        success = navigator.to_goal(position, quaternion, orientation[0],orientation[1], orientation[2])
-        
+        success = navigator.to_goal(position1, quaternion1, orientation1[0],orientation1[1], orientation1[2])
         
         again = 0
         
-        while(again<1):
+        while(again<3):
             if success:
                 rospy.loginfo("Destination reached!")
-                again = 1
+                again = again +1 
             else:
                 rospy.loginfo("SENDING GOAL AGAIN")
                 time.sleep(0.5)
-                again = 0
-                success = navigator.to_goal(position, quaternion, orientation[0],orientation[1], orientation[2])
+                success = navigator.to_goal(position1, quaternion1, orientation1[0],orientation1[1], orientation1[2])
       
         
         end = timer()
-        print(timedelta(seconds=end-start)) #in seconds
+        seconds = end-start
+        print(timedelta(seconds)) #in seconds
+        with open('goal_time.txt', 'a') as file:
+            file.write(str(seconds) + '\n')
     except rospy.ROSInterruptException:
         rospy.loginfo(" Quitting")
         
