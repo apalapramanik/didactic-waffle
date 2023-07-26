@@ -175,7 +175,7 @@ class FilterEstimator:
         self.points_array = []
         self.error_array = []
         
-        for x, y in self.prediction_points:
+        for x, y,z in self.prediction_points:
             predicted_x, predicted_y = kf_estimator.predict_correct(x, y)
             # print(f"Initial Point (x, y) = ({x}, {y})")
             # print(f"KF Predicted Point:", predicted_x, predicted_y) 
@@ -185,9 +185,9 @@ class FilterEstimator:
             self.error_array.append(self.error)
             
             
-        np.savetxt("pred_kf2.txt", self.pred_array1, delimiter=",")
+        # np.savetxt("pred_kf2.txt", self.pred_array1, delimiter=",")
         # np.savetxt("org2.txt", self.points_array, delimiter=",")
-        np.savetxt("error_kf.txt", self.error_array)
+        # np.savetxt("error_kf.txt", self.error_array)
         # print("error:", error)
         for i in range(self.steps):
             predicted_x, predicted_y = kf_estimator.predict_correct(predicted_x, predicted_y)
@@ -211,7 +211,7 @@ class FilterEstimator:
         self.error = 0.0
 
         # Loop for each point in the input array
-        for x, y in self.prediction_points:
+        for x, y,z in self.prediction_points:
             # print(f"Point: ({x}, {y})")
             self.points_array.append([x,y])
             # Extended Kalman Filter
@@ -221,8 +221,8 @@ class FilterEstimator:
             self.error = self.euclidean_distance(x, y, ekf_predicted_x, ekf_predicted_y)
             self.error_array.append(self.error)
             
-        np.savetxt("error_ekf.txt", self.error_array)   
-        np.savetxt("pred_ekf2.txt", self.pred_array1, delimiter=",")
+        # np.savetxt("error_ekf.txt", self.error_array)   
+        # np.savetxt("pred_ekf2.txt", self.pred_array1, delimiter=",")
         # np.savetxt("org_ekf2.txt", self.points_array, delimiter=",")
             # Generate 5 more predictions using the Extended Kalman Filter
         for _ in range(self.steps):
@@ -264,7 +264,7 @@ class FilterEstimator:
         ukf_estimator.ukf.R = R
 
         # Loop for each point in the input array
-        for x, y in self.prediction_points:
+        for x, y,z in self.prediction_points:
             # print(f"Point: ({x}, {y})")
             self.points_array.append([x,y])
             #Unscented Kalman Filter
@@ -276,7 +276,7 @@ class FilterEstimator:
         
         np.savetxt("error_ukf.txt", self.error_array)    
         np.savetxt("pred_ukf2.txt", self.pred_array1, delimiter=",")
-        # np.savetxt("org_ukf2.txt", self.points_array, delimiter=",")
+        np.savetxt("org_ukf2.txt", self.points_array, delimiter=",")
         # print("error:", error)
         # Generate 5 more predictions using the Unscented Kalman Filter
         for _ in range(self.steps):
@@ -317,7 +317,7 @@ class FilterEstimator:
         enkf_estimator.enkf.R = np.diag([0.1, 0.1])  # Measurement noise covariance
 
         # Loop for each point in the input array
-        for x, y in self.prediction_points:
+        for x, y,z in self.prediction_points:
             # print(f"Point: ({x}, {y})")
             self.points_array.append([x,y])
             # Ensemble Kalman Filter
@@ -327,8 +327,8 @@ class FilterEstimator:
             self.error = self.euclidean_distance(x, y, enkf_predicted_x, enkf_predicted_y)
             self.error_array.append(self.error)
             
-        np.savetxt("error_enkf.txt", self.error_array)    
-        np.savetxt("pred_enkf2.txt", self.pred_array1, delimiter=",")
+        # np.savetxt("error_enkf.txt", self.error_array)    
+        # np.savetxt("pred_enkf2.txt", self.pred_array1, delimiter=",")
         # np.savetxt("org_enkf2.txt", self.points_array, delimiter=",")
         
         # print("error:", error)
@@ -365,24 +365,24 @@ class FilterEstimator:
 
 
     
-if __name__ == "__main__":
+# if __name__ == "__main__":
     
-    # prediction_points = [(50, 50), (100, 100), (150, 100), (200, 100)]
-    prediction_points = []
-    with open('org2.txt', 'r') as file:
-        for line in file:
-            x, y = map(float, line.strip().split(','))  # Split by comma and convert values to float
-            prediction_points.append((x, y))
+#     # prediction_points = [(50, 50), (100, 100), (150, 100), (200, 100)]
+#     prediction_points = []
+#     with open('org2.txt', 'r') as file:
+#         for line in file:
+#             x, y = map(float, line.strip().split(','))  # Split by comma and convert values to float
+#             prediction_points.append((x, y))
 
-    print(prediction_points)  # Optional: Print to verify the data      
-    steps = 5
+#     print(prediction_points)  # Optional: Print to verify the data      
+#     steps = 5
 
-    # Create an instance of FilterEstimator
-    filter_estimator = FilterEstimator(prediction_points, steps)
+#     # Create an instance of FilterEstimator
+#     filter_estimator = FilterEstimator(prediction_points, steps)
 
-    # Call the main function with the desired filter type
-    filter_type = "enkf"  # Change this to the desired filter type
-    filter_estimator.pred(filter_type)
+#     # Call the main function with the desired filter type
+#     filter_type = "enkf"  # Change this to the desired filter type
+#     filter_estimator.pred(filter_type)
 
 
 

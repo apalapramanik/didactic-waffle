@@ -198,7 +198,7 @@ class predict:
                     pos1 = [meanx1,meanz1, 0.0] #check x, y, z order
                     pos1b = [meanx1,meanz1]
                     human1_array.append(pos1b)
-                    np.savetxt("org1.txt", human1_array, delimiter=",")
+                    # np.savetxt("org1.txt", human1_array, delimiter=",")
                     
         
                     #add position to array and transform:
@@ -226,7 +226,7 @@ class predict:
                     marker.publish_human_marker(name = "human1", cord_x = meanx1, cord_y = 0.0, cord_z = meanz1)
                     
                     filter_estimator1 = FilterEstimator(transform_array1, steps)
-                    predictions_array1, error1= filter_estimator1.kf_caller()
+                    predictions_array1, error1= filter_estimator1.ukf_caller()
                     rospy.loginfo("Prediction done!")
                     
                     # for evaluation:
