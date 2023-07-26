@@ -8,7 +8,6 @@ from actionlib_msgs.msg import *
 from geometry_msgs.msg import Pose, Point, Quaternion
 from tb_apala.msg import position
 from tb_apala.msg import distance
-from nav_msgs.msg import Odometry
 from move_base_msgs.msg import MoveBaseActionFeedback, MoveBaseAction
 from timeit import default_timer as timer
 from datetime import timedelta
@@ -154,9 +153,9 @@ if __name__ == '__main__':
         
         """
        
-        orientation1 = [0.158272, 0.003596, 2.648034]
-        position1 = {'x': 8.000262, 'y' : 0.158272} 
-        quaternion1 = {'r1' :-0.000, 'r2' : -0.000, 'r3' : 0.970, 'r4' : 0.245} #run command : rosrun tf tf_echo /map /base_link
+        orientation1 = [-0.003284, -0.003284, 2.642751]
+        position1 = {'x': 7.972651, 'y' :0.070677} 
+        quaternion1 = {'r1' :-0.000, 'r2' : -0.000, 'r3' : 0.960, 'r4' : 0.281} #run command : rosrun tf tf_echo /map /base_link
         
         
         """
@@ -210,7 +209,7 @@ if __name__ == '__main__':
         
         
         
-        rospy.loginfo("Go to (%s, %s) pose", position['x'], position['y'])
+        rospy.loginfo("Go to (%s, %s) pose", position1['x'], position1['y'])
         start = timer()
         success = navigator.to_goal(position1, quaternion1, orientation1[0],orientation1[1], orientation1[2])
         

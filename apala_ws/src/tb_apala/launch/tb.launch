@@ -23,11 +23,11 @@
 	 
 	</group>
 
-	
+</launch>	
 
 	<!-- ALL NAVIGATION NODES GETS LAUNCHED HERE -->
 	 	
-	<group name = "navigation nodes">	 		
+	<!-- <group name = "navigation nodes">	 		
 		
 	 	<node pkg="tb_apala" name= "navigation" type="move.py"/>
 	 	
@@ -35,18 +35,17 @@
 
 	
 	 	
-	<!-- ALL MONITORING NODES GETS LAUNCHED HERE -->
+	<! ALL MONITORING NODES GETS LAUNCHED HERE -->
  	 
-	<group name = "monitoring nodes">
+	<!-- <group name = "monitoring nodes">
 	 	
 	 	<node name="monitor_plot1" pkg="rqt_plot" type="rqt_plot" args=" /eventually_dist1 /eventually_dist2  /halting_h1 /halting_h2  "/>
     	<node name="monitor_plot2" pkg="rqt_plot" type="rqt_plot" args="  /human_h1 /human_h2 "/>
 	 	
-	</group>
+	</group>  -->
 <!-- 
 	<include file="$(find cpu_monitor)/launch/cpu_monitor.launch">
     <arg name="poll_period" value="2.0"/>
   	</include>  -->
 
 
-</launch>

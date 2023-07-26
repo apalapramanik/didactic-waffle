@@ -15,10 +15,9 @@
 # import ros_numpy
 import rospy
 from geometry_msgs.msg import Twist
-from tb_apala.msg import Plot
 from std_msgs.msg import Float32
 from std_msgs.msg import Float32MultiArray
-from tb_apala.msg import MinMax
+# from tb_apala.msg import MinMax
 from std_msgs.msg import String
 
 
