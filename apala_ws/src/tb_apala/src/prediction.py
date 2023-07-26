@@ -15,7 +15,7 @@ from tb_apala.msg import position
 import struct
 from visualization_msgs.msg import Marker
 from marker_publisher import marker
-from eval_pred import FilterEstimator
+from kf_predictors import FilterEstimator
 from std_msgs.msg import Float32MultiArray
 from cv2 import HuMoments
 import rospy
@@ -196,8 +196,9 @@ class predict:
                     
                     #get x,z position cordinates for kf:
                     pos1 = [meanx1,meanz1, 0.0] #check x, y, z order
-                    # human1_array.append(pos1)
-                    # np.savetxt("org1.txt", human1_array, delimiter=",")
+                    pos1b = [meanx1,meanz1]
+                    human1_array.append(pos1b)
+                    np.savetxt("org1.txt", human1_array, delimiter=",")
                     
         
                     #add position to array and transform:
@@ -273,7 +274,8 @@ class predict:
                     
                     #get x,z position cordinates:
                     pos2 = [meanx2,meanz2,0.0] 
-                    human2_array.append(pos2)
+                    pos2b = [meanx2,meanz2] 
+                    human2_array.append(pos2b)
                     np.savetxt("org2.txt", human2_array, delimiter=",")
                     
                     # add positions to array and transform :
@@ -306,17 +308,17 @@ class predict:
                     
                     
                     #for evaluation:
-                    filter_estimator21 = FilterEstimator(transform_array2, steps)
-                    predictions_array21, error21= filter_estimator21.kf_caller()
+                    # filter_estimator21 = FilterEstimator(transform_array2, steps)
+                    # predictions_array21, error21= filter_estimator21.kf_caller()
                     
-                    filter_estimator22 = FilterEstimator(transform_array2, steps)
-                    predictions_array22, error22= filter_estimator22.ekf_caller()
+                    # filter_estimator22 = FilterEstimator(transform_array2, steps)
+                    # predictions_array22, error22= filter_estimator22.ekf_caller()
                     
-                    filter_estimator23 = FilterEstimator(transform_array2, steps)
-                    predictions_array23, error23= filter_estimator23.ukf_caller()
+                    # filter_estimator23 = FilterEstimator(transform_array2, steps)
+                    # predictions_array23, error23= filter_estimator23.ukf_caller()
                     
-                    filter_estimator24 = FilterEstimator(transform_array2, steps)
-                    predictions_array24, error24= filter_estimator24.enkf_caller()
+                    # filter_estimator24 = FilterEstimator(transform_array2, steps)
+                    # predictions_array24, error24= filter_estimator24.enkf_caller()
                     
                     
                     a = 0

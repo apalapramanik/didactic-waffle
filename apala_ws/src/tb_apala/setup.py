@@ -15,7 +15,7 @@ setup_args = generate_distutils_setup(
 
 setup_args = generate_distutils_setup(
     packages=['FilterEstimator'],
-    package_dir={'':'eval_pred'},
+    package_dir={'':'kf_predictors'},
 )
 # setup_args = generate_distutils_setup(
 #     packages=['KalmanFilterEstimator'],
