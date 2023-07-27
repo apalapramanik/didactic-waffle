@@ -7,6 +7,7 @@ from filterpy.kalman import UnscentedKalmanFilter
 from filterpy.kalman import MerweScaledSigmaPoints
 from filterpy.kalman import EnsembleKalmanFilter
 import pandas as pd
+# from marker_publisher import marker
 
 class BaseFilter:
     def __init__(self):
@@ -49,7 +50,7 @@ class KalmanFilterEstimator(BaseFilter):
 class ExtendedKalmanFilterEstimator(BaseFilter):
     def __init__(self):
         # Define the state transition function (linear motion model)
-        self.dt = 1.0  # Time step
+        self.dt = 0.25  # Time step
         self.ekf = ExtendedKalmanFilter(dim_x=4, dim_z=2)  # 4 states (x, y, vx, vy), 2 measurements (x, y)
         self.ekf.x = np.array([50, 50, 0, 0])  # Initial state [x, y, vx, vy]
         self.ekf.F = np.array([[1, 0, self.dt, 0],
@@ -94,7 +95,7 @@ class ExtendedKalmanFilterEstimator(BaseFilter):
 class UnscentedKalmanFilterEstimator(BaseFilter):
     def __init__(self):
         # Define the state transition function (constant velocity model)
-        self.dt = 0.2 # Time step
+        self.dt = 0.25 # Time step
         self.ukf = None  # Initialize UKF instance
 
     def state_transition_function(self, x, dt):  # Add dt as an argument
@@ -128,7 +129,7 @@ class UnscentedKalmanFilterEstimator(BaseFilter):
 class EnsembleKalmanFilterEstimator(BaseFilter):
     def __init__(self):
         # Define the state transition function (constant velocity model)
-        self.dt = 1.0  # Time step
+        self.dt = 0.25  # Time step
         self.enkf = None  # Initialize EnKF instance
 
     def state_transition_function(self, x, dt):
@@ -188,9 +189,9 @@ class FilterEstimator:
             
         
             
-        # np.savetxt("pred_kf2.txt", self.pred_array1, delimiter=",")
-        # np.savetxt("org2.txt", self.points_array, delimiter=",")
-        # np.savetxt("error_kf.txt", self.error_array)
+        np.savetxt("pred_kf2.txt", self.pred_array1, delimiter=",")
+        np.savetxt("org2.txt", self.points_array, delimiter=",")
+        np.savetxt("error_kf.txt", self.error_array)
         print("error:", self.error)
         for i in range(self.steps):
             predicted_x, predicted_y = kf_estimator.predict_correct(predicted_x, predicted_y)
@@ -223,8 +224,8 @@ class FilterEstimator:
             self.error = self.euclidean_distance(x, y, ekf_predicted_x, ekf_predicted_y)
             self.error_array.append(self.error)
             
-        # np.savetxt("error_ekf.txt", self.error_array)   
-        # np.savetxt("pred_ekf2.txt", self.pred_array1, delimiter=",")
+        np.savetxt("error_ekf.txt", self.error_array)   
+        np.savetxt("pred_ekf2.txt", self.pred_array1, delimiter=",")
         # np.savetxt("org_ekf2.txt", self.points_array, delimiter=",")
             # Generate 5 more predictions using the Extended Kalman Filter
         for _ in range(self.steps):
@@ -257,7 +258,7 @@ class FilterEstimator:
         R = np.diag([0.1, 0.1])  # Measurement noise covariance
 
         # Initialize UKF
-        ukf_estimator.ukf = UnscentedKalmanFilter(dim_x=4, dim_z=2, dt=0.5,
+        ukf_estimator.ukf = UnscentedKalmanFilter(dim_x=4, dim_z=2, dt=0.25,
                                                 hx=ukf_estimator.measurement_function,
                                                 fx=ukf_estimator.state_transition_function,
                                                 points=points)
@@ -276,14 +277,17 @@ class FilterEstimator:
             self.error = self.euclidean_distance(x, y, ukf_predicted_x, ukf_predicted_y)
             self.error_array.append(self.error)
         
-        # np.savetxt("error_ukf.txt", self.error_array)    
-        # np.savetxt("pred_ukf2.txt", self.pred_array1, delimiter=",")
+        np.savetxt("error_ukf.txt", self.error_array)    
+        np.savetxt("pred_ukf2.txt", self.pred_array1, delimiter=",")
         # np.savetxt("org_ukf2.txt", self.points_array, delimiter=",")
         print("error:", self.error)
+        # b = 0
         # Generate 5 more predictions using the Unscented Kalman Filter
         for _ in range(self.steps):
+            # b = b+1
             ukf_predicted_x, ukf_predicted_y = ukf_estimator.predict_correct(ukf_predicted_x, ukf_predicted_y)
             self.predictions_array.append( [ukf_predicted_x, ukf_predicted_y])
+            # marker.publish_prediction_marker(b, name = "pred_human1", cord_x= ukf_predicted_x, cord_y=0.0, cord_z= ukf_predicted_y)
             print(f"Additional UKF Prediction: (x, y) = ({ukf_predicted_x}, {ukf_predicted_y})")
         return self.predictions_array, self.error
     
@@ -311,7 +315,7 @@ class FilterEstimator:
         initial_covariance = np.eye(state_size) * 0.1
 
         enkf_estimator.enkf = EnsembleKalmanFilter(x=initial_state, P=initial_covariance, dim_z=measurement_size,
-                                                dt=1.0, N=ensemble_size, hx=enkf_estimator.measurement_function,
+                                                dt=0.25, N=ensemble_size, hx=enkf_estimator.measurement_function,
                                                 fx=enkf_estimator.state_transition_function)
 
         # Define process noise covariance (Q) and measurement noise covariance (R)
@@ -319,7 +323,7 @@ class FilterEstimator:
         enkf_estimator.enkf.R = np.diag([0.1, 0.1])  # Measurement noise covariance
 
         # Loop for each point in the input array
-        for x, y,z in self.prediction_points:
+        for x, y in self.prediction_points:
             # print(f"Point: ({x}, {y})")
             self.points_array.append([x,y])
             # Ensemble Kalman Filter
@@ -329,8 +333,8 @@ class FilterEstimator:
             self.error = self.euclidean_distance(x, y, enkf_predicted_x, enkf_predicted_y)
             self.error_array.append(self.error)
             
-        # np.savetxt("error_enkf.txt", self.error_array)    
-        # np.savetxt("pred_enkf2.txt", self.pred_array1, delimiter=",")
+        np.savetxt("error_enkf.txt", self.error_array)    
+        np.savetxt("pred_enkf2.txt", self.pred_array1, delimiter=",")
         # np.savetxt("org_enkf2.txt", self.points_array, delimiter=",")
         
         # print("error:", error)
@@ -383,7 +387,7 @@ if __name__ == "__main__":
     filter_estimator = FilterEstimator(prediction_points, steps)
 
     # Call the main function with the desired filter type
-    filter_type = "ukf"  # Change this to the desired filter type
+    filter_type = "enkf"  # Change this to the desired filter type
     filter_estimator.pred(filter_type)
 
 

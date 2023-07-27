@@ -30,7 +30,7 @@ from scipy.spatial import ConvexHull
 
 
 filter_type = "kf"
-steps = 10
+steps = 15
 
 odom_pose = []
 odom_or = []
@@ -370,8 +370,9 @@ class predict:
                     
                     a = 0
                     for pt in range(len(predictions_array2)):  
+                        point = predictions_array2[pt]
                         a = a+1                     
-                        marker.publish_prediction_marker(a, name = "pred_human2", cord_x= predictions_array2[pt][0], cord_y=0.0, cord_z= predictions_array2[pt][1])
+                        marker.publish_prediction_marker(a, name = "pred_human2", cord_x= point[0], cord_y=0.0, cord_z= point[1])
                     
                     pred2_distance_array = []
 
