@@ -1,10 +1,9 @@
 /////////////////////////////////////////////***imports***////////////////////////////////////////////////////////////////
 
 #include <ros/ros.h>
-#include <tb_apala/Boundingbox.h>
+#include <apala/Boundingbox.h>
 // #include <testrobots/newBoundingbox.h>
-#include <tb_apala/Plot.h>
-#include <tb_apala/yolodepth.h>
+#include <apala/Plot.h>
 
 #include <string>
 #include <vector>
@@ -18,7 +17,6 @@
 
 // ROS Topics
 #include <sensor_msgs/Image.h>
-#include <std_msgs/String.h>
 #include <sensor_msgs/PointCloud2.h> 
 #include <pcl_ros/point_cloud.h>  
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
@@ -68,6 +66,10 @@
 #include <pcl/filters/crop_hull.h>
 #include <pcl/surface/concave_hull.h>
 #include <pcl/point_types.h>
+#include <geometry_msgs/PointStamped.h>
+#include <std_msgs/Float64.h>
+#include <apala/ObjectCount.h>
+
 
 // std
 #include <sstream>
@@ -81,8 +83,7 @@
 using namespace std;
 using namespace std::chrono;
 using namespace std::chrono_literals;
-int start;
-std::string cp_flag;
+
 
 //****************************************************declarations************************************************
 
@@ -97,6 +98,8 @@ ros::Publisher pub_extracted_cloud;
 ros::Publisher pub_projected_cloud;
 ros::Publisher passthrough_filtered;
 ros::Publisher passthrough_filtered_again;
+ros::Publisher pub_mean_point;
+ros::Publisher pub_dist;
 
 //object declarations
 pcl::PCDReader reader; 
@@ -113,6 +116,8 @@ visualization_msgs::Marker marker;
 sensor_msgs::PointCloud2 crop_cloud_msg;
 sensor_msgs::PointCloud2 passfiltered_ros;
 sensor_msgs::PointCloud2 passfiltered_ros_again;
+geometry_msgs::PointStamped msg_mean_point;
+std_msgs::Float64 msg_dist;
 
 
 // variables and pointers
@@ -121,23 +126,27 @@ Eigen::Matrix<float, 3,3> cov_matrix;
 pcl::PCLPointCloud2 passfiltered_pcl2;
 pcl::PointCloud<pcl::PointXYZ> final_cloud;
 pcl::PCLPointCloud2 passfiltered_pcl2_again;
-std::string frame_id="camera_rgb_optical_frame";
+pcl::PointXYZ mean_point;
+
+std::string frame_id="camera_realsense"; //camera_rgb_optical_frame
 pcl::PointCloud<pcl::PointXYZ> pass_filtered_cloud;
-static const std::string PCL_TOPIC = "/camera/depth/points";
+//static const std::string PCL_TOPIC = "/camera/depth/points";/realsense/depth/color/points
+// static const std::string PCL_TOPIC = "/realsense/depth/color/points";
+static const std::string PCL_TOPIC = "/front_realsense/front/depth/color/points";
 pcl::PCLPointCloud2::Ptr inputCloud (new pcl::PCLPointCloud2());
 pcl::PCLPointCloud2::Ptr outputCloud (new pcl::PCLPointCloud2());
 pcl::ModelCoefficients::Ptr coefficients (new pcl::ModelCoefficients ());
 pcl::PointCloud<pcl::PointXYZ>::Ptr output_ptr(new pcl::PointCloud<pcl::PointXYZ>);
 pcl::PointCloud<pcl::PointXYZ>::Ptr no_plane_cloud(new pcl::PointCloud<pcl::PointXYZ>);
 pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_projected (new pcl::PointCloud<pcl::PointXYZ>);
-pcl::PointCloud<pcl::PointXYZ>::Ptr cropped_cloud_ptr(new pcl::PointCloud<pcl::PointXYZ>);
+// pcl::PointCloud<pcl::PointXYZ>::Ptr cropped_cloud_ptr(new pcl::PointCloud<pcl::PointXYZ>);
 pcl::PointCloud<pcl::PointXYZ>::Ptr passfiltered_again (new pcl::PointCloud<pcl::PointXYZ>);
 pcl::PointCloud<pcl::PointXYZ>::Ptr passfiltered_pclXYZ (new pcl::PointCloud<pcl::PointXYZ>);   
 
 //function declarations:
-void cp_flag_callback(std_msgs::String msg);
 void extractObject(pcl::PointCloud<pcl::PointXYZ>::Ptr crop_cloud_ptr);
 int counter = 0 ;
+int start = 1;
 
 
 
@@ -155,17 +164,17 @@ void save_pcd(sensor_msgs::PointCloud2 ros_msg, int counter,string file_name ){
 void callback(const sensor_msgs::PointCloud2ConstPtr& cloud_msg) { 
    
 
-   if (cp_flag == "yes")//if human is present 
+   if (start > 0)//if human is present 
    {
-      ROS_INFO("Processing Cloud now....");
+      
       //start timer
       auto start1 = high_resolution_clock::now(); 
       pcl_conversions::toPCL(*cloud_msg, *inputCloud);
       counter++;
 
       // ----------save to pcd--------------------  
-      
-   
+
+
       // pcl::PointCloud<pcl::PointXYZ>::Ptr m_cloud(new pcl::PointCloud<pcl::PointXYZ>);
       // pcl::PCLPointCloud2 pcl_pc2;
       // pcl_conversions::toPCL(*cloud_msg,pcl_pc2);
@@ -174,8 +183,8 @@ void callback(const sensor_msgs::PointCloud2ConstPtr& cloud_msg) {
       // ss << "original"<< counter <<".pcd";
       // writer.write<pcl::PointXYZ>(ss.str(), *m_cloud, false);
 
-   
-   // ----------------------------------------
+
+      // ----------------------------------------
 
       //do voxel filtering and save to pcd   
 
@@ -185,13 +194,13 @@ void callback(const sensor_msgs::PointCloud2ConstPtr& cloud_msg) {
       std::cerr << "PointCloud after filtering: " << outputCloud->width * outputCloud->height << " data points (" << pcl::getFieldsList (*outputCloud) << ").\n" << std::endl;    
       pcl::fromPCLPointCloud2(*outputCloud, *output_ptr);
 
-       //passthrough filtering z axis
+      //passthrough filtering z axis
       // pcl::PointCloud<pcl::PointXYZ>::Ptr passfiltered_pclXYZ (new pcl::PointCloud<pcl::PointXYZ>);
       // pcl::PassThrough<pcl::PointXYZ> pass_filter;
 
       pass_filter.setInputCloud (output_ptr);
       pass_filter.setFilterFieldName ("z");
-      pass_filter.setFilterLimits (0, 4.0); //1.25,3.0
+      pass_filter.setFilterLimits (1.50, 4.5); //1.25,3.0
       pass_filter.setFilterLimitsNegative (false);  // try this with false
       pass_filter.filter (*passfiltered_pclXYZ);
 
@@ -208,7 +217,7 @@ void callback(const sensor_msgs::PointCloud2ConstPtr& cloud_msg) {
 
       pass_filter2.setInputCloud (passfiltered_pclXYZ);
       pass_filter2.setFilterFieldName ("x");
-      pass_filter2.setFilterLimits (-0.8, 0.9);
+      pass_filter2.setFilterLimits (-0.8, 1.0);
       pass_filter2.setFilterLimitsNegative (false);  // try this with false
       pass_filter2.filter (*passfiltered_again);
 
@@ -231,18 +240,6 @@ void callback(const sensor_msgs::PointCloud2ConstPtr& cloud_msg) {
       //save_pcd(obj_msg,counter, "extracted");
 
 
-      // //call extract function and convert to ros msg and publish 
-
-      // std::cout<<"extracting object...\n"<< std::endl; 
-      // extractObject(output_ptr);
-      // pcl::toROSMsg(*no_plane_cloud.get(),obj_msg );
-      // pub_extracted_cloud.publish(obj_msg);
-
-
-      // //save extracted cloud to pcd   
-      // //save_pcd(obj_msg,counter, "extracted");
-
-
       // project points on XZ plane:
       pcl::ProjectInliers<pcl::PointXYZ> proj;
       coefficients->values.resize (4);
@@ -255,7 +252,7 @@ void callback(const sensor_msgs::PointCloud2ConstPtr& cloud_msg) {
       proj.setInputCloud (no_plane_cloud);
       proj.setModelCoefficients (coefficients);
       proj.filter (*cloud_projected);
-   
+
 
       pcl::toROSMsg(*cloud_projected.get(),proj_msg);
       pub_projected_cloud.publish(proj_msg); 
@@ -266,6 +263,24 @@ void callback(const sensor_msgs::PointCloud2ConstPtr& cloud_msg) {
       // bb << "final"<< counter <<".pcd";
       // writer.write<pcl::PointXYZ>(bb.str(), *cloud_projected, false);
 
+      //-----calculate mean ----------------
+      // pcl::computeCentroid(*cloud_projected, mean_point);
+
+      // msg_mean_point.header.frame_id = "map"; // set the frame ID
+      // msg_mean_point.header.stamp = ros::Time::now(); // set the timestamp
+      // msg_mean_point.point.x = mean_point.x;
+      // msg_mean_point.point.y = mean_point.y;
+      // msg_mean_point.point.z = mean_point.z;
+
+      // pub_mean_point.publish(msg_mean_point);
+
+      //--------calculate distance ---------
+
+      // double distance = sqrt((mean_point.x * mean_point.x + mean_point.y * mean_point.y + mean_point.z * mean_point.z) / 3);
+
+      // msg_dist.data = distance;
+      // pub_dist.publish(msg_dist);
+
 
 
       //calculate computation time
@@ -274,11 +289,11 @@ void callback(const sensor_msgs::PointCloud2ConstPtr& cloud_msg) {
       auto duration1 = duration_cast<microseconds>(stop1 - start1);
       std::cout << "total time: "<< duration1.count()/1000000.0 << " s\n" << std::endl;
       std::cout << "**************************\n"<<std::endl;
-    
+         
    }
    else
    {
-      ROS_INFO("NO human found");
+      std::cout<<"NO HUMAN FOUND"<<endl;
    }
    
 
@@ -323,15 +338,12 @@ void extractObject(pcl::PointCloud<pcl::PointXYZ>::Ptr crop_cloud_ptr)
    
 }
 
-void human_callback(tb_apala::Plot data){
-   start = data.value;
+// void human_callback(apala::ObjectCount data){
+//    start = data.count;
+//    std::cout << "human value:"<<start<<std::endl;
    
-}
-
-void cp_flag_callback(std_msgs::String str){
-   cp_flag = str.data;
    
-}
+// }
 
 ////////////////////////***************main function**********************///////////////////////////////////////////////
 
@@ -342,9 +354,8 @@ int main(int argc, char **argv)
    ros::NodeHandle nh;
 
    //subscribe
-   ros::Subscriber yolo_sub = nh.subscribe("H_Detection_msg", 10, human_callback);
+   // ros::Subscriber yolo_sub = nh.subscribe("/front/darknet_ros/found_object", 10, human_callback);
    ros::Subscriber PCLsub = nh.subscribe(PCL_TOPIC, 10, callback);
-   ros::Subscriber cp_flag_sub = nh.subscribe("cp_flag", 10, cp_flag_callback);
 
    //set frame_id
    
@@ -357,13 +368,14 @@ int main(int argc, char **argv)
 
    
    
-   //publish
-   pub_cropped_cloud=nh.advertise<sensor_msgs::PointCloud2>("cropped_cloud",1);
-   pub_extracted_cloud=nh.advertise<sensor_msgs::PointCloud2>("extracted_cloud",1);
+   //publish   
+   
    pub_projected_cloud=nh.advertise<sensor_msgs::PointCloud2>("projected",1);
    passthrough_filtered=nh.advertise<sensor_msgs::PointCloud2>("passfiltered",1);
    passthrough_filtered_again=nh.advertise<sensor_msgs::PointCloud2>("passfiltered_again",1);
-   
+   pub_extracted_cloud=nh.advertise<sensor_msgs::PointCloud2>("extracted_cloud",1);
+   // pub_mean_point = nh.advertise<geometry_msgs::PointStamped>("mean_point", 1);
+   // pub_dist = nh.advertise<std_msgs::Float64>("distance", 1);
    
    ros::spin();
    return 0;

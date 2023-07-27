@@ -24,9 +24,9 @@ class marker:
         prediction_marker_cube.pose.orientation.y =  1.0
         prediction_marker_cube.pose.orientation.z = 0.0
         prediction_marker_cube.pose.orientation.w = 0.0
-        prediction_marker_cube.scale.x = 0.7
-        prediction_marker_cube.scale.y = 0.7
-        prediction_marker_cube.scale.z = 0.7
+        prediction_marker_cube.scale.x = 0.3
+        prediction_marker_cube.scale.y = 0.3
+        prediction_marker_cube.scale.z = 0.3
         prediction_marker_cube.color.a = 1.0
         prediction_marker_cube.color.r = 1.0
         prediction_marker_cube.color.g = 0.0
@@ -52,9 +52,9 @@ class marker:
         pred_marker_cube.pose.orientation.y =  1.0
         pred_marker_cube.pose.orientation.z = 0.0
         pred_marker_cube.pose.orientation.w = 0.0
-        pred_marker_cube.scale.x = 0.7
-        pred_marker_cube.scale.y = 0.7
-        pred_marker_cube.scale.z = 0.7
+        pred_marker_cube.scale.x = 0.3
+        pred_marker_cube.scale.y = 0.3
+        pred_marker_cube.scale.z = 0.3
         pred_marker_cube.color.a = 1.0
         pred_marker_cube.color.r = 0.0
         pred_marker_cube.color.g = 1.0

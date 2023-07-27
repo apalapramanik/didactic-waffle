@@ -23,13 +23,14 @@ from cmath import isnan, nan, sqrt
 from os import device_encoding
 from numpy import NaN, cov, poly
 from sklearn.cluster import DBSCAN
+from scipy.spatial import ConvexHull
 # import ros_numpy
 
 
 
 
 filter_type = "kf"
-steps = 5
+steps = 10
 
 odom_pose = []
 odom_or = []
@@ -42,7 +43,21 @@ transform_array3 = []
 human1_array = []
 human2_array = []
 
+# class KalmanFilter:
+    
+#     kf = cv2.KalmanFilter(4, 2)
+#     kf.measurementMatrix = np.array([[1, 0, 0, 0], [0, 1, 0, 0]], np.float32) #H
+#     kf.transitionMatrix = np.array([[1, 0, 1, 0], [0, 1, 0, 1], [0, 0, 1, 0], [0, 0, 0, 1]], np.float32) #A
 
+
+#     def predict(self, coordX, coordY):
+#         # This function estimates the position of the object
+#         measured = np.array([[np.float32(coordX)], [np.float32(coordY)]])
+#         self.kf.correct(measured) #x(k)=x'(k)+K(k)*(z(k)-H*x'(k))
+#         predicted = self.kf.predict()
+#         x, y = float(predicted[0]), float(predicted[1])
+#         return x, y
+    
 class predict:
     def __init__(self):
         
@@ -170,9 +185,41 @@ class predict:
             rospy.loginfo("Clustered point cloud")
             
             
-             
+           ########################## convex hull ####################################### 
+            # Apply shape filter
+            filtered_clusters = []
+            filtered_labels = []
             useful_cluster1 = []
             useful_cluster2 = []
+            # useful_cluster3 = []
+
+            for i in range(len(components)):
+                cluster = components[i]
+                # hull = ConvexHull(cluster)
+                try:
+                    hull = ConvexHull(cluster, incremental=True)
+                except Exception as e:
+                    # print("Error computing convex hull for cluster {}: {}".format(i, e))
+                    continue
+                    
+                # Check if the cluster forms a convex hull
+                if len(hull.vertices) == len(cluster):
+                    filtered_clusters.append(cluster)
+                    filtered_labels.append(labels[i])
+
+            for i, cluster in enumerate(filtered_clusters):
+                cluster_number = filtered_labels[i]
+                if cluster_number == 0:
+                    useful_cluster1.append(cluster)
+                elif cluster_number == 1:
+                    useful_cluster2.append(cluster)
+                # elif cluster_number == 2:
+                #     useful_cluster3.append(cluster)
+            #---------------------------------------------------------------------------------------------
+            
+            
+            # useful_cluster1 = []
+            # useful_cluster2 = []
             # useful_cluster3 = []
             x1 = []
             z1 = []
@@ -226,7 +273,7 @@ class predict:
                     marker.publish_human_marker(name = "human1", cord_x = meanx1, cord_y = 0.0, cord_z = meanz1)
                     
                     filter_estimator1 = FilterEstimator(transform_array1, steps)
-                    predictions_array1, error1= filter_estimator1.ukf_caller()
+                    predictions_array1, error1= filter_estimator1.kf_caller()
                     rospy.loginfo("Prediction done!")
                     
                     # for evaluation:
@@ -243,7 +290,7 @@ class predict:
                     # predictions_array125, error15= filter_estimator14.enkf_caller()
                     
                     
-                
+                    print(predictions_array1)
                     b = 0
                     for pt in range(len(predictions_array1)):                        
                         point = predictions_array1[pt]
