@@ -5,7 +5,7 @@
 	
 	<group name = "visualizing nodes">
 	
-		<include file="$(find turtlebot3_gazebo)/launch/scene1.launch" arg="waffle"/> 
+		<include file="$(find turtlebot3_gazebo)/launch/scene2.launch" arg="waffle"/> 
 		<include file="$(find turtlebot3_navigation)/launch/turtlebot3_navigation.launch" args="$(find turtlebot3_navigation)/maps/map.yaml" arg="waffle"/> 
 		
 	</group>
@@ -19,7 +19,7 @@
 		<env name="GMON_OUT_PREFIX" value="organize" />
 		<node pkg = "tb_apala" name= "cloud_processing" type = "organize" />	
 
-		<node pkg="tb_apala" name= "clustering_prediction_node" type="prediction.py"/> 
+		<!-- <node pkg="tb_apala" name= "clustering_prediction_node" type="prediction.py"/>  -->
 	 
 	</group>
 

@@ -177,7 +177,7 @@ class FilterEstimator:
         self.points_array = []
         self.error_array = []
         
-        for x, y in self.prediction_points:
+        for x, y,z in self.prediction_points:
             # kf_estimator = KalmanFilterEstimator()
             predicted_x, predicted_y = kf_estimator.predict_correct(x, y)
             print(f"Initial Point (x, y) = ({x}, {y})")
@@ -189,15 +189,28 @@ class FilterEstimator:
             
         
             
-        np.savetxt("pred_kf2.txt", self.pred_array1, delimiter=",")
-        np.savetxt("org2.txt", self.points_array, delimiter=",")
-        np.savetxt("error_kf.txt", self.error_array)
+        # np.savetxt("pred_kf2.txt", self.pred_array1, delimiter=",")
+        # np.savetxt("org2.txt", self.points_array, delimiter=",")
+        # np.savetxt("error_kf.txt", self.error_array)
+        # print("error:", self.error)
+        
+         # Save data to the files in append mode
+        with open("pred_kf2.txt", "a") as f:
+            np.savetxt(f, self.pred_array1, delimiter=",")
+
+        with open("org2.txt", "a") as f:
+            np.savetxt(f, self.points_array, delimiter=",")
+
+        with open("error_kf.txt", "a") as f:
+            np.savetxt(f, [self.error_array], delimiter=",")
+
         print("error:", self.error)
+        
         for i in range(self.steps):
             predicted_x, predicted_y = kf_estimator.predict_correct(predicted_x, predicted_y)
             self.predictions_array.append([predicted_x, predicted_y])
             print(f"Point {i + 1}: (x, y) = ({predicted_x}, {predicted_y})")
-        # print("hereee")
+  
         return self.predictions_array, self.error
     
    
@@ -224,9 +237,22 @@ class FilterEstimator:
             self.error = self.euclidean_distance(x, y, ekf_predicted_x, ekf_predicted_y)
             self.error_array.append(self.error)
             
-        np.savetxt("error_ekf.txt", self.error_array)   
-        np.savetxt("pred_ekf2.txt", self.pred_array1, delimiter=",")
+        # np.savetxt("error_ekf.txt", self.error_array)   
+        # np.savetxt("pred_ekf2.txt", self.pred_array1, delimiter=",")
         # np.savetxt("org_ekf2.txt", self.points_array, delimiter=",")
+        
+         # Save data to the files in append mode
+        with open("pred_ekf2.txt", "a") as f:
+            np.savetxt(f, self.pred_array1, delimiter=",")
+
+        # with open("org2.txt", "a") as f:
+        #     np.savetxt(f, self.points_array, delimiter=",")
+
+        with open("error_ekf.txt", "a") as f:
+            np.savetxt(f, [self.error_array], delimiter=",")
+
+        print("error:", self.error)
+        
             # Generate 5 more predictions using the Extended Kalman Filter
         for _ in range(self.steps):
             ekf_predicted_x, ekf_predicted_y = ekf_estimator.predict_correct(ekf_predicted_x, ekf_predicted_y)
@@ -277,17 +303,29 @@ class FilterEstimator:
             self.error = self.euclidean_distance(x, y, ukf_predicted_x, ukf_predicted_y)
             self.error_array.append(self.error)
         
-        np.savetxt("error_ukf.txt", self.error_array)    
-        np.savetxt("pred_ukf2.txt", self.pred_array1, delimiter=",")
+        # np.savetxt("error_ukf.txt", self.error_array)    
+        # np.savetxt("pred_ukf2.txt", self.pred_array1, delimiter=",")
         # np.savetxt("org_ukf2.txt", self.points_array, delimiter=",")
+        # print("error:", self.error)
+        
+         # Save data to the files in append mode
+        with open("pred_ukf2.txt", "a") as f:
+            np.savetxt(f, self.pred_array1, delimiter=",")
+
+        # with open("org2.txt", "a") as f:
+        #     np.savetxt(f, self.points_array, delimiter=",")
+
+        with open("error_ukf.txt", "a") as f:
+            np.savetxt(f, [self.error_array], delimiter=",")
+
         print("error:", self.error)
-        # b = 0
+        
+    
         # Generate 5 more predictions using the Unscented Kalman Filter
         for _ in range(self.steps):
-            # b = b+1
+         
             ukf_predicted_x, ukf_predicted_y = ukf_estimator.predict_correct(ukf_predicted_x, ukf_predicted_y)
             self.predictions_array.append( [ukf_predicted_x, ukf_predicted_y])
-            # marker.publish_prediction_marker(b, name = "pred_human1", cord_x= ukf_predicted_x, cord_y=0.0, cord_z= ukf_predicted_y)
             print(f"Additional UKF Prediction: (x, y) = ({ukf_predicted_x}, {ukf_predicted_y})")
         return self.predictions_array, self.error
     
@@ -333,11 +371,25 @@ class FilterEstimator:
             self.error = self.euclidean_distance(x, y, enkf_predicted_x, enkf_predicted_y)
             self.error_array.append(self.error)
             
-        np.savetxt("error_enkf.txt", self.error_array)    
-        np.savetxt("pred_enkf2.txt", self.pred_array1, delimiter=",")
-        # np.savetxt("org_enkf2.txt", self.points_array, delimiter=",")
-        
+        # np.savetxt("error_enkf.txt", self.error_array)    
+        # np.savetxt("pred_enkf2.txt", self.pred_array1, delimiter=",")
+        # np.savetxt("org_enkf2.txt", self.points_array, delimiter=",")        
         # print("error:", error)
+        
+        
+         # Save data to the files in append mode
+        with open("pred_enkf2.txt", "a") as f:
+            np.savetxt(f, self.pred_array1, delimiter=",")
+
+        # with open("org2.txt", "a") as f:
+        #     np.savetxt(f, self.points_array, delimiter=",")
+
+        with open("error_enkf.txt", "a") as f:
+            np.savetxt(f, [self.error_array], delimiter=",")
+
+        print("error:", self.error)
+        
+        
         # Generate 5 more predictions using the Ensemble Kalman Filter
         for _ in range(self.steps):
             enkf_predicted_x, enkf_predicted_y = enkf_estimator.predict_correct(enkf_predicted_x, enkf_predicted_y)

@@ -227,7 +227,7 @@ if __name__ == '__main__':
         
         end = timer()
         seconds = end-start
-        print(timedelta(seconds)) #in seconds
+        # print(timedelta(seconds)) #in seconds
         with open('goal_time.txt', 'a') as file:
             file.write(str(seconds) + '\n')
     except rospy.ROSInterruptException:
