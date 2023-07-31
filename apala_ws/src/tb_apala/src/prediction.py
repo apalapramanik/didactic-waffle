@@ -158,7 +158,7 @@ class predict:
             '''
             
             #start db scan:
-            DBSCAN_cluster = DBSCAN(eps=0.5, min_samples=30).fit(xz_np_array) #0.5, 30
+            DBSCAN_cluster = DBSCAN(eps=0.3, min_samples=25).fit(xz_np_array) #0.5, 30
             labels = DBSCAN_cluster.labels_
             components = DBSCAN_cluster.components_ #copy of each core sample found by training
             # feature = DBSCAN_cluster.n_features_in_ #number of features seen during fit
@@ -254,7 +254,7 @@ class predict:
                     marker.publish_human_marker(name = "human1", cord_x = meanx1, cord_y = 0.0, cord_z = meanz1)
                     
                     filter_estimator1 = FilterEstimator(transform_array1, steps)
-                    predictions_array1, error1= filter_estimator1.kf_caller()
+                    predictions_array1, error1= filter_estimator1.kf_caller1()
                     rospy.loginfo("Prediction done!")
                     
             
@@ -320,7 +320,7 @@ class predict:
                     marker.publish_human_marker(name = "human2", cord_x = meanx1, cord_y = 0.0, cord_z = meanz1)
                      
                     filter_estimator2 = FilterEstimator(transform_array2, steps)
-                    predictions_array2, error2= filter_estimator2.kf_caller()
+                    predictions_array2, error2= filter_estimator2.kf_caller2()
                     
                   
                     

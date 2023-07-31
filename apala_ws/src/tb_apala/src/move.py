@@ -21,6 +21,7 @@ class move_forward():
         # self.x_cord3 = nan
         self.dist1 = nan
         self.dist2 = nan
+        # self.result = False
         # self.dist3 = nan
 
         rospy.Subscriber("position_h1",position,self.position1_callback,queue_size=1)
@@ -77,7 +78,7 @@ class move_forward():
             self.result = False
        
         self.goal_sent = False
-        print("result; ", self.result)
+        print("result: ", self.result)
         return self.result
     
 
@@ -191,9 +192,9 @@ if __name__ == '__main__':
         
         """
         
-        orientation4 = [-0.000618, 0.002056, 3.040110]
-        position4 = {'x': 12.737008, 'y' :-5.354957} 
-        quaternion4 = {'r1' : 0.001, 'r2' : -0.001, 'r3' : 0.999, 'r4' : 0.053} #run command : rosrun tf tf_echo /map /base_link
+        orientation5 = [-0.000618, 0.002056, 3.040110]
+        position5 = {'x': 12.737008, 'y' :-5.354957} 
+        quaternion5 = {'r1' : 0.001, 'r2' : -0.001, 'r3' : 0.999, 'r4' : 0.053} #run command : rosrun tf tf_echo /map /base_link
         
         
         
@@ -202,27 +203,30 @@ if __name__ == '__main__':
         
         """
         
-        orientation4 = [0.000765, 0.003132, 2.965275]
-        position4 = {'x': 7.478013, 'y' :-6.061655} 
-        quaternion4 = {'r1' : -0.000, 'r2' : 0.000, 'r3' : 0.997, 'r4' : 0.079} #run command : rosrun tf tf_echo /map /base_link
+        orientation6 = [0.000765, 0.003132, 2.965275]
+        position6 = {'x': 7.478013, 'y' :-6.061655} 
+        quaternion6 = {'r1' : -0.000, 'r2' : 0.000, 'r3' : 0.997, 'r4' : 0.079} #run command : rosrun tf tf_echo /map /base_link
         
         
-        
-        
-        rospy.loginfo("Go to (%s, %s) pose", position1['x'], position1['y'])
+        #---------------------------------------------------------navigate-----------------------------------------------------------------------
+        success = False
+        rospy.loginfo("Go to (%s, %s) pose", position6['x'], position6['y'])
         start = timer()
-        success = navigator.to_goal(position1, quaternion1, orientation1[0],orientation1[1], orientation1[2])
-        
         again = 0
+        success = navigator.to_goal(position6, quaternion6, orientation6[0],orientation6[1], orientation6[2])
+        
+        
         
         while(again<3):
             if success:
                 rospy.loginfo("Destination reached!")
-                again = again +1 
+                break
+                
             else:
                 rospy.loginfo("SENDING GOAL AGAIN")
-                time.sleep(0.5)
-                success = navigator.to_goal(position1, quaternion1, orientation1[0],orientation1[1], orientation1[2])
+                time.sleep(1.0)
+                success = navigator.to_goal(position6, quaternion6, orientation6[0],orientation6[1], orientation6[2])
+                again = again +1 
       
         
         end = timer()
