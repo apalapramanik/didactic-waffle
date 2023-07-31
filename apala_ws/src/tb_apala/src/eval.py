@@ -36,7 +36,7 @@ def print_values_in_file(file_path):
         print(f"An unexpected error occurred: {e}")
 
 
-base_folder = "loc1h1"
+base_folder = "loc1h2"
 
 #calculate minimum robustness of spec1:
 
