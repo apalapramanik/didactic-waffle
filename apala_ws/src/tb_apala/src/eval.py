@@ -20,10 +20,7 @@ def find_min_value_in_file(file_path):
         print(f"Error: {ve}")
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
-        
-
-
-
+ 
     
 def print_values_in_file(file_path):
     try:
@@ -38,34 +35,37 @@ def print_values_in_file(file_path):
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
 
+
+base_folder = "loc1h1"
+
 #calculate minimum robustness of spec1:
 
-file_path1 = "loc1h1/always_human1.txt"
+file_path1 = f"{base_folder}/always_human1.txt"
 min_value1 = find_min_value_in_file(file_path1)
 if min_value1 is not None:
     print(f"The minimum robustness in spec 1: {min_value1}")
     
 #calculate minimum robustness of spec2:
 
-file_path2 = "loc1h1/implies_human1.txt"
+file_path2 = f"{base_folder}/implies_human1.txt"
 min_value2 = find_min_value_in_file(file_path2)
 if min_value2 is not None:
     print(f"The minimum robustness in spec 2: {min_value2}")
     
 #calculate minimum robustness of spec3:
 
-file_path3 = "loc1h1/until_human1.txt"
+file_path3 =f"{base_folder}/until_human1.txt"
 min_value3 = find_min_value_in_file(file_path3)
 if min_value3 is not None:
     print(f"The minimum robustness in spec 3: {min_value3}")
     
 #time taken to complete task    
-file_path_to_read = "path/to/your/input_file.txt"
+file_path_to_read = f"{base_folder}/goal_time.txt"
 print_values_in_file(file_path_to_read)
 
 # calculate rmse:
-original_points = np.loadtxt("loc1h1/org_h1.txt", delimiter=",")
-predicted_points_kf = np.loadtxt("loc1_h1/pred_kf_h1.txt", delimiter=",")
+original_points = np.loadtxt(f"{base_folder}/org_h1.txt", delimiter=",")
+predicted_points_kf = np.loadtxt(f"{base_folder}/pred_kf_h1.txt", delimiter=",")
 
 x = [p[0] for p in original_points[:]]
 y = [p[1] for p in original_points[:]]
@@ -78,3 +78,6 @@ pred_cols_kf = predicted_points_kf[:,:2]
 
 rmse_kf = np.sqrt(mean_squared_error(org_cols, pred_cols_kf))
 print("Root mean squared error: ", rmse_kf)
+
+
+
