@@ -24,12 +24,12 @@ class move_forward():
         # self.result = False
         # self.dist3 = nan
 
-        rospy.Subscriber("position_h1",position,self.position1_callback,queue_size=1)
-        rospy.Subscriber("position_h2",position,self.position2_callback,queue_size=1)
+        rospy.Subscriber("position_h1",position,self.position1_callback,queue_size=10)
+        rospy.Subscriber("position_h2",position,self.position2_callback,queue_size=10)
         # rospy.Subscriber("position_h3",position,self.position3_callback,queue_size=1)
-        rospy.Subscriber("move_base/feedback",MoveBaseActionFeedback,self.feed_cb,queue_size=1)
-        self.distance_human1 = rospy.Publisher("distance_from_human1", distance,queue_size=1)
-        self.distance_human2 = rospy.Publisher("distance_from_human2", distance,queue_size=1)
+        rospy.Subscriber("move_base/feedback",MoveBaseActionFeedback,self.feed_cb,queue_size=10)
+        self.distance_human1 = rospy.Publisher("distance_from_human1", distance,queue_size=10)
+        self.distance_human2 = rospy.Publisher("distance_from_human2", distance,queue_size=10)
         # self.distance_human3 = rospy.Publisher("distance_from_human3", distance,queue_size=1)
         self.goal_sent = False        
         self.move_base = actionlib.SimpleActionClient("move_base", MoveBaseAction)
@@ -41,16 +41,32 @@ class move_forward():
         self.x_cord1 = data.x
         self.z_cord1 = data.z
         self.y_cord1 = 0.0
+        distance_from_human1 = distance()
+        self.dist1 = math.sqrt((self.x_cord1)**2 + (self.y_cord1)**2 + (self.z_cord1)**2)
+        print("dist 1:",self.dist1)
+        distance_from_human1.distance = self.dist1
+        self.distance_human1.publish(distance_from_human1)
         
     def position2_callback(self,data): 
         self.x_cord2 = data.x
         self.z_cord2 = data.z
         self.y_cord2 = 0.0
+        distance_from_human2 = distance()
+        self.dist2 = math.sqrt((self.x_cord2)**2 + (self.y_cord2)**2 + (self.z_cord2)**2)
+        print("dist 2:",self.dist2)
+        distance_from_human2.distance = self.dist2
+        self.distance_human2.publish(distance_from_human2)
         
     # def position3_callback(self,data): 
     #     self.x_cord3 = data.x
     #     self.z_cord3 = data.z
     #     self.y_cord3 = 0.0
+    #     distance_from_human3 = distance()
+    #     self.dist3 = math.sqrt((self.x_cord3)**2 + (self.y_cord3)**2 + (self.z_cord3)**2)
+    #     print("dist 3:",self.dist3)
+    #     distance_from_human3.distance = self.dist3
+    #     self.distance_human3.publish(distance_from_human3)
+            
     
     def to_goal(self, pos, quat, or_x,or_y,or_z):
         
@@ -192,9 +208,9 @@ if __name__ == '__main__':
         
         """
         
-        orientation5 = [-0.000618, 0.002056, 3.040110]
-        position5 = {'x': 12.737008, 'y' :-5.354957} 
-        quaternion5 = {'r1' : 0.001, 'r2' : -0.001, 'r3' : 0.999, 'r4' : 0.053} #run command : rosrun tf tf_echo /map /base_link
+        # orientation5 = [-0.000618, 0.002056, 3.040110]
+        # position5 = {'x': 12.737008, 'y' :-5.354957} 
+        # quaternion5 = {'r1' : 0.001, 'r2' : -0.001, 'r3' : 0.999, 'r4' : 0.053} #run command : rosrun tf tf_echo /map /base_link
         
         
         
@@ -214,10 +230,10 @@ if __name__ == '__main__':
         start = timer()
         again = 0
         success = navigator.to_goal(position1, quaternion1, orientation1[0],orientation1[1], orientation1[2])
-        success = navigator.to_goal(position2, quaternion2, orientation2[0],orientation2[1], orientation2[2])
-        success = navigator.to_goal(position3, quaternion3, orientation3[0],orientation3[1], orientation3[2])
-        success = navigator.to_goal(position4, quaternion4, orientation4[0],orientation4[1], orientation4[2])
-        success = navigator.to_goal(position5, quaternion5, orientation5[0],orientation5[1], orientation5[2])
+        # success = navigator.to_goal(position2, quaternion2, orientation2[0],orientation2[1], orientation2[2])
+        # success = navigator.to_goal(position3, quaternion3, orientation3[0],orientation3[1], orientation3[2])
+        # success = navigator.to_goal(position4, quaternion4, orientation4[0],orientation4[1], orientation4[2])
+        # success = navigator.to_goal(position5, quaternion5, orientation5[0],orientation5[1], orientation5[2])
         
         
         
@@ -230,10 +246,10 @@ if __name__ == '__main__':
                 rospy.loginfo("SENDING GOAL AGAIN")
                 time.sleep(1.0)
                 success = navigator.to_goal(position1, quaternion1, orientation1[0],orientation1[1], orientation1[2])
-                success = navigator.to_goal(position2, quaternion2, orientation2[0],orientation2[1], orientation2[2])
-                success = navigator.to_goal(position3, quaternion3, orientation3[0],orientation3[1], orientation3[2])
-                success = navigator.to_goal(position4, quaternion4, orientation4[0],orientation4[1], orientation4[2])
-                success = navigator.to_goal(position5, quaternion5, orientation5[0],orientation5[1], orientation5[2])
+                # success = navigator.to_goal(position2, quaternion2, orientation2[0],orientation2[1], orientation2[2])
+                # success = navigator.to_goal(position3, quaternion3, orientation3[0],orientation3[1], orientation3[2])
+                # success = navigator.to_goal(position4, quaternion4, orientation4[0],orientation4[1], orientation4[2])
+                # success = navigator.to_goal(position5, quaternion5, orientation5[0],orientation5[1], orientation5[2])
                 again = again +1 
       
         
