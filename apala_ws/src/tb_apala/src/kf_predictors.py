@@ -169,7 +169,7 @@ class FilterEstimator:
 
     
     
-    def kf_caller(self):
+    def kf_caller1(self):
         kf_estimator = KalmanFilterEstimator()
         self.predictions_array = []
         self.error = 0.0
@@ -195,19 +195,63 @@ class FilterEstimator:
         # print("error:", self.error)
         
          # Save data to the files in append mode
-        with open("pred_kf2.txt", "a") as f:
+        with open("pred_kf_h1.txt", "a") as f:
             np.savetxt(f, self.pred_array1, delimiter=",")
 
-        with open("org2.txt", "a") as f:
+        with open("org_h1.txt", "a") as f:
             np.savetxt(f, self.points_array, delimiter=",")
 
-        with open("error_kf.txt", "a") as f:
+        with open("error_kf_h1.txt", "a") as f:
             np.savetxt(f, [self.error_array], delimiter=",")
 
         print("error:", self.error)
         
         for i in range(self.steps):
             predicted_x, predicted_y = kf_estimator.predict_correct(predicted_x, predicted_y)
+            self.predictions_array.append([predicted_x, predicted_y])
+            print(f"Point {i + 1}: (x, y) = ({predicted_x}, {predicted_y})")
+  
+        return self.predictions_array, self.error
+    
+    def kf_caller2(self):
+        kf_estimator2 = KalmanFilterEstimator()
+        self.predictions_array = []
+        self.error = 0.0
+        self.pred_array1 = []
+        self.points_array = []
+        self.error_array = []
+        
+        for x, y,z in self.prediction_points:
+            # kf_estimator = KalmanFilterEstimator()
+            predicted_x, predicted_y = kf_estimator2.predict_correct(x, y)
+            print(f"Initial Point (x, y) = ({x}, {y})")
+            print(f"KF Predicted Point:", predicted_x, predicted_y) 
+            self.points_array.append([x,y])           
+            self.pred_array1.append([predicted_x, predicted_y])            
+            self.error = self.euclidean_distance(x, y, predicted_x, predicted_y)
+            self.error_array.append(self.error)
+            
+        
+            
+        # np.savetxt("pred_kf2.txt", self.pred_array1, delimiter=",")
+        # np.savetxt("org2.txt", self.points_array, delimiter=",")
+        # np.savetxt("error_kf.txt", self.error_array)
+        # print("error:", self.error)
+        
+         # Save data to the files in append mode
+        with open("pred_kf_h2.txt", "a") as f:
+            np.savetxt(f, self.pred_array1, delimiter=",")
+
+        with open("org_h2.txt", "a") as f:
+            np.savetxt(f, self.points_array, delimiter=",")
+
+        with open("error_kf_h2.txt", "a") as f:
+            np.savetxt(f, [self.error_array], delimiter=",")
+
+        print("error:", self.error)
+        
+        for i in range(self.steps):
+            predicted_x, predicted_y = kf_estimator2.predict_correct(predicted_x, predicted_y)
             self.predictions_array.append([predicted_x, predicted_y])
             print(f"Point {i + 1}: (x, y) = ({predicted_x}, {predicted_y})")
   

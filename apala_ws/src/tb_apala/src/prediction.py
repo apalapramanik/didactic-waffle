@@ -26,10 +26,6 @@ from sklearn.cluster import DBSCAN
 from scipy.spatial import ConvexHull
 # import ros_numpy
 
-
-
-
-filter_type = "kf"
 steps = 15
 
 odom_pose = []
@@ -43,20 +39,6 @@ transform_array3 = []
 human1_array = []
 human2_array = []
 
-# class KalmanFilter:
-    
-#     kf = cv2.KalmanFilter(4, 2)
-#     kf.measurementMatrix = np.array([[1, 0, 0, 0], [0, 1, 0, 0]], np.float32) #H
-#     kf.transitionMatrix = np.array([[1, 0, 1, 0], [0, 1, 0, 1], [0, 0, 1, 0], [0, 0, 0, 1]], np.float32) #A
-
-
-#     def predict(self, coordX, coordY):
-#         # This function estimates the position of the object
-#         measured = np.array([[np.float32(coordX)], [np.float32(coordY)]])
-#         self.kf.correct(measured) #x(k)=x'(k)+K(k)*(z(k)-H*x'(k))
-#         predicted = self.kf.predict()
-#         x, y = float(predicted[0]), float(predicted[1])
-#         return x, y
     
 class predict:
     def __init__(self):
@@ -67,8 +49,8 @@ class predict:
         rospy.Subscriber("odom", Odometry, self.odom_callback,queue_size=10)
         
         #publishers
-        self.pose_human1 = rospy.Publisher("position_h1", position,queue_size=1)
-        self.pose_human2 = rospy.Publisher("position_h2", position,queue_size=1)
+        self.pose_human1 = rospy.Publisher("position_h1", position,queue_size=10)
+        self.pose_human2 = rospy.Publisher("position_h2", position,queue_size=10)
         self.pred1_array = rospy.Publisher("pred1_array",Float32MultiArray,queue_size=10)
         self.pred2_array = rospy.Publisher("pred2_array",Float32MultiArray,queue_size=10)
         
@@ -142,9 +124,7 @@ class predict:
         pred1_array_msg = Float32MultiArray()   
         position_msg2 = position()
         pred2_array_msg = Float32MultiArray()
- 
-          
-            
+    
         if self.flag == 'yes':
             
             #convert point cloud to numpy array:
@@ -186,6 +166,7 @@ class predict:
             
             
            ########################## convex hull ####################################### 
+           
             # Apply shape filter
             filtered_clusters = []
             filtered_labels = []
@@ -276,19 +257,7 @@ class predict:
                     predictions_array1, error1= filter_estimator1.kf_caller()
                     rospy.loginfo("Prediction done!")
                     
-                    # for evaluation:
-                    # filter_estimator11 = FilterEstimator(transform_array2, steps)
-                    # predictions_array122, error12= filter_estimator11.kf_caller()
-                    
-                    # filter_estimator12 = FilterEstimator(transform_array2, steps)
-                    # predictions_array123, error13= filter_estimator12.ekf_caller()
-                    
-                    # filter_estimator13 = FilterEstimator(transform_array2, steps)
-                    # predictions_array124, error14= filter_estimator13.ukf_caller()
-                    
-                    # filter_estimator14 = FilterEstimator(transform_array2, steps)
-                    # predictions_array125, error15= filter_estimator14.enkf_caller()
-                    
+            
                     
                     print(predictions_array1)
                     b = 0
@@ -353,19 +322,7 @@ class predict:
                     filter_estimator2 = FilterEstimator(transform_array2, steps)
                     predictions_array2, error2= filter_estimator2.kf_caller()
                     
-                    
-                    #for evaluation:
-                    # filter_estimator21 = FilterEstimator(transform_array2, steps)
-                    # predictions_array21, error21= filter_estimator21.kf_caller()
-                    
-                    # filter_estimator22 = FilterEstimator(transform_array2, steps)
-                    # predictions_array22, error22= filter_estimator22.ekf_caller()
-                    
-                    # filter_estimator23 = FilterEstimator(transform_array2, steps)
-                    # predictions_array23, error23= filter_estimator23.ukf_caller()
-                    
-                    # filter_estimator24 = FilterEstimator(transform_array2, steps)
-                    # predictions_array24, error24= filter_estimator24.enkf_caller()
+                  
                     
                     
                     a = 0
