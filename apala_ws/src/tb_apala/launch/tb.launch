@@ -5,10 +5,10 @@
 	
 	<group name = "visualizing nodes">
 	
-		<include file="$(find turtlebot3_gazebo)/launch/scene2.launch" arg="waffle"/> 
+		<include file="$(find turtlebot3_gazebo)/launch/scene3.launch" arg="waffle"/> 
 		<include file="$(find turtlebot3_navigation)/launch/turtlebot3_navigation.launch" args="$(find turtlebot3_navigation)/maps/map.yaml" arg="waffle"/> 
 		
-	</group>
+	 </group>
 
 	<!-- ALL PROCESSING NODES GETS LAUNCHED HERE -->
 	
@@ -21,7 +21,7 @@
 
 		<!-- <node pkg="tb_apala" name= "clustering_prediction_node" type="prediction.py"/>  -->
 	 
-	</group>
+	 </group>
 
 </launch>	
 
