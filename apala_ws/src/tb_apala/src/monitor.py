@@ -141,9 +141,6 @@ class operator:
             self.until1.publish(until_msg1)
             with open('until_human1.txt', 'a') as file:
                 file.write(str(min_before1) + '\n')
-            
-       
-
         
             
         
