@@ -5,7 +5,7 @@
 	
 	<group name = "visualizing nodes">
 	
-		<include file="$(find turtlebot3_gazebo)/launch/scene3.launch" arg="waffle"/> 
+		<include file="$(find turtlebot3_gazebo)/launch/scene1.launch" arg="waffle"/> 
 		<include file="$(find turtlebot3_navigation)/launch/turtlebot3_navigation.launch" args="$(find turtlebot3_navigation)/maps/map.yaml" arg="waffle"/> 
 		
 	 </group>
@@ -23,7 +23,7 @@
 	 
 	 </group>
 
-</launch>	
+
 
 	<!-- ALL NAVIGATION NODES GETS LAUNCHED HERE -->
 	 	
@@ -37,15 +37,15 @@
 	 	
 	<! ALL MONITORING NODES GETS LAUNCHED HERE -->
  	 
-	<!-- <group name = "monitoring nodes">
+	<group name = "monitoring nodes">
 	 	
 	 	<node name="monitor_plot1" pkg="rqt_plot" type="rqt_plot" args=" /eventually_dist1 /eventually_dist2  /halting_h1 /halting_h2  "/>
     	<node name="monitor_plot2" pkg="rqt_plot" type="rqt_plot" args="  /human_h1 /human_h2 "/>
 	 	
-	</group>  -->
+	</group> 
 <!-- 
 	<include file="$(find cpu_monitor)/launch/cpu_monitor.launch">
     <arg name="poll_period" value="2.0"/>
   	</include>  -->
 
-
+</launch>	

@@ -88,8 +88,8 @@ class operator:
         
         
         #eventually operator
-        self.result_array1 = [1.25 - value for value in self.pred_dist1]
-        self.max_val1 = max(self.result_array1)
+        self.result_array2 = [1.25 - value for value in self.pred_dist1]
+        self.max_val1 = max(self.result_array2)
         eventually_msg1 = Float32()
         eventually_msg1.data = self.max_val1
         self.eventually1.publish(eventually_msg1)
@@ -105,11 +105,13 @@ class operator:
         else:
             self.velocity = 0.0
         self.spec3a = max(-self.max_val1, self.velocity)
+        with open('vel.txt', 'a') as file:
+            file.write(str(self.velocity) + '\n')
         implies_msg1 = Float32()
         implies_msg1.data = self.spec3a
         self.implies1.publish(implies_msg1)
         with open('implies_human1.txt', 'a') as file:
-            file.write(str(self.max_val1) + '\n')
+            file.write(str(self.spec3a) + '\n')
         
         
         
@@ -150,8 +152,8 @@ class operator:
         self.pred_dist2 = list(msg.data)
         
         #always operator
-        self.result_array2 = [value - 1.25 for value in self.pred_dist2]
-        self.min_val2 = min(self.result_array2)
+        self.result_array3 = [value - 1.25 for value in self.pred_dist2]
+        self.min_val2 = min(self.result_array3)
         always_msg2 = Float32()
         always_msg2.data = self.min_val2
         self.always2.publish(always_msg2)
@@ -161,8 +163,8 @@ class operator:
         
         
         #eventually_operator
-        self.result_array2 = [1.25 - value for value in self.pred_dist2]
-        self.max_val2 = max(self.result_array2)
+        self.result_array4 = [1.25 - value for value in self.pred_dist2]
+        self.max_val2 = max(self.result_array4)
         eventually_msg2 = Float32()
         eventually_msg2.data = self.max_val2
         self.eventually2.publish(eventually_msg2)
