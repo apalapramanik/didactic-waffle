@@ -76,7 +76,7 @@ class operator:
         self.pred_dist1 = list(msg.data)
         
         #always operator
-        self.result_array1 = [value - 1 for value in self.pred_dist1]
+        self.result_array1 = [value - 1.25 for value in self.pred_dist1]
         self.min_val1 = min(self.result_array1)
         always_msg1 = Float32()
         always_msg1.data = self.min_val1
@@ -88,7 +88,7 @@ class operator:
         
         
         #eventually operator
-        self.result_array1 = [1 - value for value in self.pred_dist1]
+        self.result_array1 = [1.25 - value for value in self.pred_dist1]
         self.max_val1 = max(self.result_array1)
         eventually_msg1 = Float32()
         eventually_msg1.data = self.max_val1
@@ -123,7 +123,7 @@ class operator:
         index1 = next((i for i, x in enumerate(self.pred_dist1) if x <= 1.25), None)
         if index1 is not None:
             # calculate max of values after index
-            max_after1 = max(1 - value for value in self.pred_dist1[index1:])
+            max_after1 = max(1.25 - value for value in self.pred_dist1[index1:])
             until_msg1 = Float32()            
             until_msg1.data = max_after1
             self.until1.publish(until_msg1)
@@ -133,7 +133,7 @@ class operator:
             
         else: 
             # calculate min of values before index
-            min_before1 = min(value - 1.0 for value in self.pred_dist1)
+            min_before1 = min(value - 1.25 for value in self.pred_dist1)
             until_msg1 = Float32()
             until_msg1.data = min_before1
             self.until1.publish(until_msg1)
@@ -150,7 +150,7 @@ class operator:
         self.pred_dist2 = list(msg.data)
         
         #always operator
-        self.result_array2 = [value - 1.0 for value in self.pred_dist2]
+        self.result_array2 = [value - 1.25 for value in self.pred_dist2]
         self.min_val2 = min(self.result_array2)
         always_msg2 = Float32()
         always_msg2.data = self.min_val2
@@ -196,7 +196,7 @@ class operator:
         
         if index2 is not None:
             # calculate max of values after index
-            max_after2 = max(1- value for value in self.pred_dist1[index2:])
+            max_after2 = max(1.25 - value for value in self.pred_dist1[index2:])
             until_msg2 = Float32()            
             until_msg2.data = max_after2
             self.until2.publish(until_msg2)
@@ -207,7 +207,7 @@ class operator:
             
         else: 
             # calculate min of values before index
-            min_before2 = min(value - 1 for value in self.pred_dist2)
+            min_before2 = min(value - 1.25 for value in self.pred_dist2)
             until_msg2 = Float32()
             until_msg2.data = min_before2
             self.until2.publish(until_msg2)
