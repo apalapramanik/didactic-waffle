@@ -198,8 +198,8 @@ if __name__ == '__main__':
         start = timer()
         again = 0
         # success = navigator.to_goal(position1, quaternion1, orientation1[0],orientation1[1], orientation1[2])
-        success = navigator.to_goal(position2, quaternion2, orientation2[0],orientation2[1], orientation2[2])
-        # success = navigator.to_goal(position3, quaternion3, orientation3[0],orientation3[1], orientation3[2])
+        # success = navigator.to_goal(position2, quaternion2, orientation2[0],orientation2[1], orientation2[2])
+        success = navigator.to_goal(position3, quaternion3, orientation3[0],orientation3[1], orientation3[2])
         # success = navigator.to_goal(position4, quaternion4, orientation4[0],orientation4[1], orientation4[2])
         # success = navigator.to_goal(position5, quaternion5, orientation5[0],orientation5[1], orientation5[2])
         
@@ -212,17 +212,17 @@ if __name__ == '__main__':
                 
             else:
                 rospy.loginfo("SENDING GOAL AGAIN")
-                time.sleep(1.0)
+                time.sleep(0.5)
                 again = 0 
                 print(time_start)
                 print(rospy.Time.now())
                 # success = navigator.to_goal(position1, quaternion1, orientation1[0],orientation1[1], orientation1[2])
-                success = navigator.to_goal(position2, quaternion2, orientation2[0],orientation2[1], orientation2[2])
-                # success = navigator.to_goal(position3, quaternion3, orientation3[0],orientation3[1], orientation3[2])
+                # success = navigator.to_goal(position2, quaternion2, orientation2[0],orientation2[1], orientation2[2])
+                success = navigator.to_goal(position3, quaternion3, orientation3[0],orientation3[1], orientation3[2])
                 # success = navigator.to_goal(position4, quaternion4, orientation4[0],orientation4[1], orientation4[2])
                 # success = navigator.to_goal(position5, quaternion5, orientation5[0],orientation5[1], orientation5[2])
-                print(time_start)
-                print(rospy.Time.now())
+                # print(time_start)
+                # print(time_start-rospy.Time.now())
         
         end = timer()
         seconds = end-start

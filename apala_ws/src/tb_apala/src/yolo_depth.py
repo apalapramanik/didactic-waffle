@@ -142,8 +142,8 @@ class ObjectDetectionNode:
         self.annotated_image_pub.publish(annotated_image_msg)
 
         # Show the annotated image
-        cv2.imshow("Annotated Image", self.color_image)
-        cv2.waitKey(1)
+        # cv2.imshow("Annotated Image", self.color_image)
+        # cv2.waitKey(1)
  
 
 def main():
