@@ -353,8 +353,13 @@ class FilterEstimator:
         # print("error:", self.error)
         
          # Save data to the files in append mode
-        with open("pred_ukf2.txt", "a") as f:
+        # with open("pred_ukf2.txt", "a") as f:
+        #     np.savetxt(f, self.pred_array1, delimiter=",")
+        # Save data to the files in append mode
+        with open( f"{base_folder}/pred_ukf.txt", "a") as f:
             np.savetxt(f, self.pred_array1, delimiter=",")
+            
+            # f"{base_folder}/always_human1.txt"
 
         # with open("org2.txt", "a") as f:
         #     np.savetxt(f, self.points_array, delimiter=",")
@@ -469,9 +474,9 @@ class FilterEstimator:
     
 if __name__ == "__main__":
     
-  
+    base_folder = 'evaluation3/location5/h3'
     prediction_points = []
-    with open('org2.txt', 'r') as file:
+    with open( f"{base_folder}/org_h1.txt", 'r') as file:
         for line in file:
             x, y = map(float, line.strip().split(','))  # Split by comma and convert values to float
             prediction_points.append((x, y))
@@ -483,7 +488,7 @@ if __name__ == "__main__":
     filter_estimator = FilterEstimator(prediction_points, steps)
 
     # Call the main function with the desired filter type
-    filter_type = "enkf"  # Change this to the desired filter type
+    filter_type = "ukf"  # Change this to the desired filter type
     filter_estimator.pred(filter_type)
 
 
