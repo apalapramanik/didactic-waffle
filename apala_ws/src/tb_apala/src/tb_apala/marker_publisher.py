@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 from visualization_msgs.msg import Marker
 import rospy
 from tb_apala.msg import position

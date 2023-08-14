@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import torch.nn as nn
 import torch.nn.functional as F
 from pointnet2_utils import PointNetSetAbstractionMsg, PointNetSetAbstraction

@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import rospy
 # import ros_numpy
 import numpy as np

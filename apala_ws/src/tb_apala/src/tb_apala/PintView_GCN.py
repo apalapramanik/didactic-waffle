@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+
+
 # from Model import Model
 import torch
 import torch.nn as nn

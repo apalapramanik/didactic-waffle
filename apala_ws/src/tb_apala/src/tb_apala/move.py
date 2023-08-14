@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 from cmath import isnan, nan
 import rospy
 import time
