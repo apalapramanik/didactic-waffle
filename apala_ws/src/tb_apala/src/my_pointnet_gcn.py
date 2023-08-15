@@ -11,8 +11,8 @@ from sensor_msgs.msg import PointCloud2 as pc2
 import rospkg
 # from pointnet2_cls_msg import get_model
 from tb_apala.msg import pcl_pred
-from pointnet2_cls_msg import get_model
-from PintView_GCN import PointViewGCN
+# from pointnet2_cls_msg import get_model
+from tb_apala.PintView_GCN import PointViewGCN
 
 class PointCloudClassifier:
     def __init__(self, model_path, point_cloud_topic):     

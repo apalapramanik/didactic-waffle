@@ -11,7 +11,7 @@ setup_args = generate_distutils_setup(
 
 # # fetch values from package.xml
 # setup_args = generate_distutils_setup(
-#     packages=['get_model','PointNetSetAbstractionMsg'],
+#     packages=['PointNetSetAbstractionMsg'],
 #     package_dir={'': 'pointnet2_cls_msg'},
 # )
 

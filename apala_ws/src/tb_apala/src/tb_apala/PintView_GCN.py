@@ -1,15 +1,15 @@
 #!/usr/bin/env python
 
 
-# from Model import Model
+from tb_apala.Model import Model
 import torch
 import torch.nn as nn
-from utils import View_selector, LocalGCN, NonLocalMP
-
-import torch
-import torch.nn as nn
+from tb_apala.utils import View_selector, LocalGCN, NonLocalMP
 import os
 import glob
+
+
+
 class Model(nn.Module):
 
     def __init__(self, name):

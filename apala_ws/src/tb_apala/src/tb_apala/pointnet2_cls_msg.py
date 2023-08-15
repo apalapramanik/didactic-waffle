@@ -2,7 +2,7 @@
 
 import torch.nn as nn
 import torch.nn.functional as F
-from pointnet2_utils import PointNetSetAbstractionMsg, PointNetSetAbstraction
+from tb_apala.pointnet2_utils import PointNetSetAbstractionMsg, PointNetSetAbstraction
 
 
 
