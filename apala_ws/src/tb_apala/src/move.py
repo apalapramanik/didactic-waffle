@@ -24,7 +24,10 @@ class move_forward():
         self.dist2 = nan
         # self.result = False
         # self.dist3 = nan
+       
+       
 
+        
         rospy.Subscriber("position_h1",position,self.position1_callback,queue_size=1)
         rospy.Subscriber("position_h2",position,self.position2_callback,queue_size=1)
         # rospy.Subscriber("position_h3",position,self.position3_callback,queue_size=1)
@@ -36,6 +39,10 @@ class move_forward():
         self.move_base = actionlib.SimpleActionClient("move_base", MoveBaseAction)
         rospy.loginfo("Wait for the action server to come up")
         self.move_base.wait_for_server()
+        
+        
+   
+        
     
         
     def position1_callback(self,data): 
@@ -101,6 +108,7 @@ class move_forward():
             self.result = True
         else:
             self.result = False
+           
        
         self.goal_sent = False
         print("result: ", self.result)
@@ -108,10 +116,11 @@ class move_forward():
     
     def feed_cb(self,feedback):  
             
-        if(self.dist1<1.25) or (self.dist2<1.25): 
+        if(self.dist1<1.25): #or (self.dist2<1.25): 
             self.stop()                                 #or (self.dist3<1):            
             rospy.loginfo("CANCEL CURRRENT GOAL")
-      
+            
+
         
     def stop(self):
         # now = rospy.Time.now()

@@ -244,6 +244,10 @@ catkin_install_python(PROGRAMS
     src/marker_publisher.py
     src/move.py 
     src/monitor.py
+    src/change_goal.py
+    src/test_goal.py
+    src/test_goal2.py
+    src/test_goal3.py
 
    DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
  )
