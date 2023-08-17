@@ -9,7 +9,7 @@ from tb_apala.msg import position
 from tb_apala.msg import distance
 from cmath import isnan, nan
 from std_msgs.msg import Float32
-
+global flag 
 
 class TurnRobotNode:
     def __init__(self):
@@ -23,7 +23,7 @@ class TurnRobotNode:
         self.dist1 = nan
         self.path_poses = []
         self.next_200_poses = []
-        self.min_ttc = 0.09
+        self.min_ttc = 0.5
         self.speed_h1 = 0.0
         self.prev_point = None
         self.prev_time = None
@@ -36,8 +36,11 @@ class TurnRobotNode:
         
         self.distance_human1 = rospy.Publisher("distance_from_human1", distance,queue_size=1)
         self.speed_human1 = rospy.Publisher('/human1_speed', Float32, queue_size=10)
+        self.ttc_h1 = rospy.Publisher('/ttc_human1', Float32, queue_size=10)
+    
     
     def position1_callback(self,data): 
+        # print(data)
           
             
         if self.prev_point is not None:
@@ -50,8 +53,8 @@ class TurnRobotNode:
             self.speed_h1 = distance_h1 / 0.01
             print("speed: ", self.speed_h1)
 
-            # self.speed_human1.publish(self.speed_h1)
-            # print("human_speed:", self.speed_h1)
+            self.speed_human1.publish(self.speed_h1)
+         
 
             self.prev_time = current_time
             self.prev_point = data
@@ -74,6 +77,7 @@ class TurnRobotNode:
             print("dist 1:",self.dist1)
             distance_from_human1.distance = self.dist1
             self.distance_human1.publish(distance_from_human1)
+  
             
     def time_to_collision(self, dist,  speed):        
         ttc = dist / (speed+0.25)
@@ -86,10 +90,12 @@ class TurnRobotNode:
         distance = math.sqrt(dx**2 + dy**2 + 0)
         return distance
 
+
     def odom_callback(self, odom_msg):
         orientation_quaternion = odom_msg.pose.pose.orientation
         self.current_orientation = math.atan2(2.0 * (orientation_quaternion.w * orientation_quaternion.z + orientation_quaternion.x * orientation_quaternion.y),
                                               1.0 - 2.0 * (orientation_quaternion.y * orientation_quaternion.y + orientation_quaternion.z * orientation_quaternion.z))
+  
         
     def path_callback(self, path_msg):
        
@@ -114,9 +120,7 @@ class TurnRobotNode:
         turn_goal.target_pose.pose.orientation.z = math.sin(target_angle / 2.0)
         turn_goal.target_pose.pose.orientation.w = math.cos(target_angle / 2.0)
         
-        if self.dist1 <1.5:
-            rospy.loginfo("waiting")
-
+    
         self.move_base_client.send_goal(turn_goal)
         self.move_base_client.wait_for_result()
 
@@ -142,16 +146,16 @@ class TurnRobotNode:
         goal.target_pose.pose.orientation.z = or_z
         
         self.move_base_client.send_goal(goal, feedback_cb=self.feed_cb)
-        success = self.move_base_client.wait_for_result()
-        state = self.move_base_client.get_state() 
+        self.move_base_client.wait_for_result()
+       
 
         if self.move_base_client.get_state() == actionlib.GoalStatus.SUCCEEDED:
-            # rospy.loginfo("reached location yayyyy  ")
+            rospy.loginfo("reached location yayyyy  ")
             self.goal1= True
         else:
-            # rospy.logwarn("couldnt make it :((((  ")
+            rospy.logwarn("couldnt make it :((((  ")
             self.goal1 = False
-      
+        print(self.goal1 )
         return self.goal1
     
     
@@ -159,13 +163,15 @@ class TurnRobotNode:
             
         # print("here in feedback")
         self.ttc_1 = self.time_to_collision(self.dist1, self.speed_h1)
+        self.ttc_h1.publish(self.ttc_1)
         print("TTC: ", self.ttc_1)
-        if self.ttc_1 < self.min_ttc:
+        if self.ttc_1 < self.min_ttc and flag == False:
             self.stop()
             print("cancelled goal")
-            
-
-           
+            self.result1 = False
+        # with open('ttc.txt', 'a') as file:
+        #     file.write(str(self.ttc_1) + '\n')
+      
            
     def stop(self):
      
@@ -186,19 +192,28 @@ if __name__ == '__main__':
         position1 = {'x': 7.972651, 'y' :0.070677} 
         quaternion1 = {'r1' :-0.000, 'r2' : -0.000, 'r3' : 0.960, 'r4' : 0.281} #run command : rosrun tf tf_echo /map /base_link
         
-
-      
-        nav_node = TurnRobotNode()
-        result1 = nav_node.to_goal(position1, quaternion1, orientation1[0],orientation1[1], orientation1[2])
-        if result1:
-            rospy.loginfo("reached destination")
-        else:
-            rospy.loginfo("changing direction")
-            
-            result2 = nav_node.turn_robot(45.0)
-            if result2:
-                # result3 = nav_node.to_goal(position2, quaternion2, orientation2[0],orientation2[1], orientation2[2])
-                result3 = nav_node.to_goal(position1, quaternion1, orientation1[0],orientation1[1], orientation1[2])
         
+        
+        again = 0
+        nav_node = TurnRobotNode()
+        # result1 = nav_node.to_goal(position1, quaternion1, orientation1[0],orientation1[1], orientation1[2])
+        flag = False
+        while(again<3):
+      
+            result1 = False
+            result1 = nav_node.to_goal(position1, quaternion1, orientation1[0],orientation1[1], orientation1[2])
+            print(result1)
+            
+            if result1:
+                rospy.loginfo("reached destination")
+                again = 1
+            else:
+                again=0
+                rospy.loginfo("changing direction")
+                flag = True
+                result2 = nav_node.turn_robot(45.0)
+                print(result2)
+            
+           
     except rospy.ROSInterruptException:
         pass
