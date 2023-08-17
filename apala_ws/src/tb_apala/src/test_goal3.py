@@ -23,7 +23,7 @@ class TurnRobotNode:
         self.dist1 = nan
         self.path_poses = []
         self.next_200_poses = []
-        self.min_ttc = 0.5
+        self.min_ttc = 0.6
         self.speed_h1 = 0.0
         self.prev_point = None
         self.prev_time = None
@@ -206,11 +206,12 @@ if __name__ == '__main__':
             
             if result1:
                 rospy.loginfo("reached destination")
-                again = 1
+                again = again+1
             else:
-                again=0
+            
                 rospy.loginfo("changing direction")
                 flag = True
+                rospy.sleep(1.0)
                 result2 = nav_node.turn_robot(45.0)
                 print(result2)
             
