@@ -3,7 +3,7 @@
 
    
 
-    <node name="monitor_plot3" pkg="rqt_plot" type="rqt_plot" output="screen" args=" /ttc_human1 /rob_rad /velocity /min_ttc"/>
+    <node name="monitor_plot3" pkg="rqt_plot" type="rqt_plot" output="screen" args=" /ttc_human1 /rob_rad /cmd_vel/linear/x /min_ttc"/>
 
     <!-- <node name="monitor_plot1" pkg="rqt_plot" type="rqt_plot" output="screen" args=" /eventually_dist1 /eventually_dist2  /halting_h1 /halting_h2  "/>
 
