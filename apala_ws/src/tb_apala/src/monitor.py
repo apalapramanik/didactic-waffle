@@ -51,8 +51,10 @@ class operator:
         self.until2 = rospy.Publisher("human_h2", Float32,queue_size=10)
         # self.until3 = rospy.Publisher("human_h3", Float32,queue_size=10)
         
-        self.velocity = 0.0
         self.turtle_vel = rospy.Publisher("velocity", Float32,queue_size=10)
+        
+        self.velocity = 0.0
+        
         turtle_vel_msg = Float32()
         if self.velocity:
             turtle_vel_msg.data = self.velocity

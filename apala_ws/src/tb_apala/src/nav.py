@@ -39,7 +39,8 @@ class TurnRobotNode:
         self.distance_human1 = rospy.Publisher("distance_from_human1", distance,queue_size=1)
         self.speed_human1 = rospy.Publisher('/human1_speed', Float32, queue_size=10)
         self.ttc_h1 = rospy.Publisher('/ttc_human1', Float32, queue_size=10)
-        self.odom_rad = rospy.Publisher('rob_rad', Float32,queue_size=10 )
+        self.odom_rad = rospy.Publisher('/rob_rad', Float32,queue_size=10 )
+        self.ttc_threshold =  rospy.Publisher('/min_ttc', Float32,queue_size=10)
     
     
     def position1_callback(self,data): 
@@ -143,10 +144,6 @@ class TurnRobotNode:
             self.goal2 = False
             
      
-        
-    
-
-
  
     def to_goal(self, pos, quat, or_x,or_y,or_z):
     
@@ -187,6 +184,9 @@ class TurnRobotNode:
             self.result1 = False
         # with open('ttc.txt', 'a') as file:
         #     file.write(str(self.ttc_1) + '\n')
+        self.ttc_threshold_msg =  Float32()
+        self.ttc_threshold_msg.data = self.min_ttc_to_stop
+        self.ttc_threshold.publish(self.ttc_threshold_msg)
       
            
     def stop(self):
