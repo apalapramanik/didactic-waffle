@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<launch>
+
+
+    <node pkg="tb_apala" name= "turn_robot_node" type="nav.py"/> 
+
+	<node pkg="tb_apala" name= "monitoring_node" type="monitor.py"/>
+
+</launch>

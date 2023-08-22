@@ -39,6 +39,7 @@ class TurnRobotNode:
         self.distance_human1 = rospy.Publisher("distance_from_human1", distance,queue_size=1)
         self.speed_human1 = rospy.Publisher('/human1_speed', Float32, queue_size=10)
         self.ttc_h1 = rospy.Publisher('/ttc_human1', Float32, queue_size=10)
+        self.odom_rad = rospy.Publisher('rob_rad', Float32,queue_size=10 )
     
     
     def position1_callback(self,data): 
@@ -100,6 +101,9 @@ class TurnRobotNode:
                                               1.0 - 2.0 * (orientation_quaternion.y * orientation_quaternion.y + orientation_quaternion.z * orientation_quaternion.z))
         # with open('orientation.txt', 'a') as file:
         #     file.write(str(self.current_orientation) + '\n')
+        self.rad_msg = Float32()
+        self.rad_msg.data = self.current_orientation
+        self.odom_rad.publish(self.rad_msg)
         
   
         

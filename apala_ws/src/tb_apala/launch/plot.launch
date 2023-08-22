@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<launch>
+
+   
+
+    <node pkg="rqt_plot" name="plot"  type="rqt_plot" output="screen" args=" /ttc_human1 /rob_rad /velocity"/>
+
+    <node name="monitor_plot1" pkg="rqt_plot" type="rqt_plot" args=" /eventually_dist1 /eventually_dist2  /halting_h1 /halting_h2  "/>
+    <node name="monitor_plot2" pkg="rqt_plot" type="rqt_plot" args="  /human_h1 /human_h2 "/>
+
+
+
+</launch>
