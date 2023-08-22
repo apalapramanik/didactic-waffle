@@ -89,6 +89,7 @@ catkin_python_setup()
   ListStamped.msg
   yolodepth.msg
   pcl_pred.msg
+  ttc.msg
  )
 
 ## Generate services in the 'srv' folder

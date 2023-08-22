@@ -7,6 +7,7 @@ from move_base_msgs.msg import MoveBaseActionFeedback, MoveBaseAction
 from geometry_msgs.msg import Pose, Point, Quaternion
 from tb_apala.msg import position
 from tb_apala.msg import distance
+from tb_apala.msg import ttc
 from cmath import isnan, nan
 from std_msgs.msg import Float32
 global flag 
@@ -97,6 +98,9 @@ class TurnRobotNode:
         orientation_quaternion = odom_msg.pose.pose.orientation
         self.current_orientation = math.atan2(2.0 * (orientation_quaternion.w * orientation_quaternion.z + orientation_quaternion.x * orientation_quaternion.y),
                                               1.0 - 2.0 * (orientation_quaternion.y * orientation_quaternion.y + orientation_quaternion.z * orientation_quaternion.z))
+        # with open('orientation.txt', 'a') as file:
+        #     file.write(str(self.current_orientation) + '\n')
+        
   
         
     def path_callback(self, path_msg):
@@ -168,10 +172,12 @@ class TurnRobotNode:
     def feed_cb(self,feedback):  
             
         
-        self.ttc_1 = self.time_to_collision(self.dist1, self.speed_h1)
-        self.ttc_h1.publish(self.ttc_1)
-        print("TTC: ", self.ttc_1)
-        if self.ttc_1 < self.min_ttc_to_stop and flag == False:
+        
+        self.ttc_1_msg = Float32()
+        self.ttc_1_msg.data = self.time_to_collision(self.dist1, self.speed_h1)        
+        self.ttc_h1.publish(self.ttc_1_msg)
+        print("TTC: ", self.ttc_1_msg.data)
+        if self.ttc_1_msg.data < self.min_ttc_to_stop and flag == False:
             self.stop()
             print("cancelled goal")
             self.result1 = False

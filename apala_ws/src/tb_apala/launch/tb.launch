@@ -21,7 +21,7 @@
 
 		<node pkg="tb_apala" name= "clustering_prediction_node" type="prediction.py"/> 
 
-		<node name="plot" pkg="rqt_plot" type="rqt_plot" args=" /human1_speed /ttc_human1 "/>
+		<node name="plot" pkg="rqt_plot" type="rqt_plot" args=" /ttc_human1 /odom "/>
 	 
 	 </group>
 

@@ -33,6 +33,7 @@ class ObjectDetectionNode:
         self.annotated_image_pub = rospy.Publisher('annotated_image', Image, queue_size=10)
         self.yolo_info_pub = rospy.Publisher('yolo_depth_topic', yolodepth, queue_size=10)
         self.cloud_processing_pub = rospy.Publisher('cp_flag', String, queue_size=10)
+        
 
         #create custom msg instance
         self.yolo_depth_msg = yolodepth()
