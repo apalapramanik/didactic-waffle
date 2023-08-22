@@ -4,5 +4,6 @@ turtlebot3_simulations/
 extra_files/
 build/
 devel/
+videos/
 yolov5m.pt
 yolov5s.pt

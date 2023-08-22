@@ -208,7 +208,7 @@ void callback(const sensor_msgs::PointCloud2ConstPtr& cloud_msg) {
 
       pass_filter2.setInputCloud (passfiltered_pclXYZ);
       pass_filter2.setFilterFieldName ("x");
-      pass_filter2.setFilterLimits (-0.8, 0.9);
+      pass_filter2.setFilterLimits (-1.0, 1.0);
       pass_filter2.setFilterLimitsNegative (false);  // try this with false
       pass_filter2.filter (*passfiltered_again);
 

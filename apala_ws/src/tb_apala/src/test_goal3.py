@@ -23,7 +23,8 @@ class TurnRobotNode:
         self.dist1 = nan
         self.path_poses = []
         self.next_200_poses = []
-        self.min_ttc = 0.6
+        self.min_ttc_to_turn = 0.8
+        self.min_ttc_to_stop = 0.8
         self.speed_h1 = 0.0
         self.prev_point = None
         self.prev_time = None
@@ -43,17 +44,18 @@ class TurnRobotNode:
         # print(data)
           
             
-        if self.prev_point is not None:
+        if self.prev_point is not None and self.prev_time is not None:
             current_time = rospy.Time.now()
-            # time_difference = (current_time - self.prev_time).to_nsec()
-            # print(time_difference)
+            time_difference = (current_time - self.prev_time).to_sec()
+            print(time_difference)
 
             distance_h1 = self.calculate_distance(self.prev_point, data)
             print("distance: ", distance_h1)
-            self.speed_h1 = distance_h1 / 0.01
-            print("speed: ", self.speed_h1)
+            if time_difference>0:
+                self.speed_h1 = distance_h1 / time_difference
+                print("speed: ", self.speed_h1)
 
-            self.speed_human1.publish(self.speed_h1)
+                self.speed_human1.publish(self.speed_h1)
          
 
             self.prev_time = current_time
@@ -87,7 +89,7 @@ class TurnRobotNode:
     def calculate_distance(self, point1, point2):
         dx = point2.x - point1.x
         dy = point2.z - point1.z
-        distance = math.sqrt(dx**2 + dy**2 + 0)
+        distance = math.sqrt(dx**2 + dy**2)
         return distance
 
 
@@ -119,6 +121,7 @@ class TurnRobotNode:
 
         turn_goal.target_pose.pose.orientation.z = math.sin(target_angle / 2.0)
         turn_goal.target_pose.pose.orientation.w = math.cos(target_angle / 2.0)
+        # turn_goal.target_pose.pose.position.x = 0.5
         
     
         self.move_base_client.send_goal(turn_goal)
@@ -131,7 +134,10 @@ class TurnRobotNode:
             rospy.logwarn("Turning the robot failed.")
             self.goal2 = False
             
-        return self.goal2
+     
+        
+    
+
 
  
     def to_goal(self, pos, quat, or_x,or_y,or_z):
@@ -161,11 +167,11 @@ class TurnRobotNode:
     
     def feed_cb(self,feedback):  
             
-        # print("here in feedback")
+        
         self.ttc_1 = self.time_to_collision(self.dist1, self.speed_h1)
         self.ttc_h1.publish(self.ttc_1)
         print("TTC: ", self.ttc_1)
-        if self.ttc_1 < self.min_ttc and flag == False:
+        if self.ttc_1 < self.min_ttc_to_stop and flag == False:
             self.stop()
             print("cancelled goal")
             self.result1 = False
