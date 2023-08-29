@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<launch>
+
+	
+	
+		
+
+		<include file="$(find turtlebot3_gazebo)/launch/scene1.launch" /> 
+		<include file="$(find turtlebot3_navigation)/launch/turtlebot3_navigation.launch" arg="$(find turtlebot3_navigation)/maps/map.yaml" /> 
+		
+	
+	
+		<node pkg="tb_apala" name= "Depth_calculation" type="yolo_depth.py"/>
+
+		<env name="GMON_OUT_PREFIX" value="organize" />
+
+		<node pkg="tb_apala" name= "cloud_processing" type = "organize" />	
+
+		<node pkg="tb_apala" name= "clustering_prediction_node" type="prediction.py"/> 
+
+		
+	 
+	
+
+	
+
+	<!-- <include file="$(find turtlebot3_gazebo)/launch/scene1.launch" arg="waffle"/> 
+		<include file="$(find turtlebot3_navigation)/launch/turtlebot3_navigation.launch" args="$(find turtlebot3_navigation)/maps/map.yaml" arg="waffle"/>  -->
+	 	
+	
+ 	 
+	
+	<!-- 
+		<include file="$(find cpu_monitor)/launch/cpu_monitor.launch">
+		<arg name="poll_period" value="2.0"/>
+		</include>  -->
+
+</launch>	
