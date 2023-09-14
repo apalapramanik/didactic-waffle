@@ -3,6 +3,7 @@ turtlebot3/turtlebot3_description
 turtlebot3/turtlebot3_example
 turtlebot3/turtlebot3_slam
 turtlebot3/turtlebot3_teleop
+turtlebot3/turtlebot3_navigation
 turtlebot3/turtlebot3
 turtlebot3_msgs/
 turtlebot3_simulations/
