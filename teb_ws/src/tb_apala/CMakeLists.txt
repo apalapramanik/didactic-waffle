@@ -24,6 +24,7 @@ find_package(catkin REQUIRED
   std_msgs
   message_generation
   geometry_msgs
+  costmap_2d
 )
 
 ## System dependencies are found with CMake's conventions
@@ -152,7 +153,7 @@ generate_messages(
 catkin_package(
 #  INCLUDE_DIRS ${THIS_PACKAGE_INCLUDE_DIRS}
  LIBRARIES  interactivity_utils
- CATKIN_DEPENDS cv_bridge roscpp rospy sensor_msgs std_msgs message_runtime interactive_markers
+ CATKIN_DEPENDS cv_bridge roscpp rospy sensor_msgs std_msgs message_runtime interactive_markers costmap_2d
  DEPENDS  EIGEN3
 
 )
@@ -183,13 +184,14 @@ link_directories(
 )
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/tb_apala.cpp
+#   src/simple_layer.cpp
 # )
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure
 # add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# add_dependencies(tb_apala_lib ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
@@ -207,7 +209,7 @@ link_directories(
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
-# target_link_libraries(${PROJECT_NAME}_node
+# target_link_libraries(${PROJECT_NAME}
 #   ${catkin_LIBRARIES}
 # )
 
