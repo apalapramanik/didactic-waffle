@@ -13,3 +13,7 @@ devel/
 videos/
 yolov5m.pt
 yolov5s.pt
+
+apala_ws/src/turtlebot3
+
+teb_ws/src/turtlebot3
