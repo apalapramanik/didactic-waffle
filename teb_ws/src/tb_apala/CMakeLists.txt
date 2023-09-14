@@ -257,7 +257,7 @@ target_link_libraries(organize ${catkin_LIBRARIES} pcl_visualization)
 add_dependencies(organize tb_apala_generate_messages_cpp)
 
 
-add_library(${PROJECT_NAME} src/simple_layer.cpp)
+# add_library(${PROJECT_NAME} src/simple_layer.cpp)
 
 
 ## Mark executables for installation
