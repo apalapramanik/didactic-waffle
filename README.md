@@ -35,7 +35,7 @@ Launch prediction node:
 
 ``` rosrun tb_apala prediction.py ```
 
-Launch box geenrator node:
+Launch box generator node:
 
 ``` rosrun tb_apala box.py ```
 
