@@ -12,6 +12,12 @@ from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Twist
 from tf.transformations import euler_from_quaternion
 import numpy as np
+from scipy.linalg import expm
+
+from tb_apala.src.StarV.StarV.plant.dlode import DLODE
+import numpy as np
+from tb_apala.src.StarV.StarV.set.star import Star
+from tb_apala.src.StarV.StarV.set.probstar import ProbStar
 
 class robot_state:
     
@@ -40,6 +46,49 @@ class robot_state:
         
         # Update state variables
         self.X = np.array([x, y, theta])
+        
+        # For testing purposes, publish a Twist command
+        twist_cmd = Twist()
+        twist_cmd.linear.x = 0.1  # Example linear velocity
+        twist_cmd.angular.z = 0.1  # Example angular velocity
+        self.twist_pub.publish(twist_cmd)
+        
+        # Calculate time difference
+        current_time = rospy.Time.now()
+        dt = (current_time - self.last_time).to_sec()
+        self.last_time = current_time
+
+        # Calculate state-space matrices (A, B, C, D)
+        A = np.array([[0, 0, -twist_cmd.linear.x * np.sin(theta)],
+                      [0, 0, twist_cmd.linear.x * np.cos(theta)],
+                      [0, 0, 0]])
+
+        B = np.array([[np.cos(theta), 0],
+                      [np.sin(theta), 0],
+                      [0, 1]])
+
+        C = np.eye(3)  # Output all states as measurements
+
+        D = np.zeros((3, 2))  # No direct dependence on control inputs
+
+        # Exponential of A*dt
+        Adt = expm(A * dt)
+
+        # Print the calculated matrices (for testing purposes)
+        rospy.loginfo("A: \n%s", A)
+        rospy.loginfo("B: \n%s", B)
+        rospy.loginfo("C: \n%s", C)
+        rospy.loginfo("D: \n%s", D)
+        rospy.loginfo("Adt: \n%s", Adt)
+        
+        
+        
+        
+        
+if __name__ == '__main__':
+   
+    robot_state_calc = robot_state()
+    rospy.spin()
         
         
         
