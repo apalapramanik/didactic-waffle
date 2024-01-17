@@ -42,4 +42,10 @@ Launch box generator node:
 
 ``` rosrun monitoring box.py ```
 
+Launch monitor node:
+
+``` rosrun monitoring monitor.py ```
+
+## Verification
+
 
