@@ -47,16 +47,13 @@ class robot_state:
         # Update state variables
         self.X = np.array([x, y, theta])
         
-        # For testing purposes, publish a Twist command
+       
         twist_cmd = Twist()
-        twist_cmd.linear.x = 0.1  # Example linear velocity
-        twist_cmd.angular.z = 0.1  # Example angular velocity
-        self.twist_pub.publish(twist_cmd)
+        # twist_cmd.linear.x = 0.1  # Example linear velocity
+        # twist_cmd.angular.z = 0.1  # Example angular velocity
+        # self.twist_pub.publish(twist_cmd)
         
-        # Calculate time difference
-        current_time = rospy.Time.now()
-        dt = (current_time - self.last_time).to_sec()
-        self.last_time = current_time
+      
 
         # Calculate state-space matrices (A, B, C, D)
         A = np.array([[0, 0, -twist_cmd.linear.x * np.sin(theta)],
@@ -71,15 +68,14 @@ class robot_state:
 
         D = np.zeros((3, 2))  # No direct dependence on control inputs
 
-        # Exponential of A*dt
-        Adt = expm(A * dt)
+       
 
         # Print the calculated matrices (for testing purposes)
         rospy.loginfo("A: \n%s", A)
         rospy.loginfo("B: \n%s", B)
         rospy.loginfo("C: \n%s", C)
         rospy.loginfo("D: \n%s", D)
-        rospy.loginfo("Adt: \n%s", Adt)
+      
         
         plant = DLODE(A, B, C, D)
         plant.info()
