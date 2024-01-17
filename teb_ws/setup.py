@@ -5,7 +5,7 @@ from distutils.core import setup
 from catkin_pkg.python_setup import generate_distutils_setup
 
 setup_args = generate_distutils_setup(
-    packages=["StarV", "verification", "monitoring"],
+    packages=['StarV', 'verification'],
     package_dir={'': 'src'}
 )
 
