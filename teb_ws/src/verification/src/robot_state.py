@@ -14,10 +14,11 @@ from tf.transformations import euler_from_quaternion
 import numpy as np
 from scipy.linalg import expm
 
-from verification.src.StarV.StarV.plant.dlode import DLODE
-import numpy as np
-from verification.src.StarV.StarV.set.star import Star
-from verification.src.StarV.StarV.set.probstar import ProbStar
+# from verification.src.StarV.StarV.plant.dlode import DLODE
+
+from StarV.StarV.plant.dlode import DLODE
+from StarV.StarV.set.star import Star
+from StarV.StarV.set.probstar import ProbStar
 
 class robot_state:
     
