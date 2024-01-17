@@ -81,6 +81,9 @@ class robot_state:
         rospy.loginfo("D: \n%s", D)
         rospy.loginfo("Adt: \n%s", Adt)
         
+        plant = DLODE(A, B, C, D)
+        plant.info()
+        
         
         
         
