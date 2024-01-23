@@ -4,12 +4,10 @@
 from distutils.core import setup
 from catkin_pkg.python_setup import generate_distutils_setup
 
-setup_args = generate_distutils_setup(
+sa = generate_distutils_setup(
     packages=['StarV'],
     package_dir={'': 'src'}
 )
 
 
-
-
-setup(**setup_args)
+setup(**sa)

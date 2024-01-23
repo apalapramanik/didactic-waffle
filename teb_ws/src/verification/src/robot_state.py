@@ -16,9 +16,10 @@ from scipy.linalg import expm
 
 # from verification.src.StarV.StarV.plant.dlode import DLODE
 
-from StarV.StarV.plant.dlode import DLODE
-from StarV.StarV.set.star import Star
-from StarV.StarV.set.probstar import ProbStar
+
+from StarV.plant.dlode import DLODE
+# from verification.src.StarV.StarV.set.star import Star
+# from verification.src.StarV.StarV.set.probstar import ProbStar
 
 class robot_state:
     
@@ -50,9 +51,9 @@ class robot_state:
         
        
         twist_cmd = Twist()
-        # twist_cmd.linear.x = 0.1  # Example linear velocity
-        # twist_cmd.angular.z = 0.1  # Example angular velocity
-        # self.twist_pub.publish(twist_cmd)
+        twist_cmd.linear.x = 0.1  # Example linear velocity
+        twist_cmd.angular.z = 0.1  # Example angular velocity
+        self.twist_pub.publish(twist_cmd)
         
       
 
