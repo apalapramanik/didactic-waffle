@@ -34,8 +34,11 @@ def plot_from_files(filename1, filename2):
 
     # Plotting
     plt.figure(figsize=(10, 6))
-    plt.plot(x1_values, y1_values, marker='o', linestyle='-', color='b', label='original Data Points', linewidth=0.25)
-    plt.plot(x2_values, y2_values, marker='o', linestyle='-', color='r', label='calculated Data Points', linewidth=0.25)
+    plt.scatter(x1_values, y1_values, color='b', label='originals Data Points')
+    plt.scatter(x2_values, y2_values, color='r', label='calculated Data Points')
+    
+    # plt.plot(x1_values, y1_values,  marker = '.', color='b', label='originals Data Points', linewidth=1.0)
+    # plt.plot(x2_values, y2_values, linestyle='dotted', color='r', label='calculated Data Points', linewidth=1.0)
     
     plt.title('Plot of states')
     plt.xlabel('X Axis')
