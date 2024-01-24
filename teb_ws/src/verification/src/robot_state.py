@@ -14,6 +14,7 @@ from tf.transformations import euler_from_quaternion
 import numpy as np
 from scipy.linalg import expm
 import matplotlib.pyplot as plt
+from std_msgs.msg import Float32
 
 # from verification.src.StarV.StarV.plant.dlode import DLODE
 
@@ -28,6 +29,7 @@ class robot_state:
         rospy.init_node('robot_state', anonymous=True)
         self.odom_sub = rospy.Subscriber('/odom', Odometry, self.odom_callback)
         self.twist_pub = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
+        self.error_pub = rospy.Publisher('/state_error', Float32, queue_size=10)  
         self.states_history = []
         self.errors_history = []
         
@@ -54,13 +56,16 @@ class robot_state:
         
         self.states_history.append(self.X)
         
+        with open('states.txt', 'a') as file:
+            file.write(f"{self.X}\n")
+            
         print("current state:", self.X, "\n")
      
         
        
         twist_cmd = Twist()
         twist_cmd.linear.x = 0.1  # Example linear velocity
-        twist_cmd.angular.z = 0.1  # Example angular velocity
+        twist_cmd.angular.z = 0.0  # Example angular velocity
         self.twist_pub.publish(twist_cmd)
         
         self.U = np.array([twist_cmd.linear.x , twist_cmd.angular.z])
@@ -84,53 +89,34 @@ class robot_state:
    
         
         # plant = DLODE(self.A, self.B, self.C, self.D)
-        # plant.info()
-        
+        # plant.info()        
   
         
-        # self.next_state = np.dot(self.A, self.X) + np.dot(self.B, self.U)
+        self.next_state = np.dot(self.A, self.X) + np.dot(self.B, self.U)
+        
+        with open('next_states.txt', 'a') as file:
+            file.write(f"{self.next_state}\n")
+            
         
         print("next state: ", self.next_state,"\n")
         
-        error = self.next_state - self.X
-        
+        if len(self.states_history) >1:
+            self.error = self.next_state - self.states_history[-2]
+        else:
+            self.error = None
+            
         # Append current state and error to history lists
-        self.states_history.append(self.X)
-        self.errors_history.append(error)
+        self.errors_history.append(self.error)
         
         # Print and plot
-        print("Next state:", self.next_state)
-        print("Error:", error)
+        print("Error:", self.error)
+       
+            
         
         # Plotting
-        self.plot_results()
+        # self.plot_results()
         
         print("---------------------------------------------------")
-        
-    def plot_results(self):
-        # Plotting code
-        time_steps = range(len(self.states_history))
-
-        # Plot states
-        plt.figure(1)
-        plt.subplot(211)
-        plt.plot(time_steps, self.states_history)
-        plt.title('Current States Over Time')
-        plt.xlabel('Time Steps')
-        plt.ylabel('States')
-
-        # Plot errors
-        plt.subplot(212)
-        plt.plot(time_steps, self.errors_history)
-        plt.title('Errors Over Time')
-        plt.xlabel('Time Steps')
-        plt.ylabel('Errors')
-
-        plt.tight_layout()
-        plt.show()
-        
-        
-        
         
         
 if __name__ == '__main__':
