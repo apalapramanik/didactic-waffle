@@ -20,8 +20,8 @@ from std_msgs.msg import Float32
 
 
 from StarV.plant.dlode import DLODE
-# from verification.src.StarV.StarV.set.star import Star
-# from verification.src.StarV.StarV.set.probstar import ProbStar
+from StarV.set.star import Star
+from StarV.set.probstar import ProbStar
 
 class robot_state:
     
@@ -56,8 +56,8 @@ class robot_state:
         
         self.states_history.append(self.X)
         
-        with open('states.txt', 'a') as file:
-            file.write(f"{self.X}\n")
+        # with open('states.txt', 'a') as file:
+        #     file.write(f"{self.X}\n")
             
         print("current state:", self.X, "\n")
      
@@ -88,14 +88,42 @@ class robot_state:
 
    
         
-        # plant = DLODE(self.A, self.B, self.C, self.D)
-        # plant.info()        
+        plant = DLODE(self.A, self.B, self.C, self.D)
+        # plant.info()
+        
+        s = ProbStar.rand(2)
+        print(s)
+        
+        """
+        
+        X0 = ProbStar.rand(2)
+        X1, Y1 = plant.stepReach(X0)
+        U0 = np.array([1.0, 0.5])
+        X2, Y2 = plant.stepReach(X0, U0)
+        
+        # Define Distribution for Initial State Space Vector
+        X_0,sigma_0,U_0 = initial_state.initial_state(pose_history,actuation_history,pose_dt_history)
+        V_pi,zeta_pi,V_omega,zeta_omega = U_0
+
+        # Convert Initial State to Probstar 
+        c = (np.expand_dims(X_0, axis=0)).transpose()
+        V = np.diag(sigma_0)
+        n_sigma = np.diag(np.ones(X_0.shape[0]))
+        n_mu = np.zeros(X_0.shape[0])
+        l = np.ones(X_0.shape[0]) * standard_deviations * -1
+        u = np.ones(X_0.shape[0]) * standard_deviations
+        probstars = []
+        
+        """
+        
+        
+                
   
         
         self.next_state = np.dot(self.A, self.X) + np.dot(self.B, self.U)
         
-        with open('next_states.txt', 'a') as file:
-            file.write(f"{self.next_state}\n")
+        # with open('next_states.txt', 'a') as file:
+        #     file.write(f"{self.next_state}\n")
             
         
         print("next state: ", self.next_state,"\n")
