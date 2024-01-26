@@ -10,7 +10,7 @@ import math
     
 def compute_reachability( bb_vertices_human,  X_initial, std_initial, A ,  std_dev=2 , steps=3, robot_width = 0.281, robot_length = 0.306 ):
     model_dt = 0.25/10
-    # vel, omega = U_initial
+
 
     # Convert Initial State to Probstar 
     c = (np.expand_dims(X_initial, axis=0)).transpose()
