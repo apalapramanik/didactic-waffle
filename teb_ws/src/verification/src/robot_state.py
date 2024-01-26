@@ -28,7 +28,6 @@ class robot_state:
     def __init__(self):
         rospy.init_node('robot_state', anonymous=True)
         self.odom_sub = rospy.Subscriber('/odom', Odometry, self.odom_callback)
-        self.twist_pub = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
         self.error_pub = rospy.Publisher('/state_error', Float32, queue_size=10)  
         self.states_history = []
         self.errors_history = []
@@ -51,10 +50,52 @@ class robot_state:
         )
         _, _, theta = euler_from_quaternion(quaternion)
         
-        # Update state variables
         self.X = np.array([x, y, theta])
         
-        self.states_history.append(self.X)
+        vel = odom_msg.twist.twist.linear 
+        omega = odom_msg.twist.twist.angular
+        
+        self.U = np.array([vel, omega])     
+        
+        
+        if len(self.states_history) <=  20:
+            self.states_history.append(self.X)
+        else:
+            self.states_history.pop()
+            self.states_history.append(self.X)
+        
+        print("length:",  len(self.states_history))
+       
+        
+        if len(self.states_history) ==  20:
+        
+            # Calculate mean and standard deviation for x
+            self.mean_x = np.mean(self.X[0, :])
+            self.std_x = np.std(self.X[0, :])
+
+            # Calculate mean and standard deviation for y
+            self.mean_y = np.mean(self.X[1, :])
+            self.std_y = np.std(self.X[1, :])
+
+            # Calculate mean and standard deviation for theta
+            self.mean_theta = np.mean(self.X[2, :])
+            self.std_theta = np.std(self.X[2, :])
+
+            # Print the results
+            print("Mean and standard deviation for x:")
+            print(f"Mean: {self.mean_x}, Standard Deviation: {self.std_x}")
+
+            print("\nMean and standard deviation for y:")
+            print(f"Mean: {self.mean_y}, Standard Deviation: {self.std_y}")
+
+            print("\nMean and standard deviation for theta:")
+            print(f"Mean: {self.mean_theta}, Standard Deviation: {self.std_theta}")
+            
+            self.X_initial = np.array([self.mean_x, self.mean_y, self.mean_theta])
+            self.std_initial = np.array([self.std_x, self.std_y, self.std_theta])
+            
+            
+        
         
         # with open('states.txt', 'a') as file:
         #     file.write(f"{self.X}\n")
@@ -63,12 +104,12 @@ class robot_state:
      
         
        
-        twist_cmd = Twist()
-        twist_cmd.linear.x = 0.1  # Example linear velocity
-        twist_cmd.angular.z = 0.0  # Example angular velocity
-        self.twist_pub.publish(twist_cmd)
+        # twist_cmd = Twist()
+        # twist_cmd.linear.x = 0.1  # Example linear velocity
+        # twist_cmd.angular.z = 0.0  # Example angular velocity
+        # self.twist_pub.publish(twist_cmd)
         
-        self.U = np.array([twist_cmd.linear.x , twist_cmd.angular.z])
+        # self.U = np.array([twist_cmd.linear.x , twist_cmd.angular.z])
         
       
 
@@ -88,11 +129,11 @@ class robot_state:
 
    
         
-        plant = DLODE(self.A, self.B, self.C, self.D)
-        # plant.info()
+        # plant = DLODE(self.A, self.B, self.C, self.D)
+        # # plant.info()
         
-        s = ProbStar.rand(2)
-        print(s)
+        # s = ProbStar.rand(2)
+        # print(s)
         
         """
         
@@ -120,24 +161,24 @@ class robot_state:
                 
   
         
-        self.next_state = np.dot(self.A, self.X) + np.dot(self.B, self.U)
+        # self.next_state = np.dot(self.A, self.X) + np.dot(self.B, self.U)
         
         # with open('next_states.txt', 'a') as file:
         #     file.write(f"{self.next_state}\n")
             
         
-        print("next state: ", self.next_state,"\n")
+        # print("next state: ", self.next_state,"\n")
         
-        if len(self.states_history) >1:
-            self.error = self.next_state - self.states_history[-2]
-        else:
-            self.error = None
+        # if len(self.states_history) >1:
+        #     self.error = self.next_state - self.states_history[-2]
+        # else:
+        #     self.error = None
             
         # Append current state and error to history lists
-        self.errors_history.append(self.error)
+        # self.errors_history.append(self.error)
         
         # Print and plot
-        print("Error:", self.error)
+        # print("Error:", self.error)
        
             
         
