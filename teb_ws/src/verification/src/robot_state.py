@@ -15,13 +15,12 @@ import numpy as np
 from scipy.linalg import expm
 import matplotlib.pyplot as plt
 from std_msgs.msg import Float32
+from math import cos, sin
 
 # from verification.src.StarV.StarV.plant.dlode import DLODE
 
 
-from StarV.plant.dlode import DLODE
-from StarV.set.star import Star
-from StarV.set.probstar import ProbStar
+
 
 class robot_state:
     
@@ -58,28 +57,30 @@ class robot_state:
         self.U = np.array([vel, omega])     
         
         
-        if len(self.states_history) <=  20:
+        if len(self.states_history) <= 19:
             self.states_history.append(self.X)
         else:
-            self.states_history.pop()
+            self.states_history.pop(0)  # Remove the oldest entry
             self.states_history.append(self.X)
-        
-        print("length:",  len(self.states_history))
-       
-        
-        if len(self.states_history) ==  20:
-        
+
+        print("length:", len(self.states_history))
+
+        if len(self.states_history) == 20:
+            # Convert states_history to a NumPy array for easier calculations
+            states_array = np.array(self.states_history)
+
             # Calculate mean and standard deviation for x
-            self.mean_x = np.mean(self.X[0, :])
-            self.std_x = np.std(self.X[0, :])
+            self.mean_x = np.mean(states_array[:, 0])
+            self.std_x = np.std(states_array[:, 0])
 
             # Calculate mean and standard deviation for y
-            self.mean_y = np.mean(self.X[1, :])
-            self.std_y = np.std(self.X[1, :])
+            self.mean_y = np.mean(states_array[:, 1])
+            self.std_y = np.std(states_array[:, 1])
 
             # Calculate mean and standard deviation for theta
-            self.mean_theta = np.mean(self.X[2, :])
-            self.std_theta = np.std(self.X[2, :])
+            self.mean_theta = np.mean(states_array[:, 2])
+            self.std_theta = np.std(states_array[:, 2])
+
 
             # Print the results
             print("Mean and standard deviation for x:")
@@ -100,7 +101,7 @@ class robot_state:
         # with open('states.txt', 'a') as file:
         #     file.write(f"{self.X}\n")
             
-        print("current state:", self.X, "\n")
+        # print("current state:", self.X, "\n")
      
         
        
@@ -115,17 +116,17 @@ class robot_state:
 
         # Calculate state-space matrices (A, B, C, D)
     
-        self.A = np.array([[1.0, 0.0, 0.0],
-                           [0.0, 1.0, 0.0],
+        self.A = np.array([[1.0, 0.0, -vel*cos(theta)],
+                           [0.0, 1.0, -vel*sin(theta)],
                            [0.0, 0.0, 1.0]])
 
-        self.B = np.array([[np.cos(theta), 0],
-                           [np.sin(theta), 0],
-                           [0, 1]])
+        # self.B = np.array([[np.cos(theta), 0],
+        #                    [np.sin(theta), 0],
+        #                    [0, 1]])
 
-        self.C = np.eye(3)  # Output all states as measurements
+        # self.C = np.eye(3)  # Output all states as measurements
 
-        self.D = np.zeros((3, 2))  # No direct dependence on control inputs
+        # self.D = np.zeros((3, 2))  # No direct dependence on control inputs
 
    
         
@@ -193,5 +194,19 @@ if __name__ == '__main__':
     robot_state_calc = robot_state()
     rospy.spin()
         
+        
+"""
+Mean and standard deviation for x:
+Mean: 11.45685789395808, Standard Deviation: 5.868065846169667e-07
+
+Mean and standard deviation for y:
+Mean: -7.218021583352927, Standard Deviation: 2.981426525819482e-06
+
+Mean and standard deviation for theta:
+Mean: 1.6257967346611615, Standard Deviation: 1.031531294396443e-05
+
+initial state: [11.45686 -7.21802  1.62578] 
+
+"""
         
         
