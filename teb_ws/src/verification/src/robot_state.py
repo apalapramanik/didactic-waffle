@@ -28,9 +28,6 @@ steps=3
 
 
 
-
-
-
 class robot_human_state:
     
     def __init__(self):
@@ -205,7 +202,6 @@ def compute_reachability( bb_vertices_human,  X_initial, std_initial,  A , angle
         probstar = ProbStar(c_V_Combine,C,d,n_mu,n_sigma)
         probstars.append(probstar)
     return probstars
-
 
 
 
