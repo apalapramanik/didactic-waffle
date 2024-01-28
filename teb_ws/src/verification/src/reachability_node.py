@@ -1,15 +1,16 @@
-import rospy
-from nav_msgs.msg import Odometry
-from geometry_msgs.msg import Twist
-from tf.transformations import euler_from_quaternion
+
 import numpy as np
 from StarV.set.probstar import ProbStar
 import math
 
+robot_width = 0.281
+robot_length = 0.306
+std_dev=2 
+steps=3
 
     
-def compute_reachability( bb_vertices_human,  X_initial, std_initial, A ,  std_dev=2 , steps=3, robot_width = 0.281, robot_length = 0.306 ):
-    model_dt = 0.25/10
+def compute_reachability( bb_vertices_human,  X_initial, std_initial,  A ):  
+    
 
 
     # Convert Initial State to Probstar 
@@ -46,6 +47,10 @@ def compute_reachability( bb_vertices_human,  X_initial, std_initial, A ,  std_d
         probstar = ProbStar(c_V_Combine,C,d,n_mu,n_sigma)
         probstars.append(probstar)
     return probstars
+
+
+
+
 
 def bb_vertices(width, length, angle):
    
@@ -115,7 +120,6 @@ def convex_hull_vertex_array_to_linear_constraint(convex_hull_array):
         d[idx, 0] = -(y1 * (x2 - x1) - x1 * (y2 - y1))
 
     return C, d
-
 
 def predicates(angle, bb_vertices_human, robot_width, robot_length,):  
     bb_vertices_robot = bb_vertices(robot_width, robot_length,  angle)    

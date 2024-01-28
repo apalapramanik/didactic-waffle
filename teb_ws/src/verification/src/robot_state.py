@@ -9,17 +9,18 @@
 
 import rospy
 from nav_msgs.msg import Odometry
-from geometry_msgs.msg import Twist
 from tf.transformations import euler_from_quaternion
 import numpy as np
 from scipy.linalg import expm
-import matplotlib.pyplot as plt
-from std_msgs.msg import Float32
 from sensor_msgs.msg import PointCloud2 as pc2
 from math import cos, sin
-from verification import reachability_node
-from StarV.plant.dlode import DLODE
-from StarV.set.probstar import ProbStar
+from reachability_node import *
+import math
+
+robot_width = 0.281
+robot_length = 0.306
+std_dev=2 
+steps=3
 
 
 
@@ -38,7 +39,7 @@ class robot_human_state:
         # Initialize state variables
         self.X = np.array([0.0, 0.0, 0.0])  # [x, y, theta]
         self.last_time = rospy.Time.now()
-        
+
      
 
     def human_pc_callback(self, pose_msg):
@@ -82,73 +83,60 @@ class robot_human_state:
         )
         _, _, theta = euler_from_quaternion(quaternion)
         
+        
+        
         self.X = np.array([x, y, theta])
         
-        vel = odom_msg.twist.twist.linear 
+        vel_x = odom_msg.twist.twist.linear.x
+        vel_y = odom_msg.twist.twist.linear.y
+        vel_z = odom_msg.twist.twist.linear.z
+        
+        vel = math.sqrt(vel_x**2 + vel_y**2 + vel_z**2)
+        
         omega = odom_msg.twist.twist.angular
         
         self.U = np.array([vel, omega])    
         
-        dt = 0.25
+        dt = 0.025 #model_dt = 0.25/10
+        
+        
     
-        self.A = np.array([[1.0, 0.0, -vel*cos(theta)*dt],
-                           [0.0, 1.0, -vel*sin(theta)*dt],
+        self.A = np.array([[1.0, 0.0, -1 * vel*cos(theta)*dt],
+                           [0.0, 1.0, -1 * vel*sin(theta)*dt],
                            [0.0, 0.0, 1.0]])
         
+        self.X_initial = self.X
+        self.std_initial = np.array([0.0, 0.0, 0.0])
+        self.U_initial = self.U
         
-        if len(self.states_history) <= 19:
-            self.states_history.append(self.X)
-        else:
-            self.states_history.pop(0)  # Remove the oldest entry
-            self.states_history.append(self.X)
-
-        print("length:", len(self.states_history))
-
-        if len(self.states_history) == 20:
-            # Convert states_history to a NumPy array for easier calculations
-            states_array = np.array(self.states_history)
-
-            # Calculate mean and standard deviation for x
-            self.mean_x = np.mean(states_array[:, 0])
-            self.std_x = np.std(states_array[:, 0])
-
-            # Calculate mean and standard deviation for y
-            self.mean_y = np.mean(states_array[:, 1])
-            self.std_y = np.std(states_array[:, 1])
-
-            # Calculate mean and standard deviation for theta
-            self.mean_theta = np.mean(states_array[:, 2])
-            self.std_theta = np.std(states_array[:, 2])
-
-
-
-   
+        probstars = compute_reachability(bb_vertices_human =  self.bb_vertices_human ,  X_initial = self.X_initial, std_initial = self.std_initial , A = self.A)
         
-        plant = DLODE(self.A)
-        # plant.info()
-        
-        
-        
-        
-        
-        """
-        s = ProbStar()
-        print(s)
-        X0 = ProbStar.rand(2)
-        X1, Y1 = plant.stepReach(X0)
-        U0 = np.array([1.0, 0.5])
-        X2, Y2 = plant.stepReach(X0, U0)
-        
-        """    
+        for i in range(steps):
+            print("Probstar ", i, ": ", probstars[i])          
+ 
         
                 
         print("---------------------------------------------------")
-        
+ 
+def pointcloud2_to_numpy(pointcloud_msg):
+    # Convert the PointCloud2 message to a NumPy array
+    numpy_array = np.frombuffer(pointcloud_msg.data, dtype=np.float32).reshape(-1, pointcloud_msg.point_step // 4)
+
+    # Extract x, y, and z coordinates
+    x = numpy_array[:, 0]
+    y = numpy_array[:, 1]
+    z = numpy_array[:, 2]
+
+    # Create a NumPy array with x, y, z coordinates
+    points = np.column_stack((x, y, z))
+
+    return points             
         
 if __name__ == '__main__':
    
     robot_state_calc = robot_human_state()
     rospy.spin()
+  
         
         
 """
@@ -204,17 +192,5 @@ Mean: 1.6257967346611615, Standard Deviation: 1.031531294396443e-05
 initial state: [11.45686 -7.21802  1.62578] 
 
 """
-def pointcloud2_to_numpy(pointcloud_msg):
-    # Convert the PointCloud2 message to a NumPy array
-    numpy_array = np.frombuffer(pointcloud_msg.data, dtype=np.float32).reshape(-1, pointcloud_msg.point_step // 4)
 
-    # Extract x, y, and z coordinates
-    x = numpy_array[:, 0]
-    y = numpy_array[:, 1]
-    z = numpy_array[:, 2]
-
-    # Create a NumPy array with x, y, z coordinates
-    points = np.column_stack((x, y, z))
-
-    return points      
         
