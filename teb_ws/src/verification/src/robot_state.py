@@ -37,6 +37,8 @@ class robot_human_state:
         
         self.states_history = []
         self.errors_history = []
+        self.pose_history = []
+        self.time_step = 1.0
         
         # Initialize state variables
         self.X = np.array([0.0, 0.0, 0.0])  # [x, y, theta]
@@ -57,19 +59,20 @@ class robot_human_state:
         self.x_std = std_deviation[0]
         self.y_std = std_deviation[1]
         
-        # Define a bounding box based on mean and standard deviation
-        bounding_box_size_multiplier = 2
-        bounding_box_width = bounding_box_size_multiplier * self.x_std
-        bounding_box_height = bounding_box_size_multiplier * self.y_std
+        
+        # # Define a bounding box based on mean and standard deviation
+        # bounding_box_size_multiplier = 2
+        # bounding_box_width = bounding_box_size_multiplier * self.x_std
+        # bounding_box_height = bounding_box_size_multiplier * self.y_std
 
-        # Calculate bounding box vertices
-        x_min = self.x_mean - bounding_box_width / 2
-        x_max = self.x_mean + bounding_box_width / 2
-        y_min = self.y_mean - bounding_box_height / 2
-        y_max = self.y_mean + bounding_box_height / 2
+        # # Calculate bounding box vertices
+        # x_min = self.x_mean - bounding_box_width / 2
+        # x_max = self.x_mean + bounding_box_width / 2
+        # y_min = self.y_mean - bounding_box_height / 2
+        # y_max = self.y_mean + bounding_box_height / 2
 
-        # Bounding box vertices in the order: top-left, top-right, bottom-right, bottom-left
-        self.bb_vertices_human = [(x_min, y_max), (x_max, y_max), (x_max, y_min), (x_min, y_min)]
+        # # Bounding box vertices in the order: top-left, top-right, bottom-right, bottom-left
+        # self.bb_vertices_human = [(x_min, y_max), (x_max, y_max), (x_max, y_min), (x_min, y_min)]
         
 
    
@@ -139,6 +142,10 @@ class robot_human_state:
         
                 
         print("---------------------------------------------------")
+        
+        
+
+    
         
 def estimate_probstar_probability(probstar):
     prob = probstar.estimateProbability()
