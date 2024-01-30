@@ -153,7 +153,7 @@ class Test(object):
             print('Y = {}'.format(Y))
         except Exception:
             print('Test Fail!')
-            self.n_fails = self.n_fails + 1
+            self.n_fails = self.n_fails + 1                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
         else:
             print('Test Successfull!')
 
