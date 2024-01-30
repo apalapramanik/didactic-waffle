@@ -154,10 +154,10 @@ class robot_human_state:
         plant = DLODE(self.A_rob)
         initial_probstar_rob = ProbStar(self.X_initial_rob, self.sigma_rob, self.lb_rob, self.ub_rob)
         print(initial_probstar_rob)
-        U0 = []
+        U0_rob = []
         for i in range(0, 5):
-            U0.append(self.U)
-        X,Y= plant.multiStepReach(initial_probstar_rob, U0, 5)
+            U0_rob.append(self.U_initial_rob)
+        X,Y= plant.multiStepReach(initial_probstar_rob, U0_rob, 5)
         print('X = {}'.format(X))
         print('Y = {}'.format(Y))
         plot_probstar(initial_probstar_rob)
