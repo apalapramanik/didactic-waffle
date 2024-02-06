@@ -16,7 +16,7 @@ from sensor_msgs.msg import PointCloud2 as pc2
 from math import cos, sin
 from reachability_node import *
 import math
-from probstar import ProbStar
+# from probstar import ProbStar
 
 from StarV.plant.dlode import DLODE
 from StarV.set.probstar import ProbStar
@@ -38,6 +38,7 @@ class robot_human_state:
         
         self.states_history = []
         self.errors_history = []
+        self.probstars =[]
         
         # Initialize state variables
         self.last_time = rospy.Time.now()       
@@ -67,64 +68,23 @@ class robot_human_state:
         current_pose = self.pose_history[-1]
         self.heading_angle = math.atan2(current_pose[1] - prev_pose[1], current_pose[0] - prev_pose[0])
         
-        self.time_step = 0.1 #check time
+        self.time_step = 0.13 #check time
         
         # Calculate velocity
         self.velocity = np.array([(current_pose[0] - prev_pose[0]) / self.time_step, (current_pose[1] - prev_pose[1]) / self.time_step])
         
-        self.X_initial_human = np.array([self.x_mean, self.y_mean, self.heading_angle])
-        self.std_initial_human = np.array([self.x_std,self.y_std, 0.5]) #check 0.5
+        self.mu_initial_human = np.array([self.x_mean, self.y_mean, self.heading_angle])
+        self.std_initial_human = np.array([self.x_std,self.y_std, 0.0]) #check 0.5
         self.U_initial_huamn = np.array([self.velocity, self.heading_angle])
-        self.sigma_human = np.diag(np.ones(self.X_initial_human.shape[0]))
+        self.sigma_human = np.diag(np.square(self.std_initial_human))
+        self.lb_human = self.mu_initial_human - self.std_initial_human / 2
+        self.ub_human = self.mu_initial_human + self.std_initial_human / 2
+        
+        initial_probstar_human = ProbStar(self.mu_initial_human, self.sigma_human, self.lb_human, self.ub_human)
+        
+        
 
-        # Calculate state transition matrix (assuming constant velocity model)
-        # self.A_human = np.array([[1, 0, self.time_step * math.cos(self.heading_angle)],
-        #                                    [0, 1, self.time_step * math.sin(self.heading_angle)],
-        #                                    [0, 0, 1]])
-        
-        # Calculate state transition matrix for constant acceleration model
-        # self.A_human= np.array([[1, 0, self.time_step, 0.5 * (self.time_step ** 2) * math.cos(self.heading_angle)],
-         
-        plant_human = DLODE(self.A_human)
-        self.a_human = 2.0 #check a
-        
-        # self.ub_human = self.X_initial_human + self.a_human * self.std_initial_human
-        # self.lb_human = self.X_initial_human - self.a_human * self.std_initial_human
-        
-        # plant = DLODE(self.A)
-        # initial_probstar_human = ProbStar(self.X_initial_human, self.sigma_human, self.lb_human, self.ub_human)
-        # print(initial_probstar_human)
-        # U0_human= []
-        # for i in range(0, 5):
-        #     U0_human.append(self.U)
-        # X_human,Y_human= plant.multiStepReach(initial_probstar_human, U0_human, 5)
-        # print('X = {}'.format(X_human))
-        # print('Y = {}'.format(Y_human))
-        # plot_probstar(initial_probstar_human)
-        
-        # print("---------------------------------------------------")                                  [0, 1, 0, 0.5 * (self.time_step ** 2) * math.sin(self.heading_angle)],
-        #                                    [0, 0, 1, self.time_step],
-        #                                    [0, 0, 0, 1]])
-        
-        # plant_human = DLODE(self.A_human)
-        # self.a_human = 2.0 #check a
-        
-        # self.ub_human = self.X_initial_human + self.a_human * self.std_initial_human
-        # self.lb_human = self.X_initial_human - self.a_human * self.std_initial_human
-        
-        # plant = DLODE(self.A)
-        # initial_probstar_human = ProbStar(self.X_initial_human, self.sigma_human, self.lb_human, self.ub_human)
-        # print(initial_probstar_human)
-        # U0_human= []
-        # for i in range(0, 5):
-        #     U0_human.append(self.U)
-        # X_human,Y_human= plant.multiStepReach(initial_probstar_human, U0_human, 5)
-        # print('X = {}'.format(X_human))
-        # print('Y = {}'.format(Y_human))
-        # plot_probstar(initial_probstar_human)
-        
-        # print("---------------------------------------------------")
-
+     
         
    
     def odom_callback(self, odom_msg):
@@ -161,42 +121,23 @@ class robot_human_state:
         
         
         
-        self.X_initial_rob = self.X
+        self.mu_initial_rob = self.X
         self.std_initial_rob = np.array([0.281, 0.306, 0.001]) 
         self.sigma_rob = np.diag(np.square(self.std_initial_rob))
-        self.U_initial_rob = self.U
-        self.C = (np.expand_dims(self.X_initial_rob, axis=0)).transpose()
-        self.V = np.diag(self.std_initial_rob)
-        self.d = self.V.shape[0]        
-        self.lb_rob = self.X_initial_rob - self.std_initial_rob / 2
-        self.ub_rob = self.X_initial_rob + self.std_initial_rob / 2
+        self.U_initial_rob = self.U      
+        self.lb_rob = self.mu_initial_rob - self.std_initial_rob / 2
+        self.ub_rob = self.mu_initial_rob + self.std_initial_rob / 2
         
-        
-        initial_probstar_rob = ProbStar(self.C, self.V, self.d ,self.X_initial_rob, self.sigma_rob, self.lb_rob, self.ub_rob)
+    
+        initial_probstar_rob = ProbStar(self.mu_initial_rob, self.sigma_rob, self.lb_rob, self.ub_rob)
         
         for i in range(5):
-            C = np.matmul(self.A_rob,initial_probstar_rob.C)
-            V = np.matmul(self.A_rob,initial_probstar_rob.V)
-            d = np.matmul(self.A_rob,initial_probstar_rob.d)
-            mu = initial_probstar_rob.mu
-            sigma = initial_probstar_rob.Sig
-            lb = initial_probstar_rob.pred_lb
-            ub = initial_probstar_rob.pred_ub
-            next_probstar = ProbStar(C, V, d, mu, sigma, lb, ub )
-            print(next_probstar)
-            # plot_probstar(next_probstar)
-            initial_probstar_rob = next_probstar
+            next_prob_star = initial_probstar_rob.affineMap(self.A_rob)
+            print("state ", i, ": ", next_prob_star)
+            self.probstars.append(next_prob_star)
+            initial_probstar_rob = next_prob_star
             
         
-        # plant = DLODE(self.A_rob)
-        # print(initial_probstar_rob)
-        # U0_rob = [] 
-        # for i in range(0, 5):
-        #     U0_rob.append(self.U_initial_rob)
-        # X,Y= plant.multiStepReach(initial_probstar_rob, U0_rob, 5)
-        # print('X = {}'.format(X))
-        # print('Y = {}'.format(Y))
-        # plot_probstar(initial_probstar_rob)
                 
         print("---------------------------------------------------")
         
