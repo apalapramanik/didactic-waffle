@@ -1,13 +1,29 @@
-import roslib
+#!/usr/bin/env python
+
+"""
+    Author:  Apala Pramanik 
+    Project: Autonomous Robot Safety Verification in Construction site
+    Advised by: Dr.Dung Hoang Tran    
+    
+"""
+
+
+
 import rospy
 import numpy as np
 from std_msgs.msg import Header
 from std_msgs.msg import Float64
 from random import gauss
 from sensor_msgs.msg import PointCloud2 as pc2
+
+
 x = []
 y = []
 received = False
+human_length = 1.79 #avg length (full arm) for men
+human_width = 1.79 #avg width (full arm) for men
+human_height = 1.740 #avg height for men
+
 
 class kf_probstar:
     

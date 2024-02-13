@@ -21,10 +21,11 @@ CATKIN_DEPENDS roscpp rospy std_msgs
 
 catkin_install_python(PROGRAMS
 
-src/robot_state.py
-src/robot_state2.py
-src/reachability_node.py
-src/kf_probstar.py
+
+
+src/robot_reachability.py
+src/human_reachability.py
+src/marker_pub.py
 
 DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )

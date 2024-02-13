@@ -9,6 +9,7 @@
 
 import rospy
 from nav_msgs.msg import Odometry
+from marker_pub import marker
 from tf.transformations import euler_from_quaternion
 import numpy as np
 from scipy.linalg import expm
@@ -26,9 +27,14 @@ robot_width = 0.281
 robot_length = 0.306
 std_dev=2 
 steps=3
-human_length = 1.79 #avg for men
-human_width = 1.79 #avg for men
 pose_history=[]
+human_length = 1.79 #avg length (full arm) for men
+human_width = 1.79 #avg width (full arm) for men
+human_height = 1.740 #avg height for men
+
+robot_width = 0.281
+robot_length = 0.306
+robot_height = 0.141
 
 
 class robot_human_state:
@@ -45,6 +51,7 @@ class robot_human_state:
         
         # Initialize state variables
         self.last_time = rospy.Time.now()       
+
 
      
 
@@ -88,10 +95,7 @@ class robot_human_state:
         
         initial_probstar_human = ProbStar(self.mu_initial_human, self.sigma_human, self.lb_human, self.ub_human)
         
-        
-
-     
-        
+         
    
     def odom_callback(self, odom_msg):
         
@@ -142,6 +146,9 @@ class robot_human_state:
             print("state ", i, ": ", next_prob_star)
             self.probstars.append(next_prob_star)
             initial_probstar_rob = next_prob_star
+            marker.publish_prediction_marker(i, name = "pred_robot", cord_x= next_prob_star.mu[0], cord_y=0.0, 
+                                             cord_z= next_prob_star.mu[1], std_x=robot_length,
+                                             std_y = robot_width, std_z = robot_height)
             
         
                 
