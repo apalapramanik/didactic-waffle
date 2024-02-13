@@ -29,8 +29,5 @@ def test_plot():
     return
 
 
-
- 
-
 if __name__ == "__main__":
     test_plot()

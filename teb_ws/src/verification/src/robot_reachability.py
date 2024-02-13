@@ -9,13 +9,13 @@
 
 import rospy
 from nav_msgs.msg import Odometry
-from marker_pub import marker
+from visualization_msgs.msg import Marker
+# from marker_pub import marker
 from tf.transformations import euler_from_quaternion
 import numpy as np
 from scipy.linalg import expm
 from sensor_msgs.msg import PointCloud2 as pc2
 from math import cos, sin
-from reachability_node import *
 import math
 # from probstar import ProbStar
 
@@ -35,6 +35,65 @@ human_height = 1.740 #avg height for men
 robot_width = 0.281
 robot_length = 0.306
 robot_height = 0.141
+
+class marker:
+ 
+    def publish_pose_marker(name, cord_x, cord_y, cord_z, std_x, std_y, std_z):
+        
+        human_marker = rospy.Publisher(name, Marker, queue_size=0)
+        prediction_marker_cube = Marker()
+    
+        
+        prediction_marker_cube.header.stamp = rospy.Time.now()
+        prediction_marker_cube.header.frame_id = "map"
+        prediction_marker_cube.ns = "basic_shapes_1"
+        prediction_marker_cube.id = 1
+        prediction_marker_cube.type = 1
+        prediction_marker_cube.pose.position.x = cord_x 
+        prediction_marker_cube.pose.position.y = cord_y
+        prediction_marker_cube.pose.position.z = cord_z 
+        prediction_marker_cube.pose.orientation.x = 1.0
+        prediction_marker_cube.pose.orientation.y =  1.0
+        prediction_marker_cube.pose.orientation.z = 0.0
+        prediction_marker_cube.pose.orientation.w = 0.0
+        prediction_marker_cube.scale.x = std_x
+        prediction_marker_cube.scale.y = std_y
+        prediction_marker_cube.scale.z = std_z
+        prediction_marker_cube.color.a = 1.0
+        prediction_marker_cube.color.r = 1.0
+        prediction_marker_cube.color.g = 0.0
+        prediction_marker_cube.color.b = 0.0
+        
+        #publish marker at current mean position of human:
+        human_marker.publish(prediction_marker_cube)
+        
+    def publish_prediction_marker(a, name, cord_x, cord_y, cord_z, std_x, std_y, std_z, or_x, or_y, or_z, or_w):
+       
+        prediction_marker = rospy.Publisher(name, Marker, queue_size=0)
+        pred_marker_cube = Marker()
+        
+        pred_marker_cube.header.stamp = rospy.Time.now()
+        pred_marker_cube.header.frame_id = "map"
+        pred_marker_cube.ns = "basic_shapes_1"
+        pred_marker_cube.id = a
+        pred_marker_cube.type = 1
+        pred_marker_cube.pose.position.x = cord_x 
+        pred_marker_cube.pose.position.y = cord_y
+        pred_marker_cube.pose.position.z = cord_z 
+        pred_marker_cube.pose.orientation.x = or_x
+        pred_marker_cube.pose.orientation.y =  or_y
+        pred_marker_cube.pose.orientation.z = or_z
+        pred_marker_cube.pose.orientation.w = or_w
+        pred_marker_cube.scale.x = std_x
+        pred_marker_cube.scale.y = std_y
+        pred_marker_cube.scale.z = std_z
+        pred_marker_cube.color.a = 1.0
+        pred_marker_cube.color.r = 0.0
+        pred_marker_cube.color.g = 1.0
+        pred_marker_cube.color.b = 0.0
+        
+        #publish marker at predicted positions of human:
+        prediction_marker.publish( pred_marker_cube)
 
 
 class robot_human_state:
@@ -140,15 +199,18 @@ class robot_human_state:
         
     
         initial_probstar_rob = ProbStar(self.mu_initial_rob, self.sigma_rob, self.lb_rob, self.ub_rob)
-        
+        b = 0
         for i in range(5):
             next_prob_star = initial_probstar_rob.affineMap(self.A_rob)
             print("state ", i, ": ", next_prob_star)
             self.probstars.append(next_prob_star)
             initial_probstar_rob = next_prob_star
-            marker.publish_prediction_marker(i, name = "pred_robot", cord_x= next_prob_star.mu[0], cord_y=0.0, 
-                                             cord_z= next_prob_star.mu[1], std_x=robot_length,
-                                             std_y = robot_width, std_z = robot_height)
+            b=b+1
+            marker.publish_prediction_marker(b, name = "pred_robot", cord_x= next_prob_star.mu[0], cord_y=next_prob_star.mu[1], 
+                                             cord_z= 0.0, std_x=robot_length,
+                                             std_y = robot_width, std_z = robot_height,
+                                             or_x = odom_msg.pose.pose.orientation.x,or_y = odom_msg.pose.pose.orientation.y,
+                                             or_z=odom_msg.pose.pose.orientation.z,or_w=odom_msg.pose.pose.orientation.x)
             
         
                 

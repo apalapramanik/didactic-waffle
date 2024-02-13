@@ -8,7 +8,7 @@
 
 from visualization_msgs.msg import Marker
 import rospy
-# from monitoring.msg import position
+
 
 
 human_length = 1.79 #avg length (full arm) for men
@@ -20,9 +20,7 @@ robot_length = 0.306
 robot_height = 0.141
 
 class marker:
-    def __init__(self):
-        pass
-    
+ 
     def publish_pose_marker(name, cord_x, cord_y, cord_z, std_x, std_y, std_z):
         
         human_marker = rospy.Publisher(name, Marker, queue_size=0)
