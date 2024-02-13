@@ -26,7 +26,9 @@ robot_width = 0.281
 robot_length = 0.306
 std_dev=2 
 steps=3
-
+human_length = 1.79 #avg for men
+human_width = 1.79 #avg for men
+pose_history=[]
 
 
 class robot_human_state:
@@ -34,11 +36,12 @@ class robot_human_state:
     def __init__(self):
         rospy.init_node('robot_state', anonymous=True)
         self.odom_sub = rospy.Subscriber('/odom', Odometry, self.odom_callback,queue_size=10) 
-        self.pc_human_sub = rospy.Subscriber("projected",pc2,self.human_pc_callback,queue_size=10)
+        # self.pc_human_sub = rospy.Subscriber("projected",pc2,self.human_pc_callback,queue_size=10)
         
         self.states_history = []
         self.errors_history = []
         self.probstars =[]
+        
         
         # Initialize state variables
         self.last_time = rospy.Time.now()       
@@ -49,23 +52,26 @@ class robot_human_state:
         
         pcl_np = pointcloud2_to_numpy(pose_msg)
         mean_value = np.mean(pcl_np, axis=0)
-        std_deviation = np.std(pcl_np, axis=0)
+        # std_deviation = np.std(pcl_np, axis=0)
         
         self.x_mean = mean_value[0]
         self.y_mean = mean_value[1]
         
-        self.x_std = std_deviation[0]
-        self.y_std = std_deviation[1]
+        # self.x_std = std_deviation[0]
+        # self.y_std = std_deviation[1]
+        
+        self.x_std = human_length
+        self.y_std = human_width
         
         if len(self.pose_history)<2:
-            self.pose_history.append(np.array([self.x_mean,self.y_mean]))
+            pose_history.append(np.array([self.x_mean,self.y_mean]))
         else :
             self.pose_history.pop()
-            self.pose_history.append(np.array([self.x_mean,self.y_mean]))
+            pose_history.append(np.array([self.x_mean,self.y_mean]))
      
         
-        prev_pose = self.pose_history[-2]
-        current_pose = self.pose_history[-1]
+        prev_pose = pose_history[-2]
+        current_pose = pose_history[-1]
         self.heading_angle = math.atan2(current_pose[1] - prev_pose[1], current_pose[0] - prev_pose[0])
         
         self.time_step = 0.13 #check time

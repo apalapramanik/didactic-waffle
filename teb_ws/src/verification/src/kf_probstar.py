@@ -7,13 +7,16 @@ from random import gauss
 from sensor_msgs.msg import PointCloud2 as pc2
 x = []
 y = []
+received = False
 
 class kf_probstar:
     
     def __init__(self):
+        
+        rospy.init_node('kf')
         self.pc_human_sub = rospy.Subscriber("projected",pc2,self.human_pc_callback,queue_size=10)
         self.prev_time = None
-        
+        self.dt = 0.0
         
         self.H = np.array([[1, 0, 0, 0], [0, 1, 0, 0]])
         self.Q = np.diag([0.01, 0.01, 1.0, 1.0])
@@ -25,17 +28,18 @@ class kf_probstar:
         self.P   = np.array([[0.0,0.0,0.0],[0.0,0.0,0.0],[0.0,0.0,0.0]])
         self.P_k = np.array([[0.0,0.0,0.0],[0.0,0.0,0.0],[0.0,0.0,0.0]])
          
-         
-         
     def human_pc_callback(self, pose_msg):
             
             current_time = rospy.Time.now()
             pcl_np = pointcloud2_to_numpy(pose_msg)
+            self.pose_x = pcl_np[0]
+            self.pose_y = pcl_np[1]
+            print(self.pose_x, self.pose_y)
             x.append(pcl_np[0])
             y.append(pcl_np[1])
             
             # Calculate velocities if there are enough data points
-            if len(self.x) > 1 and len(self.y) > 1:
+            if len(x) > 1 and len(y) > 1:
                 if self.prev_time is not None:
                     self.dt = current_time - self.prev_time
                     self.v_x = (self.x[-1] - self.x[-2]) / self.dt
@@ -45,11 +49,15 @@ class kf_probstar:
             # self.dt = 0.25 #check time
         
             self.A = np.array([[1, 0, self.dt, 0], [0, 1, 0, self.dt], [0, 0, 1, 0], [0, 0, 0, 1]], np.float32)
+            received = True
             
+            
+    def predict(self):
         
+        while(received):
             
-            
-            self.z = np.array([pcl_np[0]], [pcl_np[1]])              
+           
+            self.z = np.array([[self.pose_x], [self.pose_y]])              
             self.x - np.array([self.z[0], self.z[1], self.v_x, self.v_y])
             
             self.x_k = np.matmul(self.A, self.x)
@@ -63,22 +71,11 @@ class kf_probstar:
             
             self.x = self.x_k + np.matmul(self.K, (self.z - np.matmul(self.H, self.x_k)))
             self.P = np.matmul((np.eye(self.H.shape[1]) - np.matmul(self.K, self.H)), self.P_k)
+            print(self.x[0], self.x[1])
             
+            return self.x[0], self.x[1]
             
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
+          
             
             
 def pointcloud2_to_numpy(pointcloud_msg):
@@ -99,7 +96,9 @@ def pointcloud2_to_numpy(pointcloud_msg):
 if __name__ == '__main__':
    
     human_state_calc = kf_probstar()
-    human_state_calc.estimate()
+    human_state_calc.predict()
+   
     rospy.spin()
+    
         
 
