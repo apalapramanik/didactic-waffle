@@ -38,7 +38,7 @@ robot_height = 0.141
 
 class marker:
  
-    def publish_pose_marker(name, cord_x, cord_y, cord_z, std_x, std_y, std_z):
+    def publish_pose_marker(name, cord_x, cord_y, cord_z, std_x, std_y, std_z, or_x, or_y, or_z, or_w):
         
         human_marker = rospy.Publisher(name, Marker, queue_size=0)
         prediction_marker_cube = Marker()
@@ -52,10 +52,10 @@ class marker:
         prediction_marker_cube.pose.position.x = cord_x 
         prediction_marker_cube.pose.position.y = cord_y
         prediction_marker_cube.pose.position.z = cord_z 
-        prediction_marker_cube.pose.orientation.x = 1.0
-        prediction_marker_cube.pose.orientation.y =  1.0
-        prediction_marker_cube.pose.orientation.z = 0.0
-        prediction_marker_cube.pose.orientation.w = 0.0
+        prediction_marker_cube.pose.orientation.x = or_x
+        prediction_marker_cube.pose.orientation.y =  or_y
+        prediction_marker_cube.pose.orientation.z = or_z
+        prediction_marker_cube.pose.orientation.w = or_w
         prediction_marker_cube.scale.x = std_x
         prediction_marker_cube.scale.y = std_y
         prediction_marker_cube.scale.z = std_z
@@ -140,7 +140,7 @@ class robot_human_state:
         current_pose = pose_history[-1]
         self.heading_angle = math.atan2(current_pose[1] - prev_pose[1], current_pose[0] - prev_pose[0])
         
-        self.time_step = 0.13 #check time
+        self.time_step = 0.14 #check time
         
         # Calculate velocity
         self.velocity = np.array([(current_pose[0] - prev_pose[0]) / self.time_step, (current_pose[1] - prev_pose[1]) / self.time_step])
@@ -199,18 +199,25 @@ class robot_human_state:
         
     
         initial_probstar_rob = ProbStar(self.mu_initial_rob, self.sigma_rob, self.lb_rob, self.ub_rob)
-        b = 0
-        for i in range(5):
-            next_prob_star = initial_probstar_rob.affineMap(self.A_rob)
-            print("state ", i, ": ", next_prob_star)
-            self.probstars.append(next_prob_star)
-            initial_probstar_rob = next_prob_star
-            b=b+1
-            marker.publish_prediction_marker(b, name = "pred_robot", cord_x= next_prob_star.mu[0], cord_y=next_prob_star.mu[1], 
+        marker.publish_pose_marker( name = "pred_robot", cord_x= initial_probstar_rob.mu[0], cord_y=initial_probstar_rob.mu[1], 
                                              cord_z= 0.0, std_x=robot_length,
                                              std_y = robot_width, std_z = robot_height,
                                              or_x = odom_msg.pose.pose.orientation.x,or_y = odom_msg.pose.pose.orientation.y,
-                                             or_z=odom_msg.pose.pose.orientation.z,or_w=odom_msg.pose.pose.orientation.x)
+                                             or_z=odom_msg.pose.pose.orientation.z,or_w=odom_msg.pose.pose.orientation.w)     
+      
+        for i in range(5):
+            next_prob_star = initial_probstar_rob.affineMap(self.A_rob)
+            print("state ", i, ": ", next_prob_star)
+            self.probstars.append(next_prob_star)            
+            print()
+            # marker.publish_prediction_marker(i, name = "pred_robot", cord_x= next_prob_star.mu[0], cord_y=next_prob_star.mu[1], 
+            #                                  cord_z= 0.0, std_x=robot_length,
+            #                                  std_y = robot_width, std_z = robot_height,
+            #                                  or_x = odom_msg.pose.pose.orientation.x,or_y = odom_msg.pose.pose.orientation.y,
+            #                                  or_z=odom_msg.pose.pose.orientation.z,or_w=odom_msg.pose.pose.orientation.w)     
+            initial_probstar_rob = next_prob_star
+            
+        
             
         
                 

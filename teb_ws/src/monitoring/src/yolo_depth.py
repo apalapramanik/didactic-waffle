@@ -8,7 +8,7 @@ from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 from std_msgs.msg import String, Float32
 from visualization_msgs.msg import Marker
-from tb_apala.msg import yolodepth
+from monitoring.msg import yolodepth
 
 import torch
 

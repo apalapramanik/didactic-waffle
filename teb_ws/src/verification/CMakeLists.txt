@@ -23,5 +23,6 @@ catkin_install_python(PROGRAMS
 src/robot_reachability.py
 src/human_reachability.py
 src/marker_pub.py
+src/kf_apala.py
 DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
