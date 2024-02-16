@@ -50,49 +50,49 @@ class kf_probstar:
          
     def human_pc_callback(self, pose_msg):
             
-            self.current_time = rospy.Time.now().to_sec()
-            # print(self.current_time)
-            pcl_np = pointcloud2_to_numpy(pose_msg)
-            self.pose_x = np.mean(pcl_np[0])
-            self.pose_y = np.mean(pcl_np[2])
-            
-            x.append(self.pose_x)
-            y.append(self.pose_y)
-            
-            # Calculate velocities if there are enough data points
-            if len(x) > 1 and len(y) > 1:
-                self.dt = self.current_time - self.prev_time
-                # print("dt:", self.dt) #0.14
-                self.v_x = (x[-1] - x[-2]) / self.dt
-                self.v_y = (y[-1] - y[-2]) / self.dt
-                self.prev_time = self.current_time
-           
+        self.current_time = rospy.Time.now().to_sec()
+        # print(self.current_time)
+        pcl_np = pointcloud2_to_numpy(pose_msg)
+        self.pose_x = np.mean(pcl_np[0])
+        self.pose_y = np.mean(pcl_np[2])
+        
+        x.append(self.pose_x)
+        y.append(self.pose_y)
+        
+        # Calculate velocities if there are enough data points
+        if len(x) > 1 and len(y) > 1:
+            self.dt = self.current_time - self.prev_time
+            # print("dt:", self.dt) #0.14
+            self.v_x = (x[-1] - x[-2]) / self.dt
+            self.v_y = (y[-1] - y[-2]) / self.dt
+            self.prev_time = self.current_time
+        
 
-            self.A = np.array([[1, 0, self.dt, 0], [0, 1, 0, self.dt], [0, 0, 1, 0], [0, 0, 0, 1]], np.float32)            
-            self.z = np.array([[self.pose_x], [self.pose_y]])              
-            self.x = np.array([self.z[0], self.z[1], [self.v_x], [self.v_y]])  
-            
-            #update error covariance p_k
-            self.x_k = np.matmul(self.A, self.x)  
-            T = np.matmul(self.P, self.A.transpose())
-            self.p_k = np.matmul(self.A,T) + self.Q
-            
-            # compute kalman gain : K
-            T = np.matmul(self.P_k, self.H.transpose())
-            T = np.linalg.inv(np.matmul(self.H, T) + self.R)
-            T = np.matmul(self.H.transpose(), T)
-            self.K = np.matmul(self.P_k, T)
-            
-            
-            #prediction
-            self.x = self.x_k + np.matmul(self.K, (self.z - np.matmul(self.H, self.x_k)))
-            self.P = np.matmul((np.eye(self.H.shape[1]) - np.matmul(self.K, self.H)), self.P_k)
-            
+        self.A = np.array([[1, 0, self.dt, 0], [0, 1, 0, self.dt], [0, 0, 1, 0], [0, 0, 0, 1]], np.float32)            
+        self.z = np.array([[self.pose_x], [self.pose_y]])              
+        self.x = np.array([self.z[0], self.z[1], [self.v_x], [self.v_y]])  
+        
+        #update error covariance p_k
+        self.x_k = np.matmul(self.A, self.x)  
+        T = np.matmul(self.P, self.A.transpose())
+        self.p_k = np.matmul(self.A,T) + self.Q
+        
+        # compute kalman gain : K
+        T = np.matmul(self.P_k, self.H.transpose())
+        T = np.linalg.inv(np.matmul(self.H, T) + self.R)
+        T = np.matmul(self.H.transpose(), T)
+        self.K = np.matmul(self.P_k, T)
+        
+        
+        #prediction
+        self.x = self.x_k + np.matmul(self.K, (self.z - np.matmul(self.H, self.x_k)))
+        self.P = np.matmul((np.eye(self.H.shape[1]) - np.matmul(self.K, self.H)), self.P_k)
+        
 
-            
-            print("original pose:", [self.pose_x],[self.pose_y])   
+        
+        print("original pose:", [self.pose_x],[self.pose_y])   
 
-            print("estimated pose:", self.x[0], self.x[1])
+        print("estimated pose:", self.x[0], self.x[1])
             
 
 

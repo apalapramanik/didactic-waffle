@@ -37,92 +37,94 @@ class kf_probstar:
         self.prev_time = 0.0
         self.dt = 0.0
         
-        self.H = np.array([[1, 0, 0, 0], [0, 1, 0, 0]])
-        self.Q = np.diag([0.01, 0.01, 0.01, 1.0])
-        self.R = np.diag([0.01, 1.0])
+        self.H = np.array([[1, 0, 0], [0, 1, 0]]) #2x3
+        self.Q = np.diag([0.01, 0.01, 0.01]) #3x3
+        self.R = np.diag([0.01, 0.01]) #2x2
         
-        self.x = np.array([[0.0],[0.0],[0.0],[0.0]])
+        self.x = np.array([[0.0],[0.0],[0.0]]) #3x1
         self.z = np.array([[0.0],[0.0]])
         self.u = 0
-        self.P   = np.array([[0.0,0.0,0.0, 0.0],[0.0,0.0,0.0,0.0],[0.0,0.0,0.0,0.0],[0.0,0.0,0.0,0.0]])
-        self.P_k = np.array([[0.0,0.0,0.0,0.0],[0.0,0.0,0.0,0.0],[0.0,0.0,0.0,0.0],[0.0,0.0,0.0,0.0]])
+        self.P   = np.array([[0.0,0.0,0.0],[0.0,0.0,0.0],[0.0,0.0,0.0]])
+        self.P_k = np.array([[0.0,0.0,0.0],[0.0,0.0,0.0],[0.0,0.0,0.0]])
         self.v_x = 0
         self.v_y = 0
          
     def human_pc_callback(self, pose_msg):
             
-            self.current_time = rospy.Time.now().to_sec()
-            # print(self.current_time)
-            pcl_np = pointcloud2_to_numpy(pose_msg)
-            self.pose_x = np.mean(pcl_np[0])
-            self.pose_y = np.mean(pcl_np[2])
+        self.current_time = rospy.Time.now().to_sec()
+        # print(self.current_time)
+        pcl_np = pointcloud2_to_numpy(pose_msg)
+        self.pose_x = np.mean(pcl_np[0])
+        self.pose_y = np.mean(pcl_np[2])
+        
+        self.x_std = human_length
+        self.y_std = human_width
+        
+        x.append(self.pose_x)
+        y.append(self.pose_y)
+        
+        # Calculate velocity and heading angle
+        if len(x) > 1 and len(y) > 1:
+            self.dt = self.current_time - self.prev_time
+            # print("dt:", self.dt) #0.14
+            self.v_x = (x[-1] - x[-2]) / self.dt
+            self.v_y = (y[-1] - y[-2]) / self.dt
+        
+            self.prev_time = self.current_time
+        self.heading_angle = math.atan2(y[-1] - y[-2], x[-1] - x[-2])
+        self.velocity = math.sqrt(self.v_x ** 2 + self.v_y ** 2)
             
-            self.x_std = human_length
-            self.y_std = human_width
-            
-            x.append(self.pose_x)
-            y.append(self.pose_y)
-            
-            # Calculate velocity and heading angle
-            if len(x) > 1 and len(y) > 1:
-                self.dt = self.current_time - self.prev_time
-                # print("dt:", self.dt) #0.14
-                self.v_x = (x[-1] - x[-2]) / self.dt
-                self.v_y = (y[-1] - y[-2]) / self.dt
-            
-                self.prev_time = self.current_time
-                self.heading_angle = math.atan2(y[-1] - y[-2], x[-1] - x[-2])
-                self.velocity = math.sqrt(self.v_x ** 2 + self.v_y ** 2)
-                
-           
-            # initial state probstar:
-            self.mu_initial_human = np.array([self.pose_x,self.pose_y,self.heading_angle])
-            self.std_initial_human = np.array([self.x_std,self.y_std, 0.0])
-            self.U_initial_huamn = np.array([self.velocity, self.heading_angle])
-            self.sigma_human = np.diag(np.square(self.std_initial_human))
-            self.lb_human = self.mu_initial_human - self.std_initial_human / 2
-            self.ub_human = self.mu_initial_human + self.std_initial_human / 2
-            
-            self.initial_probstar_human = ProbStar(self.mu_initial_human, self.sigma_human, self.lb_human, self.ub_human)
-            
-            self.x
-           
+        
+        # initial state probstar:
+        self.mu_initial_human = np.array([self.pose_x,self.pose_y,self.heading_angle])
+        self.std_initial_human = np.array([self.x_std,self.y_std, 0.01])
+        self.U_initial_huamn = np.array([self.velocity, self.heading_angle])
+        self.sigma_human = np.diag(np.square(self.std_initial_human))
+        self.lb_human = self.mu_initial_human - self.std_initial_human / 2
+        self.ub_human = self.mu_initial_human + self.std_initial_human / 2
+        
+        self.initial_probstar_human = ProbStar(self.mu_initial_human, self.sigma_human, self.lb_human, self.ub_human)
+        self.A = np.array([[1, 0, self.dt], [0, 1, self.dt], [0, 0, 1]])
+        self.z = np.array([[self.pose_x], [self.pose_y]]) 
+        
+        T = np.matmul(self.P, self.A.transpose())
+    
+        self.p_k = np.matmul(self.A,T) + self.Q
+        
+        # compute kalman gain : K
+        T = np.matmul(self.P_k, self.H.transpose())
+        T = np.linalg.inv(np.matmul(self.H, T) + self.R)
+        T = np.matmul(self.H.transpose(), T)
+        self.K = np.matmul(self.P_k, T)
+        
+        
+        self.I = np.eye(3)
+        self.M = self.I - np.matmul(self.K, self.H)
+        self.N = np.matmul(self.K, self.z).flatten()
+        
+        self.x_updated = self.initial_probstar_human.affineMap(self.M, self.N)
+        
+        
+        est_pose_x = self.x_updated.mu[0]
+        est_pose_y = self.x_updated.mu[1]
 
-            self.A = np.array([[1, 0, self.dt, 0], [0, 1, 0, self.dt], [0, 0, 1, 0], [0, 0, 0, 1]], np.float32)            
-            self.z = np.array([[self.pose_x], [self.pose_y]])              
-            self.x = np.array([self.z[0], self.z[1], [self.v_x], [self.v_y]])  
-            
-            #update error covariance p_k
-            self.x_k = np.matmul(self.A, self.x)  
-            T = np.matmul(self.P, self.A.transpose())
-            self.p_k = np.matmul(self.A,T) + self.Q
-            
-            # compute kalman gain : K
-            T = np.matmul(self.P_k, self.H.transpose())
-            T = np.linalg.inv(np.matmul(self.H, T) + self.R)
-            T = np.matmul(self.H.transpose(), T)
-            self.K = np.matmul(self.P_k, T)
-            
-            
-            #prediction
-            self.x = self.x_k + np.matmul(self.K, (self.z - np.matmul(self.H, self.x_k)))
-            self.P = np.matmul((np.eye(self.H.shape[1]) - np.matmul(self.K, self.H)), self.P_k)
-            
-            # print(self.A)
-            # print(self.K)
-            
-            # print("x:", self.x.shape) 
-            # print("P:", self.P.shape)
-            # print("z:", self.z.shape) 
-            # print("A:", self.A.shape)
-            # print("x_k:", self.x_k.shape) 
-            # print("H:", self.H.shape)  
-            # print("R:", self.R.shape)
-            # print("Q:", self.Q.shape)     
-            
-            print("original pose:", [self.pose_x],[self.pose_y])   
+     
+        
+        # print(self.A)
+        # print(self.K)
+        
+        # print("x:", self.x.shape) 
+        # print("P:", self.P.shape)
+        # print("z:", self.z.shape) 
+        # print("A:", self.A.shape)
+        # print("x_k:", self.x_k.shape) 
+        # print("H:", self.H.shape)  
+        # print("R:", self.R.shape)
+        # print("Q:", self.Q.shape)     
+        
+        print("original pose:", [self.pose_x],[self.pose_y])   
 
-            print("estimated pose:", self.x[0], self.x[1])
+        print("estimated pose:", [est_pose_x], [est_pose_y])
             
 
 
@@ -152,4 +154,3 @@ if __name__ == '__main__':
     rospy.spin()
     
         
-
