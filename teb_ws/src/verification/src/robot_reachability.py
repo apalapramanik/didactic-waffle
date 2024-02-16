@@ -36,6 +36,11 @@ robot_width = 0.281
 robot_length = 0.306
 robot_height = 0.141
 
+x = []
+y = []
+
+
+
 class marker:
  
     def publish_pose_marker(name, cord_x, cord_y, cord_z, std_x, std_y, std_z, or_x, or_y, or_z, or_w):
@@ -99,7 +104,9 @@ class marker:
 class robot_human_state:
     
     def __init__(self):
-        rospy.init_node('robot_state', anonymous=True)
+        
+        rospy.init_node('reachability_analysis', anonymous=True)
+        
         self.odom_sub = rospy.Subscriber('/odom', Odometry, self.odom_callback,queue_size=10) 
         self.states_history = []
         self.errors_history = []
@@ -185,12 +192,9 @@ class robot_human_state:
         est_pose_x = self.x_updated.mu[0]
         est_pose_y = self.x_updated.mu[1]
         
-
-        
         
         # print(self.A)
-        # print(self.K)
-        
+        # print(self.K)        
         # print("x:", self.x.shape) 
         # print("P:", self.P.shape)
         # print("z:", self.z.shape) 
@@ -265,10 +269,6 @@ class robot_human_state:
         print(next_probstar_rob.mu)
         print()
         
-    
-            
-        
-        
             
         
         # next_prob_star = initial_probstar_rob.affineMap(self.A_rob)
@@ -306,15 +306,6 @@ def pointcloud2_to_numpy(pointcloud_msg):
 
     return points        
 
-def affineMap(self, A=None, b=None):
-    assert A is not None, 'A matrix must be provided for affine mapping'
-    assert isinstance(A, np.ndarray), 'A matrix should be a NumPy array'
-
-    V = np.dot(A, self.V)
-    if b is not None:
-        V[:, 0] += b
-    return ProbStar(V, self.C, self.d, self.mu, self.Sig, self.pred_lb, self.pred_ub)      
-        
 """
 
  # if len(self.states_history) <= 19:
