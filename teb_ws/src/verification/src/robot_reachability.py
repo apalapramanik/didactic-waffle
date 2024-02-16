@@ -112,52 +112,10 @@ class robot_human_state:
         self.last_time = rospy.Time.now()       
 
 
-     
-
-    def human_pc_callback(self, pose_msg):
-        
-        pcl_np = pointcloud2_to_numpy(pose_msg)
-        mean_value = np.mean(pcl_np, axis=0)
-        # std_deviation = np.std(pcl_np, axis=0)
-        
-        self.x_mean = mean_value[0]
-        self.y_mean = mean_value[1]
-        
-        # self.x_std = std_deviation[0]
-        # self.y_std = std_deviation[1]
-        
-        self.x_std = human_length
-        self.y_std = human_width
-        
-        if len(self.pose_history)<2:
-            pose_history.append(np.array([self.x_mean,self.y_mean]))
-        else :
-            self.pose_history.pop()
-            pose_history.append(np.array([self.x_mean,self.y_mean]))
-     
-        
-        prev_pose = pose_history[-2]
-        current_pose = pose_history[-1]
-        self.heading_angle = math.atan2(current_pose[1] - prev_pose[1], current_pose[0] - prev_pose[0])
-        
-        self.time_step = 0.14 #check time
-        
-        # Calculate velocity
-        self.velocity = np.array([(current_pose[0] - prev_pose[0]) / self.time_step, (current_pose[1] - prev_pose[1]) / self.time_step])
-        
-        self.mu_initial_human = np.array([self.x_mean, self.y_mean, self.heading_angle])
-        self.std_initial_human = np.array([self.x_std,self.y_std, 0.0]) #check 0.5
-        self.U_initial_huamn = np.array([self.velocity, self.heading_angle])
-        self.sigma_human = np.diag(np.square(self.std_initial_human))
-        self.lb_human = self.mu_initial_human - self.std_initial_human / 2
-        self.ub_human = self.mu_initial_human + self.std_initial_human / 2
-        
-        initial_probstar_human = ProbStar(self.mu_initial_human, self.sigma_human, self.lb_human, self.ub_human)
-        
          
    
     def odom_callback(self, odom_msg):
-        
+       
         # Extract pose and twist information from odometry message
         x = odom_msg.pose.pose.position.x
         y = odom_msg.pose.pose.position.y
@@ -171,17 +129,23 @@ class robot_human_state:
     
         self.X = np.array([x, y, theta])
         
-        vel_x = odom_msg.twist.twist.linear.x
-        vel_y = odom_msg.twist.twist.linear.y
-        vel_z = odom_msg.twist.twist.linear.z
+        # vel_x = odom_msg.twist.twist.linear.x
+        # vel_y = odom_msg.twist.twist.linear.y
+        # vel_z = odom_msg.twist.twist.linear.z
         
-        vel_rob = math.sqrt(vel_x**2 + vel_y**2 + vel_z**2)
+        # vel_rob = math.sqrt(vel_x**2 + vel_y**2 + vel_z**2)
         
-        omega_rob = odom_msg.twist.twist.angular
+        vel_rob = 0.26
         
-        self.U = np.array([vel_rob, omega_rob])    
+        w_x = odom_msg.twist.twist.angular.x
+        w_y = odom_msg.twist.twist.angular.y
+        w_z = odom_msg.twist.twist.angular.z
+        omega_rob = math.sqrt(w_x**2 + w_y**2 + w_z**2)
         
-        dt_rob = 0.25 #model_dt = 0.25/10   check dt    
+        # self.U = np.array([vel_rob, omega_rob])    
+        self.U = [vel_rob, omega_rob]
+        
+        dt_rob = 0.25 #model_dt = 0.25/10   check dt     0.03
         
     
         self.A_rob = np.array([[1.0, 0.0, -1 * vel_rob*sin(theta)*dt_rob],
@@ -199,27 +163,26 @@ class robot_human_state:
         
     
         initial_probstar_rob = ProbStar(self.mu_initial_rob, self.sigma_rob, self.lb_rob, self.ub_rob)
-        marker.publish_pose_marker( name = "pred_robot", cord_x= initial_probstar_rob.mu[0], cord_y=initial_probstar_rob.mu[1], 
-                                             cord_z= 0.0, std_x=robot_length,
-                                             std_y = robot_width, std_z = robot_height,
-                                             or_x = odom_msg.pose.pose.orientation.x,or_y = odom_msg.pose.pose.orientation.y,
-                                             or_z=odom_msg.pose.pose.orientation.z,or_w=odom_msg.pose.pose.orientation.w)     
-      
-        for i in range(5):
-            next_prob_star = initial_probstar_rob.affineMap(self.A_rob)
-            print("state ", i, ": ", next_prob_star)
-            self.probstars.append(next_prob_star)            
-            print()
-            # marker.publish_prediction_marker(i, name = "pred_robot", cord_x= next_prob_star.mu[0], cord_y=next_prob_star.mu[1], 
-            #                                  cord_z= 0.0, std_x=robot_length,
-            #                                  std_y = robot_width, std_z = robot_height,
-            #                                  or_x = odom_msg.pose.pose.orientation.x,or_y = odom_msg.pose.pose.orientation.y,
-            #                                  or_z=odom_msg.pose.pose.orientation.z,or_w=odom_msg.pose.pose.orientation.w)     
-            initial_probstar_rob = next_prob_star
+        
+        next_probstar_rob = initial_probstar_rob.affineMap(self.A_rob)
+        print(initial_probstar_rob.mu)
+        print(next_probstar_rob.mu)
+        
+    
             
+        
         
             
         
+        # next_prob_star = initial_probstar_rob.affineMap(self.A_rob)
+        # print(initial_probstar_rob.mu[0], initial_probstar_rob.mu[1])
+        # for i in range(15):
+        #     next_prob_star = next_prob_star.affineMap(self.A_rob)
+        #     # print(self.A_rob)
+        #     self.probstars.append(next_prob_star)            
+        #     print("step ", i, ": ", next_prob_star.mu[0], next_prob_star.mu[1])
+           
+          
                 
         print("---------------------------------------------------")
         
@@ -244,7 +207,16 @@ def pointcloud2_to_numpy(pointcloud_msg):
     # Create a NumPy array with x, y, z coordinates
     points = np.column_stack((x, y, z))
 
-    return points              
+    return points        
+
+def affineMap(self, A=None, b=None):
+    assert A is not None, 'A matrix must be provided for affine mapping'
+    assert isinstance(A, np.ndarray), 'A matrix should be a NumPy array'
+
+    V = np.dot(A, self.V)
+    if b is not None:
+        V[:, 0] += b
+    return ProbStar(V, self.C, self.d, self.mu, self.Sig, self.pred_lb, self.pred_ub)      
         
 """
 
@@ -297,6 +269,21 @@ Mean and standard deviation for theta:
 Mean: 1.6257967346611615, Standard Deviation: 1.031531294396443e-05
 
 initial state: [11.45686 -7.21802  1.62578] 
+
+
+publish marker:
+
+# marker.publish_pose_marker( name = "pred_robot", cord_x= initial_probstar_rob.mu[0], cord_y=initial_probstar_rob.mu[1], 
+        #                                      cord_z= 0.0, std_x=robot_length,
+        #                                      std_y = robot_width, std_z = robot_height,
+        #                                      or_x = odom_msg.pose.pose.orientation.x,or_y = odom_msg.pose.pose.orientation.y,
+        #                                      or_z=odom_msg.pose.pose.orientation.z,or_w=odom_msg.pose.pose.orientation.w) 
+        
+ # marker.publish_prediction_marker(i, name = "pred_robot", cord_x= next_prob_star.mu[0], cord_y=next_prob_star.mu[1], 
+            #                                  cord_z= 0.0, std_x=robot_length,
+            #                                  std_y = robot_width, std_z = robot_height,
+            #                                  or_x = odom_msg.pose.pose.orientation.x,or_y = odom_msg.pose.pose.orientation.y,
+            #                                  or_z=odom_msg.pose.pose.orientation.z,or_w=odom_msg.pose.pose.orientation.w)     
 
 """
  
