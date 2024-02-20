@@ -242,13 +242,20 @@ class robot_human_state:
         omega_rob = math.sqrt(w_x**2 + w_y**2 + w_z**2)
         
         # self.U = np.array([vel_rob, omega_rob])    
-        self.U = [vel_rob, omega_rob]
+        self.U = np.array([vel_rob, omega_rob])
         
-        dt_rob = 0.25 #model_dt = 0.25/10   check dt     0.03
+        dt_rob = 1.0 #model_dt = 0.25/10   check dt     0.03
         
-    
-        self.A_rob = np.array([[1.0, 0.0, -1 * vel_rob*sin(theta)*dt_rob],
-                           [0.0, 1.0, -1 * vel_rob*cos(theta)*dt_rob],
+        
+        
+        A_13 = -1 * vel_rob*sin(theta)*dt_rob
+        A_23 = 1 * vel_rob*cos(theta)*dt_rob
+        
+        # print("-vsin0dt: ",A_13)
+        # print("vcos0dt: ", A_23)
+        
+        self.A_rob = np.array([[1.0, 0.0, A_13],
+                           [0.0, 1.0, A_23],
                            [0.0, 0.0, 1.0]])
         
         
@@ -260,18 +267,30 @@ class robot_human_state:
         self.lb_rob = self.mu_initial_rob - self.std_initial_rob / 2
         self.ub_rob = self.mu_initial_rob + self.std_initial_rob / 2
         
+        
+        self.A_rob2= np.array([[1.0, 0.0, 0.0],
+                           [0.0, 1.0, 0.0],
+                           [0.0, 0.0, 1.0]])
+        
+        self.b_rob = np.array([[cos(theta)*dt_rob, 0.0],
+                              [sin(theta)*dt_rob, 0.0],
+                              [0.0, 1.0]])
     
         initial_probstar_rob = ProbStar(self.mu_initial_rob, self.sigma_rob, self.lb_rob, self.ub_rob)
         
-        next_probstar_rob = initial_probstar_rob.affineMap(self.A_rob)
+        # next_probstar_rob = initial_probstar_rob.affineMap(self.A_rob, self.b)
         print("Robot:")
-        print(initial_probstar_rob.mu)
-        print(next_probstar_rob.mu)
-        print()
         
+       
+        
+        # for i in range(10):
+        #     next_probstar_rob = next_probstar_rob.affineMap(self.A_rob)
+        #     self.probstars.append(next_probstar_rob)
             
         
-        # next_prob_star = initial_probstar_rob.affineMap(self.A_rob)
+        self.bu = np.matmul(self.b_rob, self.U).flatten()
+        
+        # next_prob_star = initial_probstar_rob.affineMap(self.A_rob2, self.bu)
         # print(initial_probstar_rob.mu[0], initial_probstar_rob.mu[1])
         # for i in range(15):
         #     next_prob_star = next_prob_star.affineMap(self.A_rob)
@@ -279,6 +298,17 @@ class robot_human_state:
         #     self.probstars.append(next_prob_star)            
         #     print("step ", i, ": ", next_prob_star.mu[0], next_prob_star.mu[1])
            
+        #____________________________________________________________________________________
+        
+        plant = DLODE(self.A_rob2, self.b_rob)
+        k = 5
+        U0 = []
+        for i in range(0, k):
+            U0.append(self.U)
+        X, Y = plant.multiStepReach(initial_probstar_rob, U0, k)
+        # print('X = {}'.format(X))
+        # print('Y = {}'.format(Y))
+        
           
                 
         print("---------------------------------------------------")
@@ -373,6 +403,20 @@ publish marker:
             #                                  or_x = odom_msg.pose.pose.orientation.x,or_y = odom_msg.pose.pose.orientation.y,
             #                                  or_z=odom_msg.pose.pose.orientation.z,or_w=odom_msg.pose.pose.orientation.w)     
 
+
+
+DLODE:...print('\nTesting DLODE multiStepReach method....')
+            k = 3
+            X0 = ProbStar.rand(2)
+            plant = DLODE.rand(2, 2, 1)
+            plant.info()
+            #U0 = np.random.rand(10, 2)
+            U0 = []
+            for i in range(0, k):
+                U0.append(ProbStar.rand(2))
+            X, Y = plant.multiStepReach(X0, U0, k)
+            print('X = {}'.format(X))
+            print('Y = {}'.format(Y))
 """
  
         
