@@ -264,15 +264,17 @@ class robot_human_state:
         vel_y = odom_msg.twist.twist.linear.y
         vel_z = odom_msg.twist.twist.linear.z
         
-        vel_rob = math.sqrt(vel_x**2 + vel_y**2 + vel_z**2)
+        # vel_rob = math.sqrt(vel_x**2 + vel_y**2 + vel_z**2)
         # print(vel_rob)
+        vel_rob = vel_x
         
         # vel_rob = 0.26
         
         w_x = odom_msg.twist.twist.angular.x
         w_y = odom_msg.twist.twist.angular.y
         w_z = odom_msg.twist.twist.angular.z
-        omega_rob = math.sqrt(w_x**2 + w_y**2 + w_z**2)
+        # omega_rob = math.sqrt(w_x**2 + w_y**2 + w_z**2)
+        omega_rob = w_z
         
         
         self.U = np.array([vel_rob, omega_rob])
