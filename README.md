@@ -47,5 +47,6 @@ Launch monitor node:
 ``` rosrun monitoring monitor.py ```
 
 ## Verification
+rosrun verification robot_reachability.py
 
 
