@@ -1,94 +1,157 @@
-# import re
-# import matplotlib.pyplot as plt
-# import numpy as np
+"""
+Plot module, contains methods for plotting
+Dung Tran, 9/11/2022
+"""
 
-# def plot_from_files(filename1, filename2):
-#     # Load data from file
-#     with open(filename1, 'r') as file:
-#         data1 = file.readlines()
-        
-#     with open(filename2, 'r') as file:
-#         data2 = file.readlines()
-    
-
-#     # Extract x and y values from each array
-#     x1_values = []
-#     y1_values = []
-    
-#     x2_values = []
-#     y2_values = []
-    
-    
-
-#     for line1 in data1:
-#         match1 = re.findall(r"[-+]?\d*\.\d+", line1)
-#         if len(match1) >= 2:
-#             x1_values.append(float(match1[0]))
-#             y1_values.append(float(match1[1]))
-            
-#     for line2 in data2:
-#         match2 = re.findall(r"[-+]?\d*\.\d+", line2)
-#         if len(match2) >= 2:
-#             x2_values.append(float(match2[0]))
-#             y2_values.append(float(match2[1]))
-
-#     # Plotting
-#     plt.figure(figsize=(10, 6))
-#     plt.scatter(x1_values, y1_values, color='b', label='originals Data Points')
-#     plt.scatter(x2_values, y2_values, color='r', label='calculated Data Points')
-    
-#     # plt.plot(x1_values, y1_values,  marker = '.', color='b', label='originals Data Points', linewidth=1.0)
-#     # plt.plot(x2_values, y2_values, linestyle='dotted', color='r', label='calculated Data Points', linewidth=1.0)
-    
-#     plt.title('Plot of states')
-#     plt.xlabel('X Axis')
-#     plt.ylabel('Y Axis')
-#     plt.legend()
-
-#     plt.show()
-    
-
-# if __name__ == '__main__':   
-#     plot_from_files('states.txt', 'next_states.txt')
-
-
+from StarV.set.probstar import ProbStar
+from StarV.set.star import Star
+import numpy as np
 import matplotlib.pyplot as plt
-import math
+import pypoman
+import warnings
 
-def car_bounding_box_vertices(width, length, angle):
-    x1 = (length/2) * math.cos(angle) - (width/2) * math.sin(angle)
-    y1 = (width/2) * math.cos(angle) + (length/2) * math.sin(angle)
-    x2 = -(length/2) * math.cos(angle) - (width/2) * math.sin(angle)
-    y2 = (width/2) * math.cos(angle) - (length/2) * math.sin(angle)
-    x3 = (length/2) * math.cos(angle) + (width/2) * math.sin(angle)
-    y3 = -(width/2) * math.cos(angle) + (length/2) * math.sin(angle)
-    x4 = -(length/2) * math.cos(angle) + (width/2) * math.sin(angle)
-    y4 = -(width/2) * math.cos(angle) - (length/2) * math.sin(angle)
-    car_bounding_box_vertices = [(x1, y1), (x2, y2), (x3, y3), (x4, y4)]
-    return car_bounding_box_vertices
-
-# Example values
-width = 4
-length = 8
-angle = math.radians(60)  # 30 degrees converted to radians
-
-# Calculate bounding box vertices
-vertices = car_bounding_box_vertices(width, length, angle)
-
-# Plotting
-car_x = [vertices[i][0] for i in range(4)] + [vertices[0][0]]
-car_y = [vertices[i][1] for i in range(4)] + [vertices[0][1]]
-
-plt.figure(figsize=(8, 8))
-plt.plot(car_x, car_y, label='Car')
-plt.scatter(*zip(*vertices), color='red', label='Bounding Box Vertices')
-
-plt.xlabel('X-axis')
-plt.ylabel('Y-axis')
-plt.title('Car Bounding Box with Rotated Vertices')
-plt.legend()
-plt.grid(True)
-plt.show()
+from mpl_toolkits.mplot3d import Axes3D
 
 
+def getVertices(I):
+    """Get all vertices of a star"""
+    
+    assert isinstance(I, ProbStar) or isinstance(I, Star), 'error: input should be a ProbStar or a Star'
+    if len(I.C) == 0:
+        lb = I.pred_lb
+        ub = I.pred_ub
+        A = np.eye(I.nVars)
+        C = np.vstack((A, -A))
+        d = np.concatenate([ub, -lb])
+    else:
+        lb = I.pred_lb
+        ub = I.pred_ub
+        A = np.eye(I.dim)
+        C1 = np.vstack((A, -A))
+        d1 = np.concatenate([ub, -lb])
+        C = np.vstack((I.C, C1))
+        d = np.concatenate([I.d, d1])
 
+    c = I.V[:,0]
+    V = I.V[:,1:I.nVars+1]
+
+    proj = (V, c)
+    ineq = (C, d)
+    verts = pypoman.projection.project_polytope(proj, ineq)
+
+    return verts
+
+
+def plot_2D_Star(I, show=True):
+
+    if I.dim != 2:
+        raise Exception('Input set is not 2D star')
+
+    verts = getVertices(I)
+    try:
+        pypoman.plot_polygon(verts)
+    except Exception:
+        warnings.warn(message='Potential floating-point error')
+    if show:
+        plt.show()
+    
+
+def plot_probstar(I, dir_mat=None, dir_vec=None, show_prob=True, label=('$y_1$', '$y_2$'), show=True):
+    """Plot a star set in a specific direction
+       y = dir_mat*x + dir_vec, x in I
+    """
+
+    if isinstance(I, ProbStar):
+        I1 = I.affineMap(dir_mat, dir_vec)
+        if I1.dim > 2:
+            raise Exception('error: only 2D plot is supported')
+        prob = I1.estimateProbability()
+        plot_2D_Star(I, show=False)
+        l, u = I1.getRanges()
+        if show_prob:
+            ax = plt.gca()
+            ax.text(0.5*(l[0] + u[0]), 0.5*(l[1] + u[1]), str(prob))
+            # ax.set_xlim(l[0], l[1])
+            # ax.set_ylim(u[0], u[1])
+            ax.set_xlim(l[0], u[0])
+            ax.set_ylim(l[1], u[1])
+
+    elif isinstance(I, list):
+        L = []
+        U = []
+        for i in range(0,len(I)):
+            I2 = I[i].affineMap(dir_mat, dir_vec)
+            if I2.dim > 2:
+                raise Exception('error: only 2D plot is supported')
+            prob = I2.estimateProbability()
+            plot_2D_Star(I2, show=False)
+            l, u = I2.getRanges()
+            if i==0:
+                L = l
+                U = u
+            else:
+                L = np.vstack((L, l))
+                U = np.vstack([U, u])
+            if show_prob:
+                ax = plt.gca()
+                ax.text(0.5*(l[0] + u[0]), 0.5*(l[1] + u[1]), str(prob))
+
+        Lm = L.min(axis=0)
+        Um = U.max(axis=0)
+        ax = plt.gca()
+        ax.set_xlim(Lm[0], Um[0])
+        ax.set_ylim(Lm[1], Um[1])
+    else:
+        raise Exception('error: first input should be a ProbStar or a list of ProbStar')
+
+    plt.xlabel(label[0], fontsize=13)
+    plt.ylabel(label[1], fontsize=13)
+    plt.xticks(fontsize=13)
+    plt.yticks(fontsize=13)
+    if show:
+        plt.show()
+
+def plot_star(I, dir_mat=None, dir_vec=None, label=('$y_1$', '$y_2$'), show=True):
+    """Plot a star set in a specific direction
+       y = dir_mat*x + dir_vec, x in I
+    """
+
+    if isinstance(I, Star):
+        I1 = I.affineMap(dir_mat, dir_vec)
+        if I1.dim > 2:
+            raise Exception('error: only 2D plot is supported')
+        plot_2D_Star(I, show=False)
+        l, u = I1.getRanges()
+        
+    elif isinstance(I, list):
+        L = []
+        U = []
+        for i in range(0,len(I)):
+            I2 = I[i].affineMap(dir_mat, dir_vec)
+            if I2.dim > 2:
+                raise Exception('error: only 2D plot is supported')
+            plot_2D_Star(I2, show=False)
+            l, u = I2.getRanges()
+            if i==0:
+                L = l
+                U = u
+            else:
+                L = np.vstack((L, l))
+                U = np.vstack([U, u])
+            
+        Lm = L.min(axis=0)
+        Um = U.max(axis=0)
+        ax = plt.gca()
+        ax.set_xlim(Lm[0], Um[0])
+        ax.set_ylim(Lm[1], Um[1])
+        
+    else:
+        raise Exception('error: first input should be a ProbStar or a list of ProbStar')
+
+    plt.xlabel(label[0], fontsize=13)
+    plt.ylabel(label[1], fontsize=13)
+    plt.xticks(fontsize=13)
+    plt.yticks(fontsize=13)
+    if show:
+        plt.show()
+        

@@ -39,7 +39,19 @@ robot_height = 0.141
 x = []
 y = []
 
+def pointcloud2_to_numpy(pointcloud_msg):
+    # Convert the PointCloud2 message to a NumPy array
+    numpy_array = np.frombuffer(pointcloud_msg.data, dtype=np.float32).reshape(-1, pointcloud_msg.point_step // 4)
 
+    # Extract x, y, and z coordinates
+    x = numpy_array[:, 0]
+    y = numpy_array[:, 1]
+    z = numpy_array[:, 2]
+
+    # Create a NumPy array with x, y, z coordinates
+    points = np.column_stack((x, y, z))
+
+    return points  
 
 class marker:
  
@@ -135,6 +147,8 @@ class robot_human_state:
         
     def human_pc_callback(self, pose_msg):
         
+        
+        
         self.current_time = rospy.Time.now().to_sec()
         # print(self.current_time)
         pcl_np = pointcloud2_to_numpy(pose_msg)
@@ -150,6 +164,7 @@ class robot_human_state:
         # Calculate velocity and heading angle
         if len(x) > 1 and len(y) > 1:
             self.dt = self.current_time - self.prev_time
+            # self.dt = 1.0
             # print("dt:", self.dt) #0.14
             self.v_x = (x[-1] - x[-2]) / self.dt
             self.v_y = (y[-1] - y[-2]) / self.dt
@@ -157,41 +172,64 @@ class robot_human_state:
             self.prev_time = self.current_time
         self.heading_angle = math.atan2(y[-1] - y[-2], x[-1] - x[-2])
         self.velocity = math.sqrt(self.v_x ** 2 + self.v_y ** 2)
+        
+        for i in range(5):
+        
+            # initial state probstar:
+            self.mu_initial_human = np.array([self.pose_x,self.pose_y,self.heading_angle])
+            self.std_initial_human = np.array([self.x_std,self.y_std, 0.01])
+            self.U_initial_huamn = np.array([self.velocity, self.heading_angle])
+            self.sigma_human = np.diag(np.square(self.std_initial_human))
+            self.lb_human = self.mu_initial_human - self.std_initial_human / 2
+            self.ub_human = self.mu_initial_human + self.std_initial_human / 2
             
-        
-        # initial state probstar:
-        self.mu_initial_human = np.array([self.pose_x,self.pose_y,self.heading_angle])
-        self.std_initial_human = np.array([self.x_std,self.y_std, 0.01])
-        self.U_initial_huamn = np.array([self.velocity, self.heading_angle])
-        self.sigma_human = np.diag(np.square(self.std_initial_human))
-        self.lb_human = self.mu_initial_human - self.std_initial_human / 2
-        self.ub_human = self.mu_initial_human + self.std_initial_human / 2
-        
-        self.initial_probstar_human = ProbStar(self.mu_initial_human, self.sigma_human, self.lb_human, self.ub_human)
-        self.A = np.array([[1, 0, self.dt], [0, 1, self.dt], [0, 0, 1]])
-        self.z = np.array([[self.pose_x], [self.pose_y]]) 
-        
-        T = np.matmul(self.P, self.A.transpose())
+            self.initial_probstar_human = ProbStar(self.mu_initial_human, self.sigma_human, self.lb_human, self.ub_human)
+            self.A = np.array([[1, 0, self.dt], [0, 1, self.dt], [0, 0, 1]])
+            self.z = np.array([[self.pose_x], [self.pose_y]]) 
+            
+            T = np.matmul(self.P, self.A.transpose())
 
-        self.p_k = np.matmul(self.A,T) + self.Q
+            self.p_k = np.matmul(self.A,T) + self.Q
+            
+            # compute kalman gain : K
+            T = np.matmul(self.P_k, self.H.transpose())
+            T = np.linalg.inv(np.matmul(self.H, T) + self.R)
+            T = np.matmul(self.H.transpose(), T)
+            self.K = np.matmul(self.P_k, T)
+            
+            
+            self.I = np.eye(3)
+            self.M = self.I - np.matmul(self.K, self.H)
+            self.N = np.matmul(self.K, self.z).flatten()
+            
+            self.x_updated = self.initial_probstar_human.affineMap(self.M, self.N)
+            
+            
+            est_pose_x = self.x_updated.mu[0]
+            est_pose_y = self.x_updated.mu[1]
+            
+            print("Human:")
+            print("original pose:", [self.pose_x],[self.pose_y]) 
+            print("estimated pose:", [est_pose_x], [est_pose_y])  
+            print()
+            self.pose_x = est_pose_x
+            self.pose_y = est_pose_y
         
-        # compute kalman gain : K
-        T = np.matmul(self.P_k, self.H.transpose())
-        T = np.linalg.inv(np.matmul(self.H, T) + self.R)
-        T = np.matmul(self.H.transpose(), T)
-        self.K = np.matmul(self.P_k, T)
-        
-        
-        self.I = np.eye(3)
-        self.M = self.I - np.matmul(self.K, self.H)
-        self.N = np.matmul(self.K, self.z).flatten()
-        
-        self.x_updated = self.initial_probstar_human.affineMap(self.M, self.N)
-        
-        
-        est_pose_x = self.x_updated.mu[0]
-        est_pose_y = self.x_updated.mu[1]
-        
+        # # Predict next 5 positions
+        # for i in range(5):
+        #     # self.x = np.matmul(self.A, self.x)
+        #     # self.z = np.matmul(self.A, self.z)
+        #     # Update the state using the motion model (A) and the current state (z)
+        #     # self.z = np.matmul(self.A[:2, :2], self.z) + self.A[:2, 2:]
+    
+        #     # Update the Kalman filter parameters (M, N) based on the updated state
+        #     self.M = self.I - np.matmul(self.K, self.H)
+        #     self.N = np.matmul(self.K, self.z).flatten()
+            
+        #     # Use the updated state to predict the next position
+        #     # self.x_updated = self.initial_probstar_human.affineMap(self.M, self.N)
+        #     self.x_updated = self.x_updated.affineMap(self.M, self.N)
+        #     print(f"Predicted position {i+1}: {self.x_updated.mu[0]}, {self.x_updated.mu[1]}")
         
         # print(self.A)
         # print(self.K)        
@@ -202,12 +240,7 @@ class robot_human_state:
         # print("x_k:", self.x_k.shape) 
         # print("H:", self.H.shape)  
         # print("R:", self.R.shape)
-        # print("Q:", self.Q.shape)     
-        
-        print("Human:")
-        print("original pose:", [self.pose_x],[self.pose_y]) 
-        print("estimated pose:", [est_pose_x], [est_pose_y])  
-        print()
+        # print("Q:", self.Q.shape)    
 
 
          
@@ -241,7 +274,7 @@ class robot_human_state:
         w_z = odom_msg.twist.twist.angular.z
         omega_rob = math.sqrt(w_x**2 + w_y**2 + w_z**2)
         
-        # self.U = np.array([vel_rob, omega_rob])    
+        
         self.U = np.array([vel_rob, omega_rob])
         
         dt_rob = 1.0 #model_dt = 0.25/10   check dt     0.03
@@ -272,8 +305,8 @@ class robot_human_state:
                            [0.0, 1.0, 0.0],
                            [0.0, 0.0, 1.0]])
         
-        self.b_rob = np.array([[cos(theta)*dt_rob, 0.0],
-                              [sin(theta)*dt_rob, 0.0],
+        self.b_rob = np.array([[cos(theta), 0.0],
+                              [sin(theta), 0.0],
                               [0.0, 1.0]])
     
         initial_probstar_rob = ProbStar(self.mu_initial_rob, self.sigma_rob, self.lb_rob, self.ub_rob)
@@ -301,19 +334,19 @@ class robot_human_state:
         #____________________________________________________________________________________
         
         plant = DLODE(self.A_rob2, self.b_rob)
-        k = 5
+        k = 3
         U0 = []
         for i in range(0, k):
             U0.append(self.U)
-        X, Y = plant.multiStepReach(initial_probstar_rob, U0, k)
-        # print('X = {}'.format(X))
-        # print('Y = {}'.format(Y))
+        # print(U0)
+        # X, Y = plant.multiStepReach(initial_probstar_rob, U0, k)
+        # # print('X = {}'.format(X))
+        # # print('Y = {}'.format(Y))
         
           
                 
         print("---------------------------------------------------")
-        
-        
+    
 
 if __name__ == '__main__':
    
@@ -322,19 +355,7 @@ if __name__ == '__main__':
     
     
   
-def pointcloud2_to_numpy(pointcloud_msg):
-    # Convert the PointCloud2 message to a NumPy array
-    numpy_array = np.frombuffer(pointcloud_msg.data, dtype=np.float32).reshape(-1, pointcloud_msg.point_step // 4)
-
-    # Extract x, y, and z coordinates
-    x = numpy_array[:, 0]
-    y = numpy_array[:, 1]
-    z = numpy_array[:, 2]
-
-    # Create a NumPy array with x, y, z coordinates
-    points = np.column_stack((x, y, z))
-
-    return points        
+      
 
 """
 
