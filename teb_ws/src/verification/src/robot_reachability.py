@@ -39,6 +39,62 @@ robot_height = 0.141
 x = []
 y = []
 
+class kalmanFilter_probstar:
+    
+    def __init__(self):
+        # self.dt = 0.0
+        
+        self.H = np.array([[1, 0, 0], [0, 1, 0]]) #2x3
+        self.Q = np.diag([0.01, 0.01, 0.01]) #3x3
+        self.R = np.diag([0.01, 0.01]) #2x2
+        
+        self.x = np.array([[0.0],[0.0],[0.0]]) #3x1
+        self.z = np.array([[0.0],[0.0]])
+        self.u = 0
+        self.P   = np.array([[0.0,0.0,0.0],[0.0,0.0,0.0],[0.0,0.0,0.0]])
+        self.P_k = np.array([[0.0,0.0,0.0],[0.0,0.0,0.0],[0.0,0.0,0.0]])
+        self.v_x = 0
+        self.v_y = 0
+        
+    
+    def predict(self, probstar, dt):
+        
+        if isinstance (probstar, ProbStar):
+        
+            self.pose_x = probstar.mu[0]
+            self.pose_y = probstar.mu[1]
+            
+            self.A = np.array([[1, 0, dt], [0, 1, dt], [0, 0, 1]])
+            self.z = np.array([[self.pose_x], [self.pose_y]]) 
+            
+            T = np.matmul(self.P, self.A.transpose())
+
+            self.p_k = np.matmul(self.A,T) + self.Q
+            
+            # compute kalman gain : K
+            T = np.matmul(self.P_k, self.H.transpose())
+            T = np.linalg.inv(np.matmul(self.H, T) + self.R)
+            T = np.matmul(self.H.transpose(), T)
+            self.K = np.matmul(self.P_k, T)
+            
+            
+            self.I = np.eye(3)
+            self.M = self.I - np.matmul(self.K, self.H)
+            self.N = np.matmul(self.K, self.z).flatten()
+            
+            self.x_updated = probstar.affineMap(self.M, self.N)
+            
+            
+            # est_pose_x = self.x_updated.mu[0]
+            # est_pose_y = self.x_updated.mu[1]
+            
+            return self.x_updated
+        
+        
+        
+        
+        
+
 def pointcloud2_to_numpy(pointcloud_msg):
     # Convert the PointCloud2 message to a NumPy array
     numpy_array = np.frombuffer(pointcloud_msg.data, dtype=np.float32).reshape(-1, pointcloud_msg.point_step // 4)
@@ -184,36 +240,57 @@ class robot_human_state:
             self.ub_human = self.mu_initial_human + self.std_initial_human / 2
             
             self.initial_probstar_human = ProbStar(self.mu_initial_human, self.sigma_human, self.lb_human, self.ub_human)
-            self.A = np.array([[1, 0, self.dt], [0, 1, self.dt], [0, 0, 1]])
-            self.z = np.array([[self.pose_x], [self.pose_y]]) 
+            current_pose = [self.pose_x, self.pose_y]
+            print(current_pose)
             
-            T = np.matmul(self.P, self.A.transpose())
+            kf = kalmanFilter_probstar()
+            self.next_probstar = kf.predict(self.initial_probstar_human, self.dt)
+            
+            
+            for i in range(5):
+                self.next_probstar = kf.predict(self.next_probstar, self.dt)
+                new_pose = [self.next_probstar.mu[0], self.next_probstar.mu[1]]
+                print("prediction ", i , ": ", new_pose)
+                
+                
+            
+            
+            
+            #-----------------------------------------------------------------------------------------------------------------------------------
+            
+            
+            
+            # self.initial_probstar_human = ProbStar(self.mu_initial_human, self.sigma_human, self.lb_human, self.ub_human)
+            # self.A = np.array([[1, 0, self.dt], [0, 1, self.dt], [0, 0, 1]])
+            # self.z = np.array([[self.pose_x], [self.pose_y]]) 
+            
+            # T = np.matmul(self.P, self.A.transpose())
 
-            self.p_k = np.matmul(self.A,T) + self.Q
+            # self.p_k = np.matmul(self.A,T) + self.Q
             
-            # compute kalman gain : K
-            T = np.matmul(self.P_k, self.H.transpose())
-            T = np.linalg.inv(np.matmul(self.H, T) + self.R)
-            T = np.matmul(self.H.transpose(), T)
-            self.K = np.matmul(self.P_k, T)
-            
-            
-            self.I = np.eye(3)
-            self.M = self.I - np.matmul(self.K, self.H)
-            self.N = np.matmul(self.K, self.z).flatten()
-            
-            self.x_updated = self.initial_probstar_human.affineMap(self.M, self.N)
+            # # compute kalman gain : K
+            # T = np.matmul(self.P_k, self.H.transpose())
+            # T = np.linalg.inv(np.matmul(self.H, T) + self.R)
+            # T = np.matmul(self.H.transpose(), T)
+            # self.K = np.matmul(self.P_k, T)
             
             
-            est_pose_x = self.x_updated.mu[0]
-            est_pose_y = self.x_updated.mu[1]
+            # self.I = np.eye(3)
+            # self.M = self.I - np.matmul(self.K, self.H)
+            # self.N = np.matmul(self.K, self.z).flatten()
             
-            print("Human:")
-            print("original pose:", [self.pose_x],[self.pose_y]) 
-            print("estimated pose:", [est_pose_x], [est_pose_y])  
-            print()
-            self.pose_x = est_pose_x
-            self.pose_y = est_pose_y
+            # self.x_updated = self.initial_probstar_human.affineMap(self.M, self.N)
+            
+            
+            # est_pose_x = self.x_updated.mu[0]
+            # est_pose_y = self.x_updated.mu[1]
+            
+            # print("Human:")
+            # print("original pose:", [self.pose_x],[self.pose_y]) 
+            # print("estimated pose:", [est_pose_x], [est_pose_y])  
+            # print()
+            # self.pose_x = est_pose_x
+            # self.pose_y = est_pose_y
         
         # # Predict next 5 positions
         # for i in range(5):
@@ -241,6 +318,8 @@ class robot_human_state:
         # print("H:", self.H.shape)  
         # print("R:", self.R.shape)
         # print("Q:", self.Q.shape)    
+        
+        #--------------------------------------------------------------------------------------------------------------------------------------
 
 
          
@@ -341,9 +420,9 @@ class robot_human_state:
         for i in range(0, k):
             U0.append(self.U)
         # print(U0)
-        # X, Y = plant.multiStepReach(initial_probstar_rob, U0, k)
-        # # print('X = {}'.format(X))
-        # # print('Y = {}'.format(Y))
+        X, Y = plant.multiStepReach(initial_probstar_rob, U0, k)
+        # print('X = {}'.format(X))
+        # print('Y = {}'.format(Y))
         
           
                 
