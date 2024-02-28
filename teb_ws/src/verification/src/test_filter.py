@@ -45,7 +45,7 @@ def test_plot():
     # print(S)
     plot_probstar(p, show=True)
     
-def test_3d_plot():
+def test_3d_plot_robot():
     
     # initial state probstar:
        
@@ -59,8 +59,8 @@ def test_3d_plot():
         
         initial_probstar_human = ProbStar(mu_initial_human, sigma_human, lb_human, ub_human)
         
-        vel_rob = 0.26
-        theta = 0.5
+        # vel_rob = 0.26
+        # theta = 0.5
         # dt_rob = 0.14
         
         A_rob = np.array([[1.0, 0.0, 0.0],
@@ -78,26 +78,26 @@ def test_3d_plot():
         prob = initial_probstar_human.affineMap(A_rob, bu)
         prob2 = prob.affineMap(A_rob,bu)
         prob3 = prob2.affineMap(A_rob,bu)
+        
+        #project to 2d
         A_2d = np.array([[1.0, 0.0, 0.0],
                         [0.0, 1.0, 0.0]])
         
         initial_2d = initial_probstar_human.affineMap(A_2d)
+        prob_2d = prob.affineMap(A_2d)
+        prob2_2d = prob2.affineMap(A_2d)
+        prob3_2d = prob3.affineMap(A_2d)
+        
         
         # print(initial_2d.mu[0], initial_2d.mu[1])
-        
-        prob_2d = prob.affineMap(A_2d)
-        # print(prob_2d.mu[0], prob_2d.mu[1])
-        
-        prob2_2d = prob2.affineMap(A_2d)
+         # print(prob_2d.mu[0], prob_2d.mu[1])
         # print(prob2_2d.mu[0], prob2_2d.mu[1])
+        # print(prob3_2d.mu[0], prob3_2d.mu[1])
         
-        prob3_2d = prob3.affineMap(A_2d)
-        print(prob3_2d.mu[0], prob3_2d.mu[1])
-        
-        print(initial_probstar_human)
-        print(prob)
-        print(prob2)
-        print(prob3)
+        # print(initial_probstar_human)
+        # print(prob)
+        # print(prob2)
+        # print(prob3)
         
         p = []
         p.append(initial_2d)
@@ -108,6 +108,34 @@ def test_3d_plot():
         
         
 
+def test_3d_plot_human():
+    
+    #initial probstar   
+    # mu = np.array([0.21812154 ,2.3695326, -1.57777, -8.4147733])     
+    mu = np.array([0.21812154 ,2.3695326, -1.5777700087596649e-06, -8.414773380051546e-06])
+    std = np.array([1.79, 1.79, 0.1, 0.1])
+    sigma = np.diag(np.square(std))
+    lb = mu - std / 2
+    ub = mu + std / 2
+    dt = 0.17
+    A = np.array([[1, 0, dt, 0], [0, 1, 0, dt], [0, 0, 1, 0], [0, 0, 0, 1]], np.float32)
+    a = np.array([[1.0, 0.0, 0.0, 0.0],
+                    [0.0, 1.0 , 0.0, 0.0]])
+    p = []
+    probstar = ProbStar(mu, sigma, lb, ub)
+    next_probstar = probstar.affineMap(A)
+    next_2d = next_probstar.affineMap(a)
+    p.append(next_2d)
+    
+    for i in range(10):
+        next_probstar = next_probstar.affineMap(A)
+        next_2d = next_probstar.affineMap(a)
+        p.append(next_2d)
+        
+        
+    plot_probstar(p,show=True)
+    
+
 if __name__ == "__main__":
     # test_random_plot()
-    test_3d_plot()
+    test_3d_plot_human()

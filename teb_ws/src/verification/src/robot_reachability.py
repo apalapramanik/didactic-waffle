@@ -185,6 +185,8 @@ class robot_human_state:
         self.v_x = 0
         self.v_y = 0
         
+        self.kf = kalmanFilter()
+        
         
         # Initialize state variables
         self.last_time = rospy.Time.now()     
@@ -215,7 +217,7 @@ class robot_human_state:
         
             self.prev_time = self.current_time
         self.heading_angle = math.atan2(y[-1] - y[-2], x[-1] - x[-2])
-        self.velocity = math.sqrt(self.v_x ** 2 + self.v_y ** 2)
+        # self.velocity = math.sqrt(self.v_x ** 2 + self.v_y ** 2)
         
         
         
@@ -237,26 +239,23 @@ class robot_human_state:
         A_2d = np.array([[1.0, 0.0, 0.0, 0.0],
                         [0.0, 1.0, 0.0, 0.0]])
         
-        kf = kalmanFilter()
-        new_star = kf.predict_update(self.initial_probstar_human, 0.25)
+        
+        new_star = self.kf.predict_update(self.initial_probstar_human, 0.25)
         # new_star2d = new_star.affineMap(A_2d)
         # print(new_star.mu[0], new_star.mu[1])
         p = []
         print("###############################################################")
         for i in range(4):
-            new_star = kf.predict_update(new_star, 1.0)
+            new_star = self.kf.predict_update(new_star, 1.0)
             new_star_2d = new_star.affineMap(A_2d)
             print(new_star_2d.mu)
            
             p.append(new_star_2d)
-            # print(p.mu)
-            
-            # print(new_star)
-            # print("........................")
+          
             
             
             # print(new_star.mu[0], new_star.mu[1])
-        plot_probstar(p, show=True)
+        # plot_probstar(p, show=True)
         print("###############################################################")
             
                 
