@@ -85,7 +85,7 @@ class kalmanFilter:
             self.x_ps = self.x_k_ps.affineMap(self.M, self.N)
             self.P = np.matmul((np.eye(self.H.shape[1]) - np.matmul(self.K, self.H)), self.P_k)
             
-            print("Estimated pose:", self.x_ps.mu[0], self.x_ps.mu[1])
+            # print("Estimated pose:", self.x_ps.C[0], self.x_ps.C[1])
         return self.x_ps
 
 def pointcloud2_to_numpy(pointcloud_msg):
@@ -212,9 +212,9 @@ class robot_human_state:
             self.v_x = (x[-1] - x[-2]) / self.dt
             self.v_y = (y[-1] - y[-2]) / self.dt
             
-        print(self.v_x, self.v_y)
+        # print(self.v_x, self.v_y)
         self.dt = round(self.dt, 2)
-        print(self.dt)
+        # print(self.dt)
 
         self.z = np.array([[self.pose_x], [self.pose_y]])
         self.x = np.array([[self.z[0, 0]], [self.z[1, 0]], [self.v_x], [self.v_y]])
@@ -227,16 +227,19 @@ class robot_human_state:
         self.lb = self.mu - self.std / 2
         self.ub = self.mu + self.std / 2
         
-        self.init_probstar_human = ProbStar(self.mu, self.sigma, self.lb, self.ub)
+        init_probstar_human = ProbStar(self.mu, self.sigma, self.lb, self.ub)
         
         kf = kalmanFilter()
         
-        self.next_prob_star_human = kf.predict_update(self.init_probstar_human, self.dt)
+        next_prob_star_human = kf.predict_update(init_probstar_human, self.dt)
         
         print("Human:")
         
         for i in range(5):
-            self.next_prob_star_human = kf.predict_update(self.next_prob_star_human, self.dt)
+            next_prob_star_human = kf.predict_update(next_prob_star_human, self.dt)
+            new_x = self.z[0] + next_prob_star_human.V[0][0]
+            new_y = self.z[1] + next_prob_star_human.V[1][0]
+            print("Estimated pose:", new_x, new_y )
             
             
                 
@@ -282,19 +285,24 @@ class robot_human_state:
                               [sin(theta), 0.0],
                               [0.0, 1.0]])
         
-        # print("b: ", self.b_rob)
+       
     
         init_probstar_rob = ProbStar(self.mu_initial_rob, self.sigma_rob, self.lb_rob, self.ub_rob)
         
         self.bu = np.matmul(self.b_rob, self.U).flatten()
         
         print("Robot:")
+        print(self.X)
         
         
         next_prob_star_rob = init_probstar_rob.affineMap(self.A_rob, self.bu)
+        print("V:", next_prob_star_rob.V)
         
         for i in range(4):
             next_prob_star_rob  = next_prob_star_rob.affineMap(self.A_rob, self.bu)
+            new_x =  x + next_prob_star_rob.V[0][0]
+            new_y = y + next_prob_star_rob.V[1][0]
+            print("Estimated pose:",new_x, new_y)
      
         
         
