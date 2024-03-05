@@ -248,8 +248,8 @@ class robot_human_state:
         for i in range(5):
             next_prob_star_human = kf.predict_update(next_prob_star_human, self.dt)
             # next_prob_star_human = next_prob_star_human.affineMap(self.A)
-            new_x =  next_prob_star_human.V[0][0] + (self.z[0]*next_prob_star_human.V[0][1]) + next_prob_star_human.V[0][3]
-            new_y = next_prob_star_human.V[1][0] + (self.z[1]*next_prob_star_human.V[1][2]) + next_prob_star_human.V[1][4]
+            new_x =  next_prob_star_human.V[0][0] + (self.z[0]*next_prob_star_human.V[0][1]) + (self.v_x * next_prob_star_human.V[0][3])
+            new_y = next_prob_star_human.V[1][0] + (self.z[1]*next_prob_star_human.V[1][2]) + (self.v_y * next_prob_star_human.V[1][4])
             print("pose ", i ,": ",new_x[0], new_y[0])
            
             marker.publish_prediction_marker(i, name = "pred_human", cord_x= new_x[0], cord_y=new_y[0], 
