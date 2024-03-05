@@ -64,24 +64,29 @@ class kalmanFilter:
                                 [0, 0, 1, 0],
                                 [0, 0, 0, 1]])
             
-            
-            self.z = np.array([[probstar.mu[0]], [probstar.mu[1]]]) #measurement            
-            self.est_probstar_k = probstar.affineMap(self.A)
-            print("pred: ", self.est_probstar_k.mu[0], self.est_probstar_k.mu[1])            
-            self.P_k = np.dot(self.A, np.dot(self.P, self.A.transpose())) + self.Q  # Predicted state covariance
+            self.x_ps = probstar
             
             
-            S = np.dot(np.dot(self.H, self.P), self.H.transpose()) + self.R
-            self.K = np.dot(np.dot(self.P, self.H.transpose()), np.linalg.inv(S))
+            #update error covariance p_k
+            self.x_k_ps = self.x_ps.affineMap(self.A)
+            T = np.matmul(self.P, self.A.transpose())
+            self.p_k = np.matmul(self.A, T) + self.Q
+            
+            # Compute Kalman gain : K
+            T = np.matmul(self.P_k, self.H.transpose())
+            T = np.linalg.inv(np.matmul(self.H, T) + self.R)
+            T = np.matmul(self.H.transpose(), T)
+            self.K = np.matmul(self.P_k, T)
             I = np.eye(4)
             self.M = I - np.matmul(self.K, self.H)
             self.N = np.matmul(self.K, self.z).flatten()
             
-            self.est_probstar = self.est_probstar_k.affineMap(self.M, self.N)
-            print("updated: ", self.est_probstar_k.mu[0], self.est_probstar_k.mu[1])
+            #prediction        
+            self.x_ps = self.x_k_ps.affineMap(self.M, self.N)
             self.P = np.matmul((np.eye(self.H.shape[1]) - np.matmul(self.K, self.H)), self.P_k)
             
-            return self.est_probstar
+            print("Estimated pose:", self.x_ps.mu[0], self.x_ps.mu[1])
+        return self.x_ps
 
 def pointcloud2_to_numpy(pointcloud_msg):
     # Convert the PointCloud2 message to a NumPy array
@@ -185,78 +190,54 @@ class robot_human_state:
         self.v_x = 0
         self.v_y = 0
         
-        self.kf = kalmanFilter()
+      
+         
         
-        
-        # Initialize state variables
-        self.last_time = rospy.Time.now()     
-        
-    def human_pc_callback(self, pose_msg):
-        
+    def human_pc_callback(self, pose_msg):       
         
         
         self.current_time = rospy.Time.now().to_sec()
-        # print(self.current_time)
+        self.dt = self.current_time - self.prev_time
+        self.prev_time = self.current_time
+
         pcl_np = pointcloud2_to_numpy(pose_msg)
-        self.pose_x = np.mean(pcl_np[0])
-        self.pose_y = np.mean(pcl_np[2])
-        
-        self.x_std = human_length
-        self.y_std = human_width
-        
+        self.pose_x = np.mean(pcl_np[:, 0])
+        self.pose_y = np.mean(pcl_np[:, 2])
+
         x.append(self.pose_x)
         y.append(self.pose_y)
-        
-        # Calculate velocity and heading angle
+
+        # Calculate velocities if there are enough data points
         if len(x) > 1 and len(y) > 1:
-            self.dt = self.current_time - self.prev_time
-            # self.dt = 1.0
-            # print("dt:", self.dt) #0.14
             self.v_x = (x[-1] - x[-2]) / self.dt
             self.v_y = (y[-1] - y[-2]) / self.dt
-        
-            self.prev_time = self.current_time
-        self.heading_angle = math.atan2(y[-1] - y[-2], x[-1] - x[-2])
-        # self.velocity = math.sqrt(self.v_x ** 2 + self.v_y ** 2)
-        
-        
-        
-        # initial state probstar:
-       
-        self.mu_initial_human = np.array([self.pose_x,self.pose_y,self.v_x, self.v_y])
-        self.std_initial_human = np.array([self.x_std,self.y_std, self.x_std, self.y_std])
-        
-        self.U_initial_huamn = np.array([self.velocity, self.heading_angle])
-        self.sigma_human = np.diag(np.square(self.std_initial_human))
-        self.lb_human = self.mu_initial_human - self.std_initial_human / 2
-        self.ub_human = self.mu_initial_human + self.std_initial_human / 2
-        
-        self.initial_probstar_human = ProbStar(self.mu_initial_human, self.sigma_human, self.lb_human, self.ub_human)
-        # print( self.initial_probstar_human)
-        current_pose = [self.pose_x, self.pose_y]
-        # print("original: ",current_pose)
-        
-        A_2d = np.array([[1.0, 0.0, 0.0, 0.0],
-                        [0.0, 1.0, 0.0, 0.0]])
-        
-        
-        new_star = self.kf.predict_update(self.initial_probstar_human, 0.25)
-        # new_star2d = new_star.affineMap(A_2d)
-        # print(new_star.mu[0], new_star.mu[1])
-        p = []
-        print("###############################################################")
-        for i in range(4):
-            new_star = self.kf.predict_update(new_star, 1.0)
-            new_star_2d = new_star.affineMap(A_2d)
-            print(new_star_2d.mu)
-           
-            p.append(new_star_2d)
-          
             
+        print(self.v_x, self.v_y)
+        self.dt = round(self.dt, 2)
+        print(self.dt)
+
+        self.z = np.array([[self.pose_x], [self.pose_y]])
+        self.x = np.array([[self.z[0, 0]], [self.z[1, 0]], [self.v_x], [self.v_y]])
+        print(self.x)
+        
+        #initial probstar        
+        self.mu = np.array([self.z[0, 0], self.z[1, 0], self.v_x, self.v_y])
+        self.std = np.array([human_length, human_width, 0.1, 0.1])
+        self.sigma = np.diag(np.square(self.std))
+        self.lb = self.mu - self.std / 2
+        self.ub = self.mu + self.std / 2
+        
+        self.init_probstar_human = ProbStar(self.mu, self.sigma, self.lb, self.ub)
+        
+        kf = kalmanFilter()
+        
+        self.next_prob_star_human = kf.predict_update(self.init_probstar_human, self.dt)
+        
+        print("Human:")
+        
+        for i in range(5):
+            self.next_prob_star_human = kf.predict_update(self.next_prob_star_human, self.dt)
             
-            # print(new_star.mu[0], new_star.mu[1])
-        # plot_probstar(p, show=True)
-        print("###############################################################")
             
                 
         #--------------------------------------------------------------------------------------------------------------------------------------
@@ -278,47 +259,12 @@ class robot_human_state:
         # _, _, theta = euler_from_quaternion(quaternion)  
         theta = 0.5             
     
-        self.X = np.array([x, y, theta])
-        
-        vel_x = odom_msg.twist.twist.linear.x
-        vel_y = odom_msg.twist.twist.linear.y
-        vel_z = odom_msg.twist.twist.linear.z
-        
-        # vel_rob = math.sqrt(vel_x**2 + vel_y**2 + vel_z**2)
-        # print(vel_rob)
-        vel_rob = vel_x
-        
-        
-        # vel_rob = 0.26
-        
-        w_x = odom_msg.twist.twist.angular.x
-        w_y = odom_msg.twist.twist.angular.y
-        w_z = odom_msg.twist.twist.angular.z
-        # omega_rob = math.sqrt(w_x**2 + w_y**2 + w_z**2)
-        omega_rob = w_z
-    
-        
-        
+        self.X = np.array([x, y, theta])  
+     
+        vel_rob = odom_msg.twist.twist.linear.x      
+        omega_rob = odom_msg.twist.twist.angular.z  
         self.U = np.array([vel_rob, omega_rob])
-        # print("u: ", self.U)
-        
-        
-        # dt_rob = 1.0 #model_dt = 0.25/10   check dt     0.03
-        
-        
-        
-        # A_13 = -1 * vel_rob*sin(theta)*dt_rob
-        # A_23 = 1 * vel_rob*cos(theta)*dt_rob
-        
-       
-        
-        # self.A_rob = np.array([[1.0, 0.0, A_13],
-        #                    [0.0, 1.0, A_23],
-        #                    [0.0, 0.0, 1.0]])
-        
-        # print(self.A_rob)
-        
-        
+        # print("u: ", self.U)        
         
         self.mu_initial_rob = self.X
         self.std_initial_rob = np.array([0.281, 0.306, 0.001]) 
@@ -338,21 +284,18 @@ class robot_human_state:
         
         # print("b: ", self.b_rob)
     
-        # initial_probstar_rob = ProbStar(self.mu_initial_rob, self.sigma_rob, self.lb_rob, self.ub_rob)
+        init_probstar_rob = ProbStar(self.mu_initial_rob, self.sigma_rob, self.lb_rob, self.ub_rob)
         
-        # self.bu = np.matmul(self.b_rob, self.U).flatten()
+        self.bu = np.matmul(self.b_rob, self.U).flatten()
         
-        # print("Robot:")
+        print("Robot:")
         
         
-        # next_prob_star = initial_probstar_rob.affineMap(self.A_rob, self.bu)
-        # print(initial_probstar_rob.mu[0], initial_probstar_rob.mu[1])
-        # for i in range(4):
-        #     next_prob_star = next_prob_star.affineMap(self.A_rob, self.bu)
-        #     self.probstars.append(next_prob_star)            
-        #     print("step ", i, ": ", next_prob_star.mu[0], next_prob_star.mu[1])
-           
-        #____________________________________________________________________________________
+        next_prob_star_rob = init_probstar_rob.affineMap(self.A_rob, self.bu)
+        
+        for i in range(4):
+            next_prob_star_rob  = next_prob_star_rob.affineMap(self.A_rob, self.bu)
+     
         
         
         
