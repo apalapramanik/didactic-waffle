@@ -59,7 +59,7 @@ class kalmanFilter:
         if isinstance(probstar, ProbStar):
             
             # Process model
-            self.A = np.array([[1, 0, 1, dt],
+            self.A = np.array([[1, 0, dt, 0],
                                 [0, 1, 0, dt],
                                 [0, 0, 1, 0],
                                 [0, 0, 0, 1]])
@@ -69,6 +69,7 @@ class kalmanFilter:
             
             #update error covariance p_k
             self.x_k_ps = self.x_ps.affineMap(self.A)
+            # print(self.x_k_ps)
             T = np.matmul(self.P, self.A.transpose())
             self.p_k = np.matmul(self.A, T) + self.Q
             
@@ -83,6 +84,7 @@ class kalmanFilter:
             
             #prediction        
             self.x_ps = self.x_k_ps.affineMap(self.M, self.N)
+            # print(self.x_k_ps)
             self.P = np.matmul((np.eye(self.H.shape[1]) - np.matmul(self.K, self.H)), self.P_k)
             
             # print("Estimated pose:", self.x_ps.C[0], self.x_ps.C[1])
@@ -197,7 +199,7 @@ class robot_human_state:
         
         
         self.current_time = rospy.Time.now().to_sec()
-        self.dt = self.current_time - self.prev_time
+        self.dt = (self.current_time - self.prev_time)
         self.prev_time = self.current_time
 
         pcl_np = pointcloud2_to_numpy(pose_msg)
@@ -211,10 +213,15 @@ class robot_human_state:
         if len(x) > 1 and len(y) > 1:
             self.v_x = (x[-1] - x[-2]) / self.dt
             self.v_y = (y[-1] - y[-2]) / self.dt
+        else:
+            self.v_x = 0.0
+            self.v_y = 0.0
             
         # print(self.v_x, self.v_y)
         self.dt = round(self.dt, 2)
-        # print(self.dt)
+        print("dt:", self.dt)
+        print("vx:", self.v_x)
+        print("vy:", self.v_y)
 
         self.z = np.array([[self.pose_x], [self.pose_y]])
         self.x = np.array([[self.z[0, 0]], [self.z[1, 0]], [self.v_x], [self.v_y]])
@@ -228,18 +235,34 @@ class robot_human_state:
         self.ub = self.mu + self.std / 2
         
         init_probstar_human = ProbStar(self.mu, self.sigma, self.lb, self.ub)
+        # print(init_probstar_human)
+        # print("Human:")
+        
+        
         
         kf = kalmanFilter()
         
-        next_prob_star_human = kf.predict_update(init_probstar_human, self.dt)
+        next_prob_star_human = kf.predict_update(init_probstar_human, self.dt)    
         
-        print("Human:")
+        print(next_prob_star_human.V)
+        
+        # next_prob_star_human = init_probstar_human.affineMap(self.A)
+        a = 0
         
         for i in range(5):
             next_prob_star_human = kf.predict_update(next_prob_star_human, self.dt)
-            new_x = self.z[0] + next_prob_star_human.V[0][0]
-            new_y = self.z[1] + next_prob_star_human.V[1][0]
-            print("Estimated pose:", new_x, new_y )
+            # next_prob_star_human = next_prob_star_human.affineMap(self.A)
+            new_x = self.z[0] + next_prob_star_human.V[0][0] + next_prob_star_human.V[0][3]
+            new_y = self.z[1] + next_prob_star_human.V[1][0] + next_prob_star_human.V[1][4]
+            print("pose ", i ,": ",new_x, new_y)
+            a = a+1
+            marker.publish_prediction_marker(a, name = "pred_human", cord_x= new_x[0], cord_y=new_y[0], 
+                                                        cord_z= 0.0, std_x=human_length,
+                                                        std_y = human_width, std_z = human_height,
+                                                        or_x = 1.0,or_y =1.0,
+                                                        or_z=0.0,or_w=0.0)  
+            
+           
             
             
                 
@@ -259,8 +282,8 @@ class robot_human_state:
             odom_msg.pose.pose.orientation.z,
             odom_msg.pose.pose.orientation.w
         )
-        # _, _, theta = euler_from_quaternion(quaternion)  
-        theta = 0.5             
+        _, _, theta = euler_from_quaternion(quaternion)  
+        # theta = 0.5             
     
         self.X = np.array([x, y, theta])  
      
@@ -281,35 +304,54 @@ class robot_human_state:
                            [0.0, 1.0, 0.0],
                            [0.0, 0.0, 1.0]])
         
-        self.b_rob = np.array([[cos(theta), 0.0],
-                              [sin(theta), 0.0],
+        self.dtm = 0.7 #odom time period = 0.03 / no of obs
+        
+        self.b_rob = np.array([[cos(theta)*self.dtm, 0.0],
+                              [sin(theta)*self.dtm, 0.0],
                               [0.0, 1.0]])
         
        
     
         init_probstar_rob = ProbStar(self.mu_initial_rob, self.sigma_rob, self.lb_rob, self.ub_rob)
+        # print(init_probstar_rob)
+        
         
         self.bu = np.matmul(self.b_rob, self.U).flatten()
         
-        print("Robot:")
-        print(self.X)
+        # print("Robot:")
+        # print(self.X)
         
         
         next_prob_star_rob = init_probstar_rob.affineMap(self.A_rob, self.bu)
-        print("V:", next_prob_star_rob.V)
+        # marker.publish_pose_marker( name = "pred_robot", cord_x= x, cord_y=y, 
+        #                                      cord_z= 0.0, std_x=robot_length,
+        #                                      std_y = robot_width, std_z = robot_height,
+        #                                      or_x = odom_msg.pose.pose.orientation.x,or_y = odom_msg.pose.pose.orientation.y,
+        #                                      or_z=odom_msg.pose.pose.orientation.z,or_w=odom_msg.pose.pose.orientation.w) 
         
-        for i in range(4):
+        # marker.publish_pose_marker( name = "pred_robot", cord_x= x + next_prob_star_rob.V[0][0], cord_y= y + next_prob_star_rob.V[1][0], 
+        #                                      cord_z= 0.0, std_x=robot_length,
+        #                                      std_y = robot_width, std_z = robot_height,
+        #                                      or_x = odom_msg.pose.pose.orientation.x,or_y = odom_msg.pose.pose.orientation.y,
+        #                                      or_z=odom_msg.pose.pose.orientation.z,or_w=odom_msg.pose.pose.orientation.w) 
+       
+        for i in range(5):
             next_prob_star_rob  = next_prob_star_rob.affineMap(self.A_rob, self.bu)
             new_x =  x + next_prob_star_rob.V[0][0]
             new_y = y + next_prob_star_rob.V[1][0]
-            print("Estimated pose:",new_x, new_y)
-     
+            # print("pose ", i ,": ",new_x, new_y)     
+            # marker.publish_prediction_marker(i, name = "pred_robot", cord_x= new_x, cord_y=new_y, 
+            #                                             cord_z= 0.0, std_x=robot_length,
+            #                                             std_y = robot_width, std_z = robot_height,
+            #                                             or_x = odom_msg.pose.pose.orientation.x,or_y = odom_msg.pose.pose.orientation.y,
+            #                                             or_z=odom_msg.pose.pose.orientation.z,or_w=odom_msg.pose.pose.orientation.w)     
+                
         
         
         
           
                 
-        print("---------------------------------------------------")
+      
     
 
 if __name__ == '__main__':
@@ -323,43 +365,6 @@ if __name__ == '__main__':
 
 """
 
- # if len(self.states_history) <= 19:
-        #     self.states_history.append(self.X)
-        # else:
-        #     self.states_history.pop(0)  # Remove the oldest entry
-        #     self.states_history.append(self.X)
-
-        # print("length:", len(self.states_history))
-
-        # if len(self.states_history) == 20:
-        #     # Convert states_history to a NumPy array for easier calculations
-        #     states_array = np.array(self.states_history)
-
-        #     # Calculate mean and standard deviation for x
-        #     self.mean_x = np.mean(states_array[:, 0])
-        #     self.std_x = np.std(states_array[:, 0])
-
-        #     # Calculate mean and standard deviation for y
-        #     self.mean_y = np.mean(states_array[:, 1])
-        #     self.std_y = np.std(states_array[:, 1])
-
-        #     # Calculate mean and standard deviation for theta
-        #     self.mean_theta = np.mean(states_array[:, 2])
-        #     self.std_theta = np.std(states_array[:, 2])
-
-
-        #     # Print the results
-        #     print("Mean and standard deviation for x:")
-        #     print(f"Mean: {self.mean_x}, Standard Deviation: {self.std_x}")
-
-        #     print("\nMean and standard deviation for y:")
-        #     print(f"Mean: {self.mean_y}, Standard Deviation: {self.std_y}")
-
-        #     print("\nMean and standard deviation for theta:")
-        #     print(f"Mean: {self.mean_theta}, Standard Deviation: {self.std_theta}")
-            
-        #     self.X_initial = np.array([self.mean_x, self.mean_y, self.mean_theta])
-        #     self.std_initial = np.array([self.std_x, self.std_y, self.std_theta])
 Robot:
 
 Mean and standard deviation for x:
@@ -389,19 +394,6 @@ publish marker:
             #                                  or_z=odom_msg.pose.pose.orientation.z,or_w=odom_msg.pose.pose.orientation.w)     
 
 
-
-DLODE:...print('\nTesting DLODE multiStepReach method....')
-            k = 3
-            X0 = ProbStar.rand(2)
-            plant = DLODE.rand(2, 2, 1)
-            plant.info()
-            #U0 = np.random.rand(10, 2)
-            U0 = []
-            for i in range(0, k):
-                U0.append(ProbStar.rand(2))
-            X, Y = plant.multiStepReach(X0, U0, k)
-            print('X = {}'.format(X))
-            print('Y = {}'.format(Y))
 """
  
         
