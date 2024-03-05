@@ -113,7 +113,7 @@ class marker:
     
         
         prediction_marker_cube.header.stamp = rospy.Time.now()
-        prediction_marker_cube.header.frame_id = "map"
+        prediction_marker_cube.header.frame_id = "camera_rgb_optical_frame"#"map"
         prediction_marker_cube.ns = "basic_shapes_1"
         prediction_marker_cube.id = 1
         prediction_marker_cube.type = 1
@@ -243,32 +243,22 @@ class robot_human_state:
         kf = kalmanFilter()
         
         next_prob_star_human = kf.predict_update(init_probstar_human, self.dt)    
-        
-        print(next_prob_star_human.V)
-        
-        # next_prob_star_human = init_probstar_human.affineMap(self.A)
-        a = 0
+     
         
         for i in range(5):
             next_prob_star_human = kf.predict_update(next_prob_star_human, self.dt)
             # next_prob_star_human = next_prob_star_human.affineMap(self.A)
-            new_x = self.z[0] + next_prob_star_human.V[0][0] + next_prob_star_human.V[0][3]
-            new_y = self.z[1] + next_prob_star_human.V[1][0] + next_prob_star_human.V[1][4]
-            print("pose ", i ,": ",new_x, new_y)
-            a = a+1
-            marker.publish_prediction_marker(a, name = "pred_human", cord_x= new_x[0], cord_y=new_y[0], 
-                                                        cord_z= 0.0, std_x=human_length,
-                                                        std_y = human_width, std_z = human_height,
+            new_x =  next_prob_star_human.V[0][0] + (self.z[0]*next_prob_star_human.V[0][1]) + next_prob_star_human.V[0][3]
+            new_y = next_prob_star_human.V[1][0] + (self.z[1]*next_prob_star_human.V[1][2]) + next_prob_star_human.V[1][4]
+            print("pose ", i ,": ",new_x[0], new_y[0])
+           
+            marker.publish_prediction_marker(i, name = "pred_human", cord_x= new_x[0], cord_y=new_y[0], 
+                                                        cord_z= 0.0, std_x=0.5,
+                                                        std_y = 0.5, std_z = 0.5,
                                                         or_x = 1.0,or_y =1.0,
                                                         or_z=0.0,or_w=0.0)  
             
-           
-            
-            
-                
-        #--------------------------------------------------------------------------------------------------------------------------------------
-
-
+      
          
    
     def odom_callback(self, odom_msg):
