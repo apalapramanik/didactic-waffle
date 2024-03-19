@@ -170,13 +170,17 @@ class robot_human_state:
         
         rospy.init_node('reachability_analysis', anonymous=True)
         
-        self.odom_sub = rospy.Subscriber('/odom', Odometry, self.odom_callback,queue_size=10) 
+        self.odom_sub1 = rospy.Subscriber('robot_1/odom', Odometry, self.odom_callback1,queue_size=10) 
         self.states_history = []
         self.errors_history = []
         self.probstars =[]
         
+        self.odom_sub2 = rospy.Subscriber('robot_2/odom', Odometry, self.odom_callback2,queue_size=10)
+        self.odom_sub3 = rospy.Subscriber('robot_3/odom', Odometry, self.odom_callback,queue_size=10)
         
-        self.pc_human_sub = rospy.Subscriber("projected",pc2,self.human_pc_callback,queue_size=10)
+        
+        
+        self.pc_human_sub = rospy.Subscriber("projected",pc2,self.human_pc_callback3,queue_size=10)
         self.prev_time = 0.0
         self.dt = 0.0
         
@@ -261,7 +265,7 @@ class robot_human_state:
       
          
    
-    def odom_callback(self, odom_msg):
+    def odom_callback1(self, odom_msg):
        
         # Extract pose and twist information from odometry message
         x = odom_msg.pose.pose.position.x
@@ -338,8 +342,160 @@ class robot_human_state:
                 
         
         
+    def odom_callback2(self, odom_msg):
+    
+        # Extract pose and twist information from odometry message
+        x = odom_msg.pose.pose.position.x
+        y = odom_msg.pose.pose.position.y
+        quaternion = (
+            odom_msg.pose.pose.orientation.x,
+            odom_msg.pose.pose.orientation.y,
+            odom_msg.pose.pose.orientation.z,
+            odom_msg.pose.pose.orientation.w
+        )
+        _, _, theta = euler_from_quaternion(quaternion)  
+        # theta = 0.5             
+
+        self.X = np.array([x, y, theta])  
         
-          
+        vel_rob = odom_msg.twist.twist.linear.x      
+        omega_rob = odom_msg.twist.twist.angular.z  
+        self.U = np.array([vel_rob, omega_rob])
+        # print("u: ", self.U)        
+        
+        self.mu_initial_rob = self.X
+        self.std_initial_rob = np.array([0.281, 0.306, 0.001]) 
+        self.sigma_rob = np.diag(np.square(self.std_initial_rob))
+        self.U_initial_rob = self.U      
+        self.lb_rob = self.mu_initial_rob - self.std_initial_rob / 2
+        self.ub_rob = self.mu_initial_rob + self.std_initial_rob / 2
+        
+        
+        self.A_rob= np.array([[1.0, 0.0, 0.0],
+                            [0.0, 1.0, 0.0],
+                            [0.0, 0.0, 1.0]])
+        
+        self.dtm = 0.7 #odom time period = 0.03 / no of obs
+        
+        self.b_rob = np.array([[cos(theta)*self.dtm, 0.0],
+                                [sin(theta)*self.dtm, 0.0],
+                                [0.0, 1.0]])
+        
+        
+
+        init_probstar_rob = ProbStar(self.mu_initial_rob, self.sigma_rob, self.lb_rob, self.ub_rob)
+        # print(init_probstar_rob)
+        
+        
+        self.bu = np.matmul(self.b_rob, self.U).flatten()
+        
+        # print("Robot:")
+        # print(self.X)
+        
+        
+        next_prob_star_rob = init_probstar_rob.affineMap(self.A_rob, self.bu)
+        # marker.publish_pose_marker( name = "pred_robot", cord_x= x, cord_y=y, 
+        #                                      cord_z= 0.0, std_x=robot_length,
+        #                                      std_y = robot_width, std_z = robot_height,
+        #                                      or_x = odom_msg.pose.pose.orientation.x,or_y = odom_msg.pose.pose.orientation.y,
+        #                                      or_z=odom_msg.pose.pose.orientation.z,or_w=odom_msg.pose.pose.orientation.w) 
+        
+        # marker.publish_pose_marker( name = "pred_robot", cord_x= x + next_prob_star_rob.V[0][0], cord_y= y + next_prob_star_rob.V[1][0], 
+        #                                      cord_z= 0.0, std_x=robot_length,
+        #                                      std_y = robot_width, std_z = robot_height,
+        #                                      or_x = odom_msg.pose.pose.orientation.x,or_y = odom_msg.pose.pose.orientation.y,
+        #                                      or_z=odom_msg.pose.pose.orientation.z,or_w=odom_msg.pose.pose.orientation.w) 
+        
+        for i in range(5):
+            next_prob_star_rob  = next_prob_star_rob.affineMap(self.A_rob, self.bu)
+            new_x =  x + next_prob_star_rob.V[0][0]
+            new_y = y + next_prob_star_rob.V[1][0]
+            # print("pose ", i ,": ",new_x, new_y)     
+            # marker.publish_prediction_marker(i, name = "pred_robot", cord_x= new_x, cord_y=new_y, 
+            #                                             cord_z= 0.0, std_x=robot_length,
+            #                                             std_y = robot_width, std_z = robot_height,
+            #                                             or_x = odom_msg.pose.pose.orientation.x,or_y = odom_msg.pose.pose.orientation.y,
+            #                                             or_z=odom_msg.pose.pose.orientation.z,or_w=odom_msg.pose.pose.orientation.w)     
+                
+        
+    def odom_callback3(self, odom_msg):
+       
+        # Extract pose and twist information from odometry message
+        x = odom_msg.pose.pose.position.x
+        y = odom_msg.pose.pose.position.y
+        quaternion = (
+            odom_msg.pose.pose.orientation.x,
+            odom_msg.pose.pose.orientation.y,
+            odom_msg.pose.pose.orientation.z,
+            odom_msg.pose.pose.orientation.w
+        )
+        _, _, theta = euler_from_quaternion(quaternion)  
+        # theta = 0.5             
+    
+        self.X = np.array([x, y, theta])  
+     
+        vel_rob = odom_msg.twist.twist.linear.x      
+        omega_rob = odom_msg.twist.twist.angular.z  
+        self.U = np.array([vel_rob, omega_rob])
+        # print("u: ", self.U)        
+        
+        self.mu_initial_rob = self.X
+        self.std_initial_rob = np.array([0.281, 0.306, 0.001]) 
+        self.sigma_rob = np.diag(np.square(self.std_initial_rob))
+        self.U_initial_rob = self.U      
+        self.lb_rob = self.mu_initial_rob - self.std_initial_rob / 2
+        self.ub_rob = self.mu_initial_rob + self.std_initial_rob / 2
+        
+        
+        self.A_rob= np.array([[1.0, 0.0, 0.0],
+                           [0.0, 1.0, 0.0],
+                           [0.0, 0.0, 1.0]])
+        
+        self.dtm = 0.7 #odom time period = 0.03 / no of obs
+        
+        self.b_rob = np.array([[cos(theta)*self.dtm, 0.0],
+                              [sin(theta)*self.dtm, 0.0],
+                              [0.0, 1.0]])
+        
+       
+    
+        init_probstar_rob = ProbStar(self.mu_initial_rob, self.sigma_rob, self.lb_rob, self.ub_rob)
+        # print(init_probstar_rob)
+        
+        
+        self.bu = np.matmul(self.b_rob, self.U).flatten()
+        
+        # print("Robot:")
+        # print(self.X)
+        
+        
+        next_prob_star_rob = init_probstar_rob.affineMap(self.A_rob, self.bu)
+        # marker.publish_pose_marker( name = "pred_robot", cord_x= x, cord_y=y, 
+        #                                      cord_z= 0.0, std_x=robot_length,
+        #                                      std_y = robot_width, std_z = robot_height,
+        #                                      or_x = odom_msg.pose.pose.orientation.x,or_y = odom_msg.pose.pose.orientation.y,
+        #                                      or_z=odom_msg.pose.pose.orientation.z,or_w=odom_msg.pose.pose.orientation.w) 
+        
+        # marker.publish_pose_marker( name = "pred_robot", cord_x= x + next_prob_star_rob.V[0][0], cord_y= y + next_prob_star_rob.V[1][0], 
+        #                                      cord_z= 0.0, std_x=robot_length,
+        #                                      std_y = robot_width, std_z = robot_height,
+        #                                      or_x = odom_msg.pose.pose.orientation.x,or_y = odom_msg.pose.pose.orientation.y,
+        #                                      or_z=odom_msg.pose.pose.orientation.z,or_w=odom_msg.pose.pose.orientation.w) 
+       
+        for i in range(5):
+            next_prob_star_rob  = next_prob_star_rob.affineMap(self.A_rob, self.bu)
+            new_x =  x + next_prob_star_rob.V[0][0]
+            new_y = y + next_prob_star_rob.V[1][0]
+            # print("pose ", i ,": ",new_x, new_y)     
+            # marker.publish_prediction_marker(i, name = "pred_robot", cord_x= new_x, cord_y=new_y, 
+            #                                             cord_z= 0.0, std_x=robot_length,
+            #                                             std_y = robot_width, std_z = robot_height,
+            #                                             or_x = odom_msg.pose.pose.orientation.x,or_y = odom_msg.pose.pose.orientation.y,
+            #                                             or_z=odom_msg.pose.pose.orientation.z,or_w=odom_msg.pose.pose.orientation.w)     
+                
+        
+                
+            
                 
       
     
