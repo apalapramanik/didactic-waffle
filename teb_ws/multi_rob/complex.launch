@@ -1,0 +1,86 @@
+<launch>
+  <arg name="model" default="$(env TURTLEBOT3_MODEL)" doc="model type [burger, waffle, waffle_pi]"/>
+  <arg name="rob1" default="tb1"/>
+  <arg name="rob2" default="tb2"/>
+  <arg name="rob3" default="tb3"/>
+
+  <arg name="x_pos1" default="11.466219"/>
+  <arg name="y_pos1" default="-7.267796"/>
+  <arg name="z_pos1" default="-0.000"/>
+  <arg name="yaw1" default="1.621071"/>
+
+ 
+  <arg name="x_pos2" default="8.143804"/>
+  <arg name="y_pos2" default="0.032318"/>
+  <arg name="z_pos2" default="-0.001064"/>
+  <arg name="yaw2" default="-0.309337"/>
+
+  
+  <arg name="x_pos3" default="18.376935"/>
+  <arg name="y_pos3" default="-1.841782"/>
+  <arg name="z_pos3" default="-0.000988"/>
+  <arg name="yaw3" default="2.441699"/>
+
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="world_name" value="$(find turtlebot3_gazebo)/worlds/scene2.world"/>
+    <arg name="paused" value="false"/>
+    <arg name="use_sim_time" value="true"/>
+    <arg name="gui" value="true"/>
+    <arg name="headless" value="false"/>
+    <arg name="debug" value="false"/>
+  </include>
+
+
+
+  <group ns = "$(arg rob1)">
+  
+   <param name="robot_description" command="$(find xacro)/xacro  $(find turtlebot3_description)/urdf/turtlebot3_$(arg model).urdf.xacro" />
+
+    <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher1" output="screen">
+        <param name="publish_frequency" type="double" value="50.0" />
+        <param name="tf_prefix" value="$(arg rob1)" />
+    </node>
+
+   <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-urdf -model $(arg rob1) -x $(arg x_pos1) -y $(arg y_pos1) -z $(arg z_pos1) -Y $(arg yaw1) -param robot_description"/>
+  </group>
+  
+
+
+  <group ns = "$(arg rob2)">
+   <param name="robot_description" command="$(find xacro)/xacro  $(find turtlebot3_description)/urdf/turtlebot3_$(arg model).urdf.xacro" />
+   
+   <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher2" output="screen">
+        <param name="publish_frequency" type="double" value="50.0" />
+        <param name="tf_prefix" value="$(arg rob2)" />
+    </node>
+   
+   <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-urdf -model $(arg rob2) -x $(arg x_pos2) -y $(arg y_pos2) -z $(arg z_pos2) -Y $(arg yaw2) -param robot_description"/>
+  </group>
+
+
+
+
+
+ <group ns = "$(arg rob3)">
+   <param name="robot_description" command="$(find xacro)/xacro  $(find turtlebot3_description)/urdf/turtlebot3_$(arg model).urdf.xacro" />
+   
+   <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher3" output="screen">
+        <param name="publish_frequency" type="double" value="50.0" />
+        <param name="tf_prefix" value="$(arg rob3)" />
+    </node>
+
+   <node name="spawn_urdf3" pkg="gazebo_ros" type="spawn_model" args="-urdf -model $(arg rob3) -x $(arg x_pos3) -y $(arg y_pos3) -z $(arg z_pos3) -Y $(arg yaw3) -param robot_description"/>
+  </group>
+
+ 
+
+  
+
+  </launch>
+
+ 
+  
+
+  
+
+
