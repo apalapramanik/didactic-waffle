@@ -50,3 +50,15 @@ Launch monitor node:
 ```rosrun verification robot_reachability.py```
 
 
+## MULTIPLE TURTLEBOT LAUNCH
+
+Launch gazebo environment:
+
+``` roslaunch turtlebot3_gazebo multi_nav.launch ```
+
+Launch navigation:   
+
+```roslaunch turtlebot3_navigation multi_nav.launch map_file:=/home/apramani/didactic-waffle/teb_ws/src/turtlebot3/turtlebot3_navigation/maps/map.yaml```
+
+
+
