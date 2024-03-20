@@ -176,7 +176,7 @@ class robot_human_state:
         self.probstars =[]
         
         self.odom_sub2 = rospy.Subscriber('robot_2/odom', Odometry, self.odom_callback2,queue_size=10)
-        self.odom_sub3 = rospy.Subscriber('robot_3/odom', Odometry, self.odom_callback,queue_size=10)
+        self.odom_sub3 = rospy.Subscriber('robot_3/odom', Odometry, self.odom_callback3,queue_size=10)
         
         
         
@@ -334,11 +334,11 @@ class robot_human_state:
             new_x =  x + next_prob_star_rob.V[0][0]
             new_y = y + next_prob_star_rob.V[1][0]
             # print("pose ", i ,": ",new_x, new_y)     
-            # marker.publish_prediction_marker(i, name = "pred_robot", cord_x= new_x, cord_y=new_y, 
-            #                                             cord_z= 0.0, std_x=robot_length,
-            #                                             std_y = robot_width, std_z = robot_height,
-            #                                             or_x = odom_msg.pose.pose.orientation.x,or_y = odom_msg.pose.pose.orientation.y,
-            #                                             or_z=odom_msg.pose.pose.orientation.z,or_w=odom_msg.pose.pose.orientation.w)     
+            marker.publish_prediction_marker(i, name = "pred_robot1", cord_x= new_x, cord_y=new_y, 
+                                                        cord_z= 0.0, std_x=robot_length,
+                                                        std_y = robot_width, std_z = robot_height,
+                                                        or_x = odom_msg.pose.pose.orientation.x,or_y = odom_msg.pose.pose.orientation.y,
+                                                        or_z=odom_msg.pose.pose.orientation.z,or_w=odom_msg.pose.pose.orientation.w)     
                 
         
         
@@ -411,11 +411,11 @@ class robot_human_state:
             new_x =  x + next_prob_star_rob.V[0][0]
             new_y = y + next_prob_star_rob.V[1][0]
             # print("pose ", i ,": ",new_x, new_y)     
-            # marker.publish_prediction_marker(i, name = "pred_robot", cord_x= new_x, cord_y=new_y, 
-            #                                             cord_z= 0.0, std_x=robot_length,
-            #                                             std_y = robot_width, std_z = robot_height,
-            #                                             or_x = odom_msg.pose.pose.orientation.x,or_y = odom_msg.pose.pose.orientation.y,
-            #                                             or_z=odom_msg.pose.pose.orientation.z,or_w=odom_msg.pose.pose.orientation.w)     
+            marker.publish_prediction_marker(i, name = "pred_robot2", cord_x= new_x, cord_y=new_y, 
+                                                        cord_z= 0.0, std_x=robot_length,
+                                                        std_y = robot_width, std_z = robot_height,
+                                                        or_x = odom_msg.pose.pose.orientation.x,or_y = odom_msg.pose.pose.orientation.y,
+                                                        or_z=odom_msg.pose.pose.orientation.z,or_w=odom_msg.pose.pose.orientation.w)     
                 
         
     def odom_callback3(self, odom_msg):
@@ -487,11 +487,11 @@ class robot_human_state:
             new_x =  x + next_prob_star_rob.V[0][0]
             new_y = y + next_prob_star_rob.V[1][0]
             # print("pose ", i ,": ",new_x, new_y)     
-            # marker.publish_prediction_marker(i, name = "pred_robot", cord_x= new_x, cord_y=new_y, 
-            #                                             cord_z= 0.0, std_x=robot_length,
-            #                                             std_y = robot_width, std_z = robot_height,
-            #                                             or_x = odom_msg.pose.pose.orientation.x,or_y = odom_msg.pose.pose.orientation.y,
-            #                                             or_z=odom_msg.pose.pose.orientation.z,or_w=odom_msg.pose.pose.orientation.w)     
+            marker.publish_prediction_marker(i, name = "pred_robot3", cord_x= new_x, cord_y=new_y, 
+                                                        cord_z= 0.0, std_x=robot_length,
+                                                        std_y = robot_width, std_z = robot_height,
+                                                        or_x = odom_msg.pose.pose.orientation.x,or_y = odom_msg.pose.pose.orientation.y,
+                                                        or_z=odom_msg.pose.pose.orientation.z,or_w=odom_msg.pose.pose.orientation.w)     
                 
         
                 
