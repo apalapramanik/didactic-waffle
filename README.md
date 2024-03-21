@@ -61,4 +61,15 @@ Launch navigation:
 ```roslaunch turtlebot3_navigation multi_nav.launch map_file:=/home/apramani/didactic-waffle/teb_ws/src/turtlebot3/turtlebot3_navigation/maps/map.yaml```
 
 
+extras:
+
+roslaunch turtlebot3_navigation multi_turtlebot3_gazebo.launch
+
+roslaunch turtlebot3_navigation move_base_three.launch
+
+roslaunch turtlebot3_navigation navigation_three.launch
+
+
+
+
 
