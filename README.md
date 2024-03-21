@@ -63,7 +63,7 @@ Launch navigation:
 
 extras:
 
-roslaunch turtlebot3_navigation multi_turtlebot3_gazebo.launch
+roslaunch turtlebot3_gazebo multi_turtlebot3_gazebo.launch
 
 roslaunch turtlebot3_navigation move_base_three.launch
 
