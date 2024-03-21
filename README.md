@@ -70,6 +70,10 @@ roslaunch turtlebot3_navigation move_base_three.launch
 roslaunch turtlebot3_navigation navigation_three.launch
 
 
+rosrun rqt_tf_tree rqt_tf_tree
+
+
+
 
 
 
