@@ -54,7 +54,7 @@ Launch monitor node:
 
 Launch gazebo environment:
 
-``` roslaunch turtlebot3_gazebo multi_nav.launch ```
+``` roslaunch turtlebot3_gazebo multi_gz.launch ```
 
 Launch navigation:   
 
