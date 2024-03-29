@@ -23,5 +23,13 @@ teb_ws/src/verification/src/StarV
 
 teb_ws/src/verification/src/extra_files
 
-teb_ws/src/mutli_turtlebot3_navigation
+teb/src/multi_turtlebot3_navigation
 
+teb_ws/src/mutli_tb_ws
+
+
+teb_ws/single_tb
+
+teb/src/multibot_layers
+
+teb/src/Multi-Robot-Gazebo-NaviStack
