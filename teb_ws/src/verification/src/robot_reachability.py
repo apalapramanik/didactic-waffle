@@ -333,7 +333,7 @@ class robot_human_state:
             new_x =  x + next_prob_star_rob.V[0][0]
             new_y = y + next_prob_star_rob.V[1][0]
             # print("pose ", i ,": ",new_x, new_y)     
-            marker.publish_prediction_marker("tb3_0_tf/camera_rgb_optical_frame", i, name = "pred_robot_tb3_0", cord_x= new_x, cord_y=new_y, 
+            marker.publish_prediction_marker("map", i, name = "pred_robot_tb3_0", cord_x= new_x, cord_y=new_y, 
                                                         cord_z= 0.0, std_x=robot_length,
                                                         std_y = robot_width, std_z = robot_height,
                                                         or_x = odom_msg.pose.pose.orientation.x,or_y = odom_msg.pose.pose.orientation.y,
@@ -410,7 +410,7 @@ class robot_human_state:
             new_x =  x + next_prob_star_rob.V[0][0]
             new_y = y + next_prob_star_rob.V[1][0]
             # print("pose ", i ,": ",new_x, new_y)     
-            marker.publish_prediction_marker("tb3_1_tf/camera_rgb_optical_frame",i, name = "pred_robot_tb3_1", cord_x= new_x, cord_y=new_y, 
+            marker.publish_prediction_marker("map",i, name = "pred_robot_tb3_1", cord_x= new_x, cord_y=new_y, 
                                                         cord_z= 0.0, std_x=robot_length,
                                                         std_y = robot_width, std_z = robot_height,
                                                         or_x = odom_msg.pose.pose.orientation.x,or_y = odom_msg.pose.pose.orientation.y,
@@ -486,8 +486,9 @@ class robot_human_state:
             next_prob_star_rob  = next_prob_star_rob.affineMap(self.A_rob, self.bu)
             new_x =  x + next_prob_star_rob.V[0][0]
             new_y = y + next_prob_star_rob.V[1][0]
-            # print("pose ", i ,": ",new_x, new_y)     
-            marker.publish_prediction_marker("tb3_2_tf/camera_rgb_optical_frame",i, name = "pred_robot_tb3_2", cord_x= new_x, cord_y=new_y, 
+            # print("pose ", i ,": ",new_x, new_y)  
+            #tb3_2_tf/camera_rgb_optical_frame   
+            marker.publish_prediction_marker("map",i, name = "pred_robot_tb3_2", cord_x= new_x, cord_y=new_y, 
                                                         cord_z= 0.0, std_x=robot_length,
                                                         std_y = robot_width, std_z = robot_height,
                                                         or_x = odom_msg.pose.pose.orientation.x,or_y = odom_msg.pose.pose.orientation.y,
