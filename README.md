@@ -58,7 +58,7 @@ Launch gazebo environment:
 
 Launch navigation:   
 
-```roslaunch turtlebot3_navigation multi_nav.launch map_file:=/home/apramani/didactic-waffle/teb_ws/src/turtlebot3/turtlebot3_navigation/maps/map.yaml```
+```roslaunch turtlebot3_navigation multi_nav.launch```
 
 TF TREE:
 
