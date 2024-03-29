@@ -21,8 +21,7 @@ import math
 
 from StarV.plant.dlode import DLODE
 from StarV.set.probstar import ProbStar
-from plot import plot_probstar, plot_star
-# from StarV.util.plot import probstar2polytope, plot_probstar
+
 
 robot_width = 0.281
 robot_length = 0.306
@@ -106,14 +105,14 @@ def pointcloud2_to_numpy(pointcloud_msg):
 
 class marker:
  
-    def publish_pose_marker(name, cord_x, cord_y, cord_z, std_x, std_y, std_z, or_x, or_y, or_z, or_w):
+    def publish_pose_marker(frame, name, cord_x, cord_y, cord_z, std_x, std_y, std_z, or_x, or_y, or_z, or_w):
         
         human_marker = rospy.Publisher(name, Marker, queue_size=0)
         prediction_marker_cube = Marker()
     
         
         prediction_marker_cube.header.stamp = rospy.Time.now()
-        prediction_marker_cube.header.frame_id = "camera_rgb_optical_frame"#"map"
+        prediction_marker_cube.header.frame_id = frame #"camera_rgb_optical_frame"#"map"
         prediction_marker_cube.ns = "basic_shapes_1"
         prediction_marker_cube.id = 1
         prediction_marker_cube.type = 1
@@ -135,13 +134,13 @@ class marker:
         #publish marker at current mean position of human:
         human_marker.publish(prediction_marker_cube)
         
-    def publish_prediction_marker(a, name, cord_x, cord_y, cord_z, std_x, std_y, std_z, or_x, or_y, or_z, or_w):
+    def publish_prediction_marker(frame, a, name, cord_x, cord_y, cord_z, std_x, std_y, std_z, or_x, or_y, or_z, or_w):
        
         prediction_marker = rospy.Publisher(name, Marker, queue_size=0)
         pred_marker_cube = Marker()
         
         pred_marker_cube.header.stamp = rospy.Time.now()
-        pred_marker_cube.header.frame_id = "map"
+        pred_marker_cube.header.frame_id = frame #"map"
         pred_marker_cube.ns = "basic_shapes_1"
         pred_marker_cube.id = a
         pred_marker_cube.type = 1
@@ -170,17 +169,17 @@ class robot_human_state:
         
         rospy.init_node('reachability_analysis', anonymous=True)
         
-        self.odom_sub1 = rospy.Subscriber('robot_1/odom', Odometry, self.odom_callback1,queue_size=10) 
+        self.odom_sub1 = rospy.Subscriber('tb3_0/odom', Odometry, self.odom_callback_tb3_0,queue_size=10) 
+        self.odom_sub2 = rospy.Subscriber('tb3_1/odom', Odometry, self.odom_callback_tb3_1,queue_size=10)
+        self.odom_sub3 = rospy.Subscriber('tb3_2/odom', Odometry, self.odom_callback_tb3_2,queue_size=10)
         self.states_history = []
         self.errors_history = []
-        self.probstars =[]
-        
-        self.odom_sub2 = rospy.Subscriber('robot_2/odom', Odometry, self.odom_callback2,queue_size=10)
-        self.odom_sub3 = rospy.Subscriber('robot_3/odom', Odometry, self.odom_callback3,queue_size=10)
+        self.probstars =[]      
         
         
         
-        self.pc_human_sub = rospy.Subscriber("projected",pc2,self.human_pc_callback3,queue_size=10)
+        
+        self.pc_human_sub = rospy.Subscriber("projected",pc2,self.human_pc_callback,queue_size=10)
         self.prev_time = 0.0
         self.dt = 0.0
         
@@ -265,7 +264,7 @@ class robot_human_state:
       
          
    
-    def odom_callback1(self, odom_msg):
+    def odom_callback_tb3_0(self, odom_msg):
        
         # Extract pose and twist information from odometry message
         x = odom_msg.pose.pose.position.x
@@ -334,15 +333,15 @@ class robot_human_state:
             new_x =  x + next_prob_star_rob.V[0][0]
             new_y = y + next_prob_star_rob.V[1][0]
             # print("pose ", i ,": ",new_x, new_y)     
-            marker.publish_prediction_marker(i, name = "pred_robot1", cord_x= new_x, cord_y=new_y, 
+            marker.publish_prediction_marker("tb3_0_tf/camera_rgb_optical_frame", i, name = "pred_robot_tb3_0", cord_x= new_x, cord_y=new_y, 
                                                         cord_z= 0.0, std_x=robot_length,
                                                         std_y = robot_width, std_z = robot_height,
                                                         or_x = odom_msg.pose.pose.orientation.x,or_y = odom_msg.pose.pose.orientation.y,
                                                         or_z=odom_msg.pose.pose.orientation.z,or_w=odom_msg.pose.pose.orientation.w)     
                 
+    
         
-        
-    def odom_callback2(self, odom_msg):
+    def odom_callback_tb3_1(self, odom_msg):
     
         # Extract pose and twist information from odometry message
         x = odom_msg.pose.pose.position.x
@@ -411,14 +410,15 @@ class robot_human_state:
             new_x =  x + next_prob_star_rob.V[0][0]
             new_y = y + next_prob_star_rob.V[1][0]
             # print("pose ", i ,": ",new_x, new_y)     
-            marker.publish_prediction_marker(i, name = "pred_robot2", cord_x= new_x, cord_y=new_y, 
+            marker.publish_prediction_marker("tb3_1_tf/camera_rgb_optical_frame",i, name = "pred_robot_tb3_1", cord_x= new_x, cord_y=new_y, 
                                                         cord_z= 0.0, std_x=robot_length,
                                                         std_y = robot_width, std_z = robot_height,
                                                         or_x = odom_msg.pose.pose.orientation.x,or_y = odom_msg.pose.pose.orientation.y,
                                                         or_z=odom_msg.pose.pose.orientation.z,or_w=odom_msg.pose.pose.orientation.w)     
                 
+     
         
-    def odom_callback3(self, odom_msg):
+    def odom_callback_tb3_2(self, odom_msg):
        
         # Extract pose and twist information from odometry message
         x = odom_msg.pose.pose.position.x
@@ -487,7 +487,7 @@ class robot_human_state:
             new_x =  x + next_prob_star_rob.V[0][0]
             new_y = y + next_prob_star_rob.V[1][0]
             # print("pose ", i ,": ",new_x, new_y)     
-            marker.publish_prediction_marker(i, name = "pred_robot3", cord_x= new_x, cord_y=new_y, 
+            marker.publish_prediction_marker("tb3_2_tf/camera_rgb_optical_frame",i, name = "pred_robot_tb3_2", cord_x= new_x, cord_y=new_y, 
                                                         cord_z= 0.0, std_x=robot_length,
                                                         std_y = robot_width, std_z = robot_height,
                                                         or_x = odom_msg.pose.pose.orientation.x,or_y = odom_msg.pose.pose.orientation.y,
