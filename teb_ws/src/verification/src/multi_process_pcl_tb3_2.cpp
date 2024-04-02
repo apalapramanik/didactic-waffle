@@ -121,9 +121,9 @@ Eigen::Matrix<float, 3,3> cov_matrix;
 pcl::PCLPointCloud2 passfiltered_pcl2;
 pcl::PointCloud<pcl::PointXYZ> final_cloud;
 pcl::PCLPointCloud2 passfiltered_pcl2_again;
-std::string frame_id="camera_rgb_optical_frame";
+std::string frame_id="tb3_2_tf/camera_rgb_optical_frame";
 pcl::PointCloud<pcl::PointXYZ> pass_filtered_cloud;
-static const std::string PCL_TOPIC = "/camera/depth/points";
+static const std::string PCL_TOPIC = "/tb3_2/camera/depth/points";
 pcl::PCLPointCloud2::Ptr inputCloud (new pcl::PCLPointCloud2());
 pcl::PCLPointCloud2::Ptr outputCloud (new pcl::PCLPointCloud2());
 pcl::ModelCoefficients::Ptr coefficients (new pcl::ModelCoefficients ());
@@ -278,7 +278,7 @@ void callback(const sensor_msgs::PointCloud2ConstPtr& cloud_msg) {
    }
    else
    {
-      ROS_INFO("NO human found");
+      ROS_INFO("tb3_2: NO human found");
    }
    
 
@@ -338,13 +338,13 @@ void cp_flag_callback(std_msgs::String str){
 int main(int argc, char **argv)
 {
    
-   ros::init (argc, argv, "cloud_processing");
+   ros::init (argc, argv, "tb3_2/cloud_processing");
    ros::NodeHandle nh;
 
    //subscribe
-   ros::Subscriber yolo_sub = nh.subscribe("H_Detection_msg", 10, human_callback);
+   ros::Subscriber yolo_sub = nh.subscribe("tb3_2/H_Detection_msg", 10, human_callback);
    ros::Subscriber PCLsub = nh.subscribe(PCL_TOPIC, 10, callback);
-   ros::Subscriber cp_flag_sub = nh.subscribe("cp_flag", 10, cp_flag_callback);
+   ros::Subscriber cp_flag_sub = nh.subscribe("tb3_2/cp_flag", 10, cp_flag_callback);
 
    //set frame_id
    
@@ -358,11 +358,11 @@ int main(int argc, char **argv)
    
    
    //publish
-   pub_cropped_cloud=nh.advertise<sensor_msgs::PointCloud2>("cropped_cloud",1);
-   pub_extracted_cloud=nh.advertise<sensor_msgs::PointCloud2>("extracted_cloud",1);
-   pub_projected_cloud=nh.advertise<sensor_msgs::PointCloud2>("projected",1);
-   passthrough_filtered=nh.advertise<sensor_msgs::PointCloud2>("passfiltered",1);
-   passthrough_filtered_again=nh.advertise<sensor_msgs::PointCloud2>("passfiltered_again",1);
+   pub_cropped_cloud=nh.advertise<sensor_msgs::PointCloud2>("tb3_2/cropped_cloud",1);
+   pub_extracted_cloud=nh.advertise<sensor_msgs::PointCloud2>("tb3_2/extracted_cloud",1);
+   pub_projected_cloud=nh.advertise<sensor_msgs::PointCloud2>("tb3_2/projected",1);
+   passthrough_filtered=nh.advertise<sensor_msgs::PointCloud2>("tb3_2/passfiltered",1);
+   passthrough_filtered_again=nh.advertise<sensor_msgs::PointCloud2>("tb3_2/passfiltered_again",1);
    
    
    ros::spin();

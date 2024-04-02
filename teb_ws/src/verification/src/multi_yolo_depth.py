@@ -230,11 +230,11 @@ class ObjectDetectionNode:
 
             
             # Publish the class ID, class name, depth and confidence
-            self.yolo_depth_msg_1.class_id = int(class_id)
-            self.yolo_depth_msg_1.label = self.model_1.names[int(class_id)]
-            self.yolo_depth_msg_1.depth = object_depth            
-            self.yolo_depth_msg_1.confidence = confidence
-            self.yolo_info_pub_tb3_1.publish(self.yolo_depth_msg_1) 
+            self.yolo_depth_msg_tb3_1.class_id = int(class_id)
+            self.yolo_depth_msg_tb3_1.label = self.model_1.names[int(class_id)]
+            self.yolo_depth_msg_tb3_1.depth = object_depth            
+            self.yolo_depth_msg_tb3_1.confidence = confidence
+            self.yolo_info_pub_tb3_1.publish(self.yolo_depth_msg_tb3_1) 
                     
             # object_depth = "{:.3e}m".format(object_depth) 
             depth = str(object_depth)      
@@ -339,11 +339,11 @@ class ObjectDetectionNode:
 
             
             # Publish the class ID, class name, depth and confidence
-            self.yolo_depth_msg_2.class_id = int(class_id)
-            self.yolo_depth_msg_2.label = self.model_2.names[int(class_id)]
-            self.yolo_depth_msg_2.depth = object_depth            
-            self.yolo_depth_msg_2.confidence = confidence
-            self.yolo_info_pub_tb3_2.publish(self.yolo_depth_msg_2) 
+            self.yolo_depth_msg_tb3_2.class_id = int(class_id)
+            self.yolo_depth_msg_tb3_2.label = self.model_2.names[int(class_id)]
+            self.yolo_depth_msg_tb3_2.depth = object_depth            
+            self.yolo_depth_msg_tb3_2.confidence = confidence
+            self.yolo_info_pub_tb3_2.publish(self.yolo_depth_msg_tb3_2) 
                     
             # object_depth = "{:.3e}m".format(object_depth) 
             depth = str(object_depth)      
