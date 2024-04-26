@@ -118,10 +118,7 @@ def test_prob():
     l3,u3 = init_2d2.getRanges()
     # print("second:",l2,u2)  
     
-    # h = []
-    # h.append(init_2d)
-    # h.append(init_2d2)
-    # # plot_probstar(h)
+
     
     
     ########### init probstar 2 affine map ############################################
@@ -146,10 +143,10 @@ def test_prob():
     l4,u4 = next_2d2.getRanges()
     print("second affmap:", l4, u4)
     
-    # p = []
-    # p.append(next_2d)
-    # p.append(next_2d2)
-    # plot_probstar(p)
+    p = []
+    p.append(next_2d)
+    p.append(next_2d2)
+    plot_probstar(p)
     
     
     lb2 = np.array([11.39635, -7.1893])
@@ -332,7 +329,7 @@ def test_prob2():
 
     
 if __name__ == "__main__":
-    test_prob2()
+    test_prob()
     
 
     
