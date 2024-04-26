@@ -286,7 +286,7 @@ class robot_human_state:
         # print("u: ", self.U)        
         
         self.mu_initial_rob = self.X
-        self.std_initial_rob = np.array([0.281, 0.306, 0.001]) 
+        self.std_initial_rob = np.array([0.281, 0.306, 0.001])  #TEST IT
         self.sigma_rob = np.diag(np.square(self.std_initial_rob))
         self.U_initial_rob = self.U      
         self.lb_rob = self.mu_initial_rob - self.std_initial_rob / 2

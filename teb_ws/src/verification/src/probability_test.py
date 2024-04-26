@@ -303,8 +303,8 @@ def test_prob2():
     
     V = next_2d.V  
     V_new = V[:,1:3]  
-    c_new =  np.array([[X[0]], [X[1]]])     
-    C_new = np.matmul(H, V_new)
+    c_new =  np.array([[V[0][0]], [V[1][0]]])     #center
+    C_new = np.matmul(H, V_new) #constarint
     d_new = g-np.matmul(H,c_new)
     d_new = d_new.reshape(4,)   
     sig = np.diag(np.square(std_initial_rob[0:2]))   
@@ -313,8 +313,10 @@ def test_prob2():
     
     probstar_overlap = ProbStar(c_V, C_new, d_new, mu_initial_rob[0:2], sig, lb_rob[0:2], ub_rob[0:2])
     print(probstar_overlap)
-    
-    # plot_probstar(probstar_overlap)
+    p =[]
+    p.append(next_2d)
+    p.append(probstar_overlap)
+    plot_probstar(next_2d)
     print('Probability:',probstar_overlap.estimateProbability())
     print('Is it empty set? ', probstar_overlap.isEmptySet())
    
@@ -329,7 +331,7 @@ def test_prob2():
 
     
 if __name__ == "__main__":
-    test_prob()
+    test_prob2()
     
 
     
