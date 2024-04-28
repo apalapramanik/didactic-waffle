@@ -184,7 +184,7 @@ def test_prob2():
     vel = 0.26
     omega = 0.2
     theta=1.6257967346611615   
-    X = np.array([11.45685789395808,-7.218021583352927,1.6257967346611615])
+    x = np.array([11.59,-7.28,1.62])
     
     
     
@@ -192,7 +192,7 @@ def test_prob2():
     
     
     U = np.array([vel, omega]) 
-    mu_initial_rob = X
+    mu_initial_rob = x
     std_initial_rob = np.array([0.281, 0.306, 0.001]) 
     sigma_rob = np.diag(np.square(std_initial_rob))
     U_initial_rob = U      
@@ -321,7 +321,153 @@ def test_prob2():
     print('Is it empty set? ', probstar_overlap.isEmptySet())
    
     
+def test_prob3():
     
+    A_2d= np.array([[1.0, 0.0, 0.0],
+                        [0.0, 1.0, 0.0]])
+    
+    
+    ############# initial probstar 1 #####################################
+    
+    vel = 0.26
+    omega = 0.2
+    theta=1.6257967346611615   
+    x = np.array([11.59,-7.28,1.62])
+    
+    U = np.array([vel, omega]) 
+    deviation = np.array([0.281, 0.306, 0.001])    
+    c = (np.expand_dims(x, axis=0)).transpose()
+    V = np.diag(deviation)
+    c_V = np.concatenate([c, V], axis =1)
+    C = []
+    d = []
+    
+    mu = np.zeros(x.shape[0])
+    sigma = np.diag(np.ones(x.shape[0]))
+    pred_lb = np.ones(x.shape[0]) * 4.5 * -1
+    pred_ub = np.ones(x.shape[0]) * 4.5
+    p = ProbStar(c_V, C, d, mu, sigma, pred_lb, pred_ub)
+    print("first pstar prob:", p.estimateProbability())
+    
+   
+    
+   
+   
+    
+    ##################### affine map init probstar 1 ######################################
+    
+    
+    A_rob= np.array([[1.0, 0.0, 0.0],
+                        [0.0, 1.0, 0.0],
+                        [0.0, 0.0, 1.0]])
+    
+    dtm = 0.7 #odom time period = 0.03 / no of obs
+    
+    b_rob = np.array([[cos(theta)*dtm, 0.0],
+                            [sin(theta)*dtm, 0.0],
+                            [0.0, 1.0]])
+    
+    bu = np.matmul(b_rob, U).flatten() 
+    
+    
+    
+    next = p.affineMap(A_rob,bu)
+    print("next_prob:", next.estimateProbability())
+    
+    next_2d = next.affineMap(A_2d)
+    l2,u2 = next_2d.getRanges()
+    print("first_affmap bounds:",l2,u2)
+    # plot_probstar(next_2d)
+
+    
+    
+    #################### initial  probstar 2  ############################################
+    
+    vel2 = 0.26
+    omega2 = 0.2
+    theta2=1.6257967346611615   
+    
+    
+    U2 = np.array([vel2, omega2])
+        
+    x2 = np.array([12.99,-7.78,2.92])
+    
+    deviation2 = np.array([0.281, 0.306, 0.001])    
+    c2 = (np.expand_dims(x2, axis=0)).transpose()
+    V2 = np.diag(deviation2)
+    c_V2 = np.concatenate([c2, V2], axis =1)
+    C2 = []
+    d2 = []
+    
+    mu2 = np.zeros(x2.shape[0])
+    sigma2 = np.diag(np.ones(x2.shape[0]))
+    pred_lb2 = np.ones(x2.shape[0]) * 4.5 * -1
+    pred_ub2 = np.ones(x2.shape[0]) * 4.5
+    p2 = ProbStar(c_V2, C2, d2, mu2, sigma2, pred_lb2, pred_ub2)
+    print("second pstar prob:", p2.estimateProbability())
+    
+    # init_2d2 = p2.affineMap(A_2d) 
+    # l3,u3 = init_2d2.getRanges()
+    # print("second:",l2,u2)  
+    
+    # plot_probstar(init_2d2)
+    
+    
+   
+    
+    
+    ########### init probstar 2 affine map ############################################
+    
+    A_rob2 = np.array([[1.0, 0.0, 0.0],
+                        [0.0, 1.0, 0.0],
+                        [0.0, 0.0, 1.0]])
+    
+    dtm2 = 0.7 #odom time period = 0.03 / no of obs
+    
+    b_rob2 = np.array([[cos(theta2)*dtm2, 0.0],
+                            [sin(theta2)*dtm2, 0.0],
+                            [0.0, 1.0]])
+    
+    bu2 = np.matmul(b_rob2, U2).flatten() 
+    
+    next2 = p2.affineMap(A_rob2,bu2)
+    
+    
+    
+    next_2d2 = next2.affineMap(A_2d)
+    # plot_probstar(next_2d2)
+    l4,u4 = next_2d2.getRanges()
+    print("second affmap bounds:", l4, u4)
+    # plot_probstar(next_2d2)
+    
+    # plot = []
+    # plot.append(next_2d)
+    # plot.append(next_2d2)
+    # plot_probstar(plot)
+    # plot_probstar(next_2d)
+    # plot_probstar(next_2d2)
+    
+    
+    ################################################# half space intersection ############################################################
+    
+    
+    C = np.array([[1,0], 
+                  [-1,0],
+                  [0,1],
+                  [0,-1]])
+    
+    d = np.array([u4[0], -l4[0], u4[1], -l4[1]])
+    
+    # overlap = ProbStar(next_2d.V, C, d,next_2d.mu, next_2d.Sig, next_2d.pred_lb, next_2d.pred_ub )
+    # plot_probstar(overlap)
+    s = next_2d.addMultipleConstraints(C,d)
+    
+    plot = []
+    plot.append(next_2d)
+    plot.append(next_2d2)
+    plot.append(s)
+    plot_probstar(plot)
+    # plot_probstar(s)
     
     
    
@@ -331,7 +477,7 @@ def test_prob2():
 
     
 if __name__ == "__main__":
-    test_prob2()
+    test_prob3()
     
 
     
