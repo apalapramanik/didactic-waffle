@@ -64,6 +64,17 @@ TF TREE:
 
 ```rosrun rqt_tf_tree rqt_tf_tree```
 
+### Launch files:
+```roslaunch verification scenario.launch```
+
+```roslaunch verification yolo.launch```
+
+```roslaunch verification clustering.launch```
+
+```roslaunch verification cloud_processing.launch```
+
+
+
 
 
 
