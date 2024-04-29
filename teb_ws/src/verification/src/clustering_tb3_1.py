@@ -88,37 +88,41 @@ class predict:
             odom_pose.append([self.curr_pose_x, self.curr_pose_y,self.curr_pose_z])
             odom_or.pop(0)
             odom_or.append([self.curr_or_x, self.curr_or_y,self.curr_or_z,self.curr_or_w])
+        
+        if len(odom_pose)>1: 
     
         
-        # convert orientation into quaternion 
-        q_old = np.quaternion(odom_or[0][3], odom_or[0][0], odom_or[0][1], odom_or[0][2])
-        p_old = [odom_pose[0][0], odom_pose[0][1], odom_pose[0][2]]
-        
-        q_new = np.quaternion(odom_or[1][3], odom_or[1][0], odom_or[1][1], odom_or[1][2])
-        p_new = [odom_pose[1][0], odom_pose[1][1], odom_pose[1][2]]
-        
-        #calculate rotation quaternion: q_rotation = q_current * ((q_previous)transpose)
-        q_old_inv = np.conjugate(q_old)
-        global q_rot 
-        q_rot = q_new * q_old_inv
-        
-        # compute translation matrix : x, y, z
-        translation_x = odom_pose[1][0] - odom_pose[0][0]
-        translation_y = odom_pose[1][1] - odom_pose[0][1]
-        translation_z = odom_pose[1][2] - odom_pose[0][2]
+            # convert orientation into quaternion 
+            q_old = np.quaternion(odom_or[0][3], odom_or[0][0], odom_or[0][1], odom_or[0][2])
+            p_old = [odom_pose[0][0], odom_pose[0][1], odom_pose[0][2]]
+            
+            q_new = np.quaternion(odom_or[1][3], odom_or[1][0], odom_or[1][1], odom_or[1][2])
+            p_new = [odom_pose[1][0], odom_pose[1][1], odom_pose[1][2]]
+            
+            #calculate rotation quaternion: q_rotation = q_current * ((q_previous)transpose)
+            q_old_inv = np.conjugate(q_old)
+            global q_rot 
+            q_rot = q_new * q_old_inv
+            
+            # compute translation matrix : x, y, z
+            translation_x = odom_pose[1][0] - odom_pose[0][0]
+            translation_y = odom_pose[1][1] - odom_pose[0][1]
+            translation_z = odom_pose[1][2] - odom_pose[0][2]
 
-        global translation
-        translation = [translation_x, translation_y, translation_z]
-        
-        #save 10 rotations and translations in array
-        if len(rot_array)<10:
-            rot_array.append(q_rot)
-            trans_array.append(translation)
+            global translation
+            translation = [translation_x, translation_y, translation_z]
+            
+            #save 10 rotations and translations in array
+            if len(rot_array)<10:
+                rot_array.append(q_rot)
+                trans_array.append(translation)
+            else:
+                rot_array.pop(0)
+                rot_array.append(q_rot)
+                trans_array.pop(0)
+                trans_array.append(translation)
         else:
-            rot_array.pop(0)
-            rot_array.append(q_rot)
-            trans_array.pop(0)
-            trans_array.append(translation)
+            print("Wait for odometry")
             
          
     def cloud_callback_tb3_1(self, data):

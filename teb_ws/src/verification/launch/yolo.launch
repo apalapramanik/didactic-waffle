@@ -1,4 +1,0 @@
-<?xml version="1.0"?>
-<launch>	
-    <node pkg="verification" name= "Depth_calculation" type="multi_yolo_depth.py"/>
-</launch>	

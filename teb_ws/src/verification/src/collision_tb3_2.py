@@ -200,7 +200,7 @@ class robot_human_state:
         rospy.init_node('tb3_2_collision_node', anonymous=True)
         
         
-        self.odom_sub2 = rospy.Subscriber('tb3_2/odom', Odometry, self.odom_callback_tb3_2,queue_size=10)s
+        self.odom_sub2 = rospy.Subscriber('tb3_2/odom', Odometry, self.odom_callback_tb3_2,queue_size=10)
         
         self.pc_human_sub = rospy.Subscriber("tb3_2/position_h1",pc2,self.human1_pc_callback,queue_size=10)
         self.prev_time = 0.0

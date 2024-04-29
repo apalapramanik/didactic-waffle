@@ -87,7 +87,9 @@ catkin_install_python(PROGRAMS
 src/robot_reachability.py
 src/human_reachability.py
 src/marker_pub.py
-src/collision.py
+src/collision_tb3_0.py
+src/collision_tb3_1.py
+src/collision_tb3_2.py
 src/clustering_tb3_0.py
 src/clustering_tb3_1.py
 src/clustering_tb3_2.py

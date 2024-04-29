@@ -2,5 +2,5 @@
 <launch>
 		<node pkg="verification" name= "tb3_0_clustering_node" type="clustering_tb3_0.py"/> 
         <node pkg="verification" name= "tb3_1_clustering_node" type="clustering_tb3_1.py"/> 
-        <!-- <node pkg="verification" name= "tb3_2_clustering_node" type="clustering_tb3_2.py"/>  -->
+        <node pkg="verification" name= "tb3_2_clustering_node" type="clustering_tb3_2.py"/> 
 </launch>	
