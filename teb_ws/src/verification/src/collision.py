@@ -169,6 +169,29 @@ class marker:
         #publish marker at predicted positions of human:
         prediction_marker.publish( pred_marker_cube)
 
+def probstar_halfspace_intersection_2d(P1, P2):
+    if isinstance(P1, ProbStar) and isinstance(P2, ProbStar):
+        
+        A_2d= np.array([[1.0, 0.0, 0.0],
+                        [0.0, 1.0, 0.0]])
+        
+        P1 = P1.affineMap(A_2d)
+        P2 = P2.affineMap(A_2d)
+        
+        l, u = P2.getRanges()
+        
+        C = np.array([[1,0], 
+                  [-1,0],
+                  [0,1],
+                  [0,-1]])
+        
+        d = np.array([u[0], -l[0], u[1], -l[1]])
+        
+        P3 = P1.addMultipleConstraints(C,d)
+        collision_probability = P3.estimateProbability()
+        return collision_probability
+    else:
+        return "Error: Inputs must be instances of ProbStar"
 
 class robot_human_state:
     
@@ -229,9 +252,9 @@ class robot_human_state:
             
         # print(self.v_x, self.v_y)
         self.dt = round(self.dt, 2)
-        print("dt:", self.dt)
-        print("vx:", self.v_x)
-        print("vy:", self.v_y)
+        # print("dt:", self.dt)
+        # print("vx:", self.v_x)
+        # print("vy:", self.v_y)
 
         self.z = np.array([[self.pose_x], [self.pose_y]])
         self.x_human = np.array([[self.z[0, 0]], [self.z[1, 0]], [self.v_x], [self.v_y]])
