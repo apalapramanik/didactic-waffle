@@ -129,8 +129,10 @@ def probstar():
     pred_lb = np.ones(x.shape[0]) * 4.5 * -1
     pred_ub = np.ones(x.shape[0]) * 4.5
     p = ProbStar(c_V, C, d, mu, sigma, pred_lb, pred_ub)
-    print(p.estimateProbability())
+    print(p.V)
+    # print(p.estimateProbability())
     p1 = p.affineMap(A=np.eye(2,3))
+    print(p1.V)
     # print(mu.shape)
     plot_probstar(p1)
     

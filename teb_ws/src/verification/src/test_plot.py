@@ -1,0 +1,47 @@
+# import matplotlib.pyplot as plt
+
+# # Previous points
+# x_points = [
+#     12.639869468451742, 12.966528918885906, 13.29318836932007, 13.619847819754234, 13.946507270188398,
+#     12.604747964870295, 12.937228578816631, 13.269709192762967, 13.602189806709303, 13.934670420655639,
+#     12.617640034367678, 12.949453274226018, 13.281266514084358, 13.613079753942698, 13.944892993801037,
+#     12.617293696512059, 12.939632995594302, 13.261972294676545, 13.584311593758787, 13.90665089284103
+# ]
+# y_points = [
+#     -2.638714798422696, -2.5256284116596617, -2.412542024896627, -2.2994556381335927, -2.186369251370558,
+#     -2.661006813028256, -2.55111234030744, -2.441217867586624, -2.331323394865808, -2.221428922144992,
+#     -2.65226803463591, -2.540383606080011, -2.428499177524112, -2.3166147489682127, -2.2047303204123136,
+#     -2.6491047296195673, -2.538804945237222, -2.428505160854877, -2.3182053764725317, -2.2079055920901864
+# ]
+
+# # Create a line plot
+# plt.figure(figsize=(10, 6))
+# plt.plot(x_points, y_points, marker='o', linestyle='-')
+
+# # Add labels and title
+# plt.xlabel('X-axis')
+# plt.ylabel('Y-axis')
+# plt.title('Line Plot of Points')
+
+# # Display the plot
+# plt.grid(True)
+# plt.show()
+
+
+import numpy as np
+from scipy.stats import linregress
+
+# Points
+x_points = [12.639869468451742, 12.966528918885906, 13.29318836932007, 13.619847819754234, 13.946507270188398]
+y_points = [-2.638714798422696, -2.5256284116596617, -2.412542024896627, -2.2994556381335927, -2.186369251370558]
+
+# Fit a linear regression model
+slope, intercept, r_value, p_value, std_err = linregress(x_points, y_points)
+
+# Check if the points form a straight line
+if r_value**2 > 0.95:  # Adjust the threshold as needed
+    print("The points form a straight line.")
+else:
+    print("The points do not form a straight line.")
+
+
