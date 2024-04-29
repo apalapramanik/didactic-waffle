@@ -15,9 +15,11 @@ from tf.transformations import euler_from_quaternion, quaternion_from_euler
 import numpy as np
 from scipy.linalg import expm
 from sensor_msgs.msg import PointCloud2 as pc2
+from verification.msg import position
 from math import cos, sin
 import math
-# from probstar import ProbStar
+import csv
+
 
 from StarV.plant.dlode import DLODE
 from StarV.set.probstar import ProbStar
@@ -25,16 +27,14 @@ from StarV.set.probstar import ProbStar
 
 robot_width = 0.281
 robot_length = 0.306
-std_dev=2 
-steps=3
-pose_history=[]
-human_length = 1.79 #avg length (full arm) for men
-human_width = 1.79 #avg width (full arm) for men
-human_height = 1.740 #avg height for men
-
-robot_width = 0.281
-robot_length = 0.306
 robot_height = 0.141
+
+human_length = 1.79 #avg length (full arm) for men meters
+human_width = 1.79 #avg width (full arm) for men meters
+human_height = 1.740 #avg height for men meters
+
+
+
 
 v_tb1 = []
 w_tb1 = []
@@ -45,6 +45,9 @@ w_tb2 = []
 
 x = []
 y = []
+
+prev_time = 0.0
+dt = 0.0
 
 class kalmanFilter:
     
@@ -198,16 +201,8 @@ class robot_human_state:
         
         rospy.init_node('tb3_0_collision_node', anonymous=True)
         
-        self.odom_sub1 = rospy.Subscriber('tb3_0/odom', Odometry, self.odom_callback_tb3_0,queue_size=10) 
-       
-        self.states_history = []
-        self.errors_history = []
-        self.probstars =[]      
-        
-        
-        
-        
-        self.pc_human_sub = rospy.Subscriber("tb3_0/position_h1",pc2,self.human1_pc_callback,queue_size=10)
+        self.odom_sub1 = rospy.Subscriber('tb3_0/odom', Odometry, self.odom_callback_tb3_0,queue_size=10)
+        self.pc_human_sub = rospy.Subscriber("tb3_0/position_h1",position,self.human1_pc_callback,queue_size=10)
         self.prev_time = 0.0
         self.dt = 0.0
         
@@ -229,19 +224,27 @@ class robot_human_state:
     def human1_pc_callback(self, pose_msg):       
         
         
-        self.current_time = rospy.Time.now().to_sec()
-        self.dt = (self.current_time - self.prev_time)
+        self.current_time = rospy.Time.now().to_sec()      
+       
+        
+        # self.dt = (self.current_time - self.prev_time)
+        self.dt = 0.9
+      
         self.prev_time = self.current_time
+        
 
         
         self.pose_x = pose_msg.x
-        self.pose_y = pose_msg.y
+        self.pose_y = pose_msg.z
 
         x.append(self.pose_x)
         y.append(self.pose_y)
 
         # Calculate velocities if there are enough data points
-        if len(x) > 1 and len(y) > 1:
+        if len(x) > 1 and len(y) > 1 :
+            
+            # if self.dt == 0.0:
+            #     self.dt == 0.01            
             self.v_x = (x[-1] - x[-2]) / self.dt
             self.v_y = (y[-1] - y[-2]) / self.dt
         else:
@@ -256,12 +259,12 @@ class robot_human_state:
 
         self.z = np.array([[self.pose_x], [self.pose_y]])
         self.x_human = np.array([[self.z[0, 0]], [self.z[1, 0]], [self.v_x], [self.v_y]])
-        print(self.x_human)
+        # print(self.x_human)
         
         #initial probstar  
         self.c_human = self.x_human
         self.dev_human = np.array([human_length, human_width, 0.001, 0.001])    
-        self.v_human = np.diag(self.deviation)
+        self.v_human = np.diag(self.dev_human)
         self.V_human = np.concatenate([self.c_human, self.v_human], axis =1)
         self.mu_human = np.zeros(4)
         self.sigma_human = np.diag(np.ones(4))        
@@ -281,20 +284,31 @@ class robot_human_state:
      
         
         for i in range(5):
-            next_probstar_human = kf.predict_update(next_probstar_human, self.dt)
+            next_probstar_human = kf.predict_update(next_probstar_human,self.dt)
+            new_x =  next_probstar_human.V[0][0]
+            new_y = next_probstar_human.V[1][0]
+            print("probability ", i, " : ", next_probstar_human.estimateProbability())
+            
+            # Write the values to a CSV file            
+            with open('data.csv', mode='a', newline='') as file:
+                writer = csv.writer(file)
+                if file.tell() == 0:  # Check if file is empty
+                    writer.writerow(['new_x', 'new_y'])
+                writer.writerow([new_x, new_y])
           
-            new_x =  next_probstar_human.V[0][0] + (self.z[0]*next_probstar_human.V[0][1]) + (self.v_x * next_probstar_human.V[0][3])
-            new_y = next_probstar_human.V[1][0] + (self.z[1]*next_probstar_human.V[1][2]) + (self.v_y * next_probstar_human.V[1][4])
-            print("pose ", i ,": ",new_x[0], new_y[0])
+            # new_x =  next_probstar_human.V[0][0] + (self.z[0]*next_probstar_human.V[0][1]) + (self.v_x * next_probstar_human.V[0][3])
+            # new_y = next_probstar_human.V[1][0] + (self.z[1]*next_probstar_human.V[1][2]) + (self.v_y * next_probstar_human.V[1][4])
+            # print("pose ", i ,": ",new_x[0], new_y[0])
            
-            marker.publish_prediction_marker("tb3_0_tf/camera_rgb_optical_frame",i, name = "pred_human", cord_x= new_x[0], cord_y=new_y[0], 
-                                                        cord_z= 0.0, std_x=0.5,
+            marker.publish_prediction_marker("tb3_0_tf/camera_rgb_optical_frame",i, name = "tb3_0_pred_human1", cord_x= new_x, cord_y=0.0, 
+                                                        cord_z= new_y, std_x=0.5,
                                                         std_y = 0.5, std_z = 0.5,
                                                         or_x = 1.0,or_y =1.0,
                                                         or_z=0.0,or_w=0.0)  
+        print("-----------------------------------------------------------------------------")
             
       
-         
+        
    
     def odom_callback_tb3_0(self, odom_msg):
        
@@ -422,9 +436,6 @@ Mean and standard deviation for theta:
 Mean: 1.6257967346611615, Standard Deviation: 1.031531294396443e-05
 
 initial state: [11.45686 -7.21802  1.62578] 
-
-
-  
 
 
 """

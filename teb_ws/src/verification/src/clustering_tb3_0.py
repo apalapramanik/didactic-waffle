@@ -14,7 +14,7 @@ from std_msgs.msg import String
 import quaternion # https://github.com/moble/quaternion
 from nav_msgs.msg import Odometry
 import numpy as np
-from monitoring.msg import position
+from verification.msg import position
 import struct
 from visualization_msgs.msg import Marker
 # from marker_publisher import marker

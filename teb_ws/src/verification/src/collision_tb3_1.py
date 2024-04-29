@@ -18,17 +18,13 @@ from sensor_msgs.msg import PointCloud2 as pc2
 from math import cos, sin
 import math
 from verification.msg import position
-# from probstar import ProbStar
+
 
 from StarV.plant.dlode import DLODE
 from StarV.set.probstar import ProbStar
 
 
-robot_width = 0.281
-robot_length = 0.306
-std_dev=2 
-steps=3
-pose_history=[]
+
 human_length = 1.79 #avg length (full arm) for men
 human_width = 1.79 #avg width (full arm) for men
 human_height = 1.740 #avg height for men
@@ -46,6 +42,9 @@ w_tb2 = []
 
 x = []
 y = []
+
+prev_time = 0.0
+dt = 0.0
 
 class kalmanFilter:
     
@@ -203,13 +202,12 @@ class robot_human_state:
          
         self.odom_sub2 = rospy.Subscriber('tb3_1/odom', Odometry, self.odom_callback_tb3_1,queue_size=10)
         
-        self.states_history = []
-        self.errors_history = []
-        self.probstars = []   
         
         self.pc_human_sub = rospy.Subscriber("tb3_1/position_h1",position,self.human1_pc_callback,queue_size=10)
+        
         self.prev_time = 0.0
         self.dt = 0.0
+        
         
         self.H = np.array([[1, 0, 0], [0, 1, 0]]) #2x3
         self.Q = np.diag([0.01, 0.01, 0.01]) #3x3
@@ -229,18 +227,22 @@ class robot_human_state:
         
         
         self.current_time = rospy.Time.now().to_sec()
+        
+        if not hasattr(self, 'prev_time'):
+            self.prev_time = self.current_time
+        
         self.dt = (self.current_time - self.prev_time)
         self.prev_time = self.current_time       
         
         self.pose_x = pose_msg.x
-        self.pose_y = pose_msg.y
+        self.pose_y = pose_msg.z
         
 
         x.append(self.pose_x)
         y.append(self.pose_y)
 
         # Calculate velocities if there are enough data points
-        if len(x) > 1 and len(y) > 1:
+        if len(x) > 1 and len(y) > 1 and self.dt != 0:
             self.v_x = (x[-1] - x[-2]) / self.dt
             self.v_y = (y[-1] - y[-2]) / self.dt
         else:
@@ -260,7 +262,7 @@ class robot_human_state:
         #initial probstar  
         self.c_human = self.x_human
         self.dev_human = np.array([human_length, human_width, 0.001, 0.001])    
-        self.v_human = np.diag(self.deviation)
+        self.v_human = np.diag(self.dev_human)
         self.V_human = np.concatenate([self.c_human, self.v_human], axis =1)
         self.mu_human = np.zeros(4)
         self.sigma_human = np.diag(np.ones(4))        
@@ -280,13 +282,13 @@ class robot_human_state:
      
         
         for i in range(5):
-            next_probstar_human = kf.predict_update(next_probstar_human, self.dt)
+            next_probstar_human = kf.predict_update(next_probstar_human,self.dt)
           
             new_x =  next_probstar_human.V[0][0] + (self.z[0]*next_probstar_human.V[0][1]) + (self.v_x * next_probstar_human.V[0][3])
             new_y = next_probstar_human.V[1][0] + (self.z[1]*next_probstar_human.V[1][2]) + (self.v_y * next_probstar_human.V[1][4])
             print("pose ", i ,": ",new_x[0], new_y[0])
            
-            marker.publish_prediction_marker("tb3_1_tf/camera_rgb_optical_frame",i, name = "pred_human", cord_x= new_x[0], cord_y=new_y[0], 
+            marker.publish_prediction_marker("tb3_1_tf/camera_rgb_optical_frame",i, name = "tb3_1_pred_human1", cord_x= new_x[0], cord_y=new_y[0], 
                                                         cord_z= 0.0, std_x=0.5,
                                                         std_y = 0.5, std_z = 0.5,
                                                         or_x = 1.0,or_y =1.0,
