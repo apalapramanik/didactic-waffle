@@ -129,7 +129,7 @@ class ObjectDetectionNode:
             depth = str(object_depth)      
 
             # Draw a rectangle around the object
-            cv2.rectangle(self.color_image, (int(x1), int(y1)), (int(w), int(h)), (153, 26, 25), 2)
+            cv2.rectangle(self.color_image_0, (int(x1), int(y1)), (int(w), int(h)), (153, 26, 25), 2)
 
             # Add text for depth
             cv2.putText(self.color_image_0, depth, (int(x1), int(y1)-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (153, 26, 25), 1)
