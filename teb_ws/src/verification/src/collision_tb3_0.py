@@ -228,7 +228,7 @@ class robot_human_state:
        
         
         # self.dt = (self.current_time - self.prev_time)
-        self.dt = 0.9
+        self.dt = 1
       
         self.prev_time = self.current_time
         
@@ -287,7 +287,8 @@ class robot_human_state:
             next_probstar_human = kf.predict_update(next_probstar_human,self.dt)
             new_x =  next_probstar_human.V[0][0]
             new_y = next_probstar_human.V[1][0]
-            print("probability ", i, " : ", next_probstar_human.estimateProbability())
+            # print("probability ", i, " : ", next_probstar_human.estimateProbability())
+            print(new_x, new_y)
             
             # Write the values to a CSV file            
             with open('data.csv', mode='a', newline='') as file:
