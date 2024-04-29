@@ -324,11 +324,6 @@ void extractObject(pcl::PointCloud<pcl::PointXYZ>::Ptr crop_cloud_ptr)
    
 }
 
-void human_callback(monitoring::Plot data){
-   start = data.value;
-   
-}
-
 void cp_flag_callback(std_msgs::String str){
    cp_flag = str.data;
    
@@ -343,7 +338,6 @@ int main(int argc, char **argv)
    ros::NodeHandle nh;
 
    //subscribe
-   ros::Subscriber yolo_sub = nh.subscribe("tb3_1/H_Detection_msg", 10, human_callback);
    ros::Subscriber PCLsub = nh.subscribe(PCL_TOPIC, 10, callback);
    ros::Subscriber cp_flag_sub = nh.subscribe("tb3_1/cp_flag", 10, cp_flag_callback);
 

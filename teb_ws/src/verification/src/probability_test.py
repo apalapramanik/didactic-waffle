@@ -461,13 +461,52 @@ def test_prob3():
     # overlap = ProbStar(next_2d.V, C, d,next_2d.mu, next_2d.Sig, next_2d.pred_lb, next_2d.pred_ub )
     # plot_probstar(overlap)
     s = next_2d.addMultipleConstraints(C,d)
+    print(s.estimateProbability())
     
-    plot = []
-    plot.append(next_2d)
-    plot.append(next_2d2)
-    plot.append(s)
-    plot_probstar(plot)
-    # plot_probstar(s)
+    # plot = []
+    # plot.append(next_2d)
+    # plot.append(next_2d2)
+    # plot.append(s)
+    # plot_probstar(plot)
+    
+    p = probstar_halfspace_intersection_2d(p, p2)
+    print(p)
+   
+    
+def probstar_halfspace_intersection_2d(P1, P2):
+    if isinstance(P1, ProbStar) and isinstance(P2, ProbStar):
+        
+        l, u = P2.getRanges()
+        
+        H = np.array([[1,0], 
+                  [-1,0],
+                  [0,1],
+                  [0,-1]])
+        
+        g = np.array([u[0], -l[0], u[1], -l[1]])
+        
+        g = g.reshape(4,1)
+        
+        
+        V = P1.V
+        v_new = V[0:2, 1:3] #new basis vector
+        c_new =  np.array([[V[0][0]], [V[1][0]]]) # new center
+        V_new = np.concatenate([c_new, v_new], axis =1) #new combined V 
+        C_new = np.matmul(H, v_new) #new constarint matrix
+        d_new = g-np.matmul(H,c_new) 
+        d_new = d_new.reshape(4,) #new constraint vector
+        new_mu = P1.mu[0:2]
+        new_sig = P1.Sig[0:2,0:2]
+        new_pred_lb = P1.pred_lb[0:2]
+        
+        new_pred_ub = P1.pred_ub[0:2]
+        
+        intersection = ProbStar(V_new,C_new,d_new,new_mu, new_sig,new_pred_lb,new_pred_ub)
+        collision_probability = intersection.estimateProbability()
+        return collision_probability
+    
+    else:
+        return("Error: Input is not a probstar")
     
     
    
