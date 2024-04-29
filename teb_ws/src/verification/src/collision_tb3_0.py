@@ -196,7 +196,7 @@ class robot_human_state:
     
     def __init__(self):
         
-        rospy.init_node('reachability_analysis', anonymous=True)
+        rospy.init_node('tb3_0_collision_node', anonymous=True)
         
         self.odom_sub1 = rospy.Subscriber('tb3_0/odom', Odometry, self.odom_callback_tb3_0,queue_size=10) 
        
@@ -424,19 +424,7 @@ Mean: 1.6257967346611615, Standard Deviation: 1.031531294396443e-05
 initial state: [11.45686 -7.21802  1.62578] 
 
 
-publish marker:
-
-# marker.publish_pose_marker( name = "pred_robot", cord_x= initial_probstar_rob.mu[0], cord_y=initial_probstar_rob.mu[1], 
-        #                                      cord_z= 0.0, std_x=robot_length,
-        #                                      std_y = robot_width, std_z = robot_height,
-        #                                      or_x = odom_msg.pose.pose.orientation.x,or_y = odom_msg.pose.pose.orientation.y,
-        #                                      or_z=odom_msg.pose.pose.orientation.z,or_w=odom_msg.pose.pose.orientation.w) 
-        
- # marker.publish_prediction_marker(i, name = "pred_robot", cord_x= next_prob_star.mu[0], cord_y=next_prob_star.mu[1], 
-            #                                  cord_z= 0.0, std_x=robot_length,
-            #                                  std_y = robot_width, std_z = robot_height,
-            #                                  or_x = odom_msg.pose.pose.orientation.x,or_y = odom_msg.pose.pose.orientation.y,
-            #                                  or_z=odom_msg.pose.pose.orientation.z,or_w=odom_msg.pose.pose.orientation.w)     
+  
 
 
 """

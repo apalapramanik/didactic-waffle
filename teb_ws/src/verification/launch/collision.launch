@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<launch>
+		<node pkg="verification" name= "tb3_0_collision_node" type="collision_tb3_0.py"/> 
+        <node pkg="verification" name= "tb3_1_collision_node" type="collision_tb3_1.py"/> 
+        <node pkg="verification" name= "tb3_2_collision_node" type="collision_tb3_2.py"/> 
+</launch>	

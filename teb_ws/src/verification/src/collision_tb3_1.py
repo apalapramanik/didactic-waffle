@@ -198,7 +198,7 @@ class robot_human_state:
     
     def __init__(self):
         
-        rospy.init_node('reachability_analysis', anonymous=True)
+        rospy.init_node('tb3_1_collision_node', anonymous=True)
         
          
         self.odom_sub2 = rospy.Subscriber('tb3_1/odom', Odometry, self.odom_callback_tb3_1,queue_size=10)
