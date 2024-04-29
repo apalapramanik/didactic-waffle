@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<launch>
+		<include file="$(find turtlebot3_gazebo)/launch/multi_gz.launch" /> 
+		<include file="$(find turtlebot3_navigation)/launch/multi_nav.launch" arg="$(find turtlebot3_navigation)/maps/map.yaml" /> 	
+		<node pkg="verification" name= "Depth_calculation" type="multi_yolo_depth.py"/>	
+
+</launch>	

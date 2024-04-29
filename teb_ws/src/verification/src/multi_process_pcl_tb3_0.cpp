@@ -339,7 +339,7 @@ void cp_flag_callback(std_msgs::String str){
 int main(int argc, char **argv)
 {
    
-   ros::init (argc, argv, "tb3_0/cloud_processing");
+   ros::init (argc, argv, "tb3_0_cloud_processing");
    ros::NodeHandle nh;
 
    //subscribe

@@ -319,7 +319,7 @@ def pointcloud2_to_numpy(pointcloud_msg):
     return points
 
 def main():
-        rospy.init_node('tb3_2/clustering_node', anonymous=False)         
+        rospy.init_node('tb3_2_clustering_node', anonymous=False)         
         pr = predict()        
         while not rospy.is_shutdown():
             rospy.spin()      

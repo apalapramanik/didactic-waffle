@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<launch>
+		
+
+		<node pkg="verification" name= "tb3_0_cloud_processing" type = "multi_process_pcl_tb3_0" />	
+        <node pkg="verification" name= "tb3_1_cloud_processing" type = "multi_process_pcl_tb3_1" />	
+        <node pkg="verification" name= "tb3_2_cloud_processing" type = "multi_process_pcl_tb3_2" />	
+
+		
+
+		
+
+</launch>	
