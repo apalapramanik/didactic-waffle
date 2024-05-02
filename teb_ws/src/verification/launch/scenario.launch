@@ -4,4 +4,10 @@
 		<include file="$(find turtlebot3_navigation)/launch/multi_nav.launch" arg="$(find turtlebot3_navigation)/maps/map.yaml" /> 	
 		<node pkg="verification" name= "Depth_calculation" type="multi_yolo_depth.py"/>	
 
+		<node pkg="verification" name= "turn_robot_node_tb3_0" type="goal_tb3_0.py"/>	
+		<node pkg="verification" name= "turn_robot_node_tb3_1" type="goal_tb3_1.py"/>	
+		<node pkg="verification" name= "turn_robot_node_tb3_2" type="goal_tb3_2.py"/>	
+
+
+
 </launch>	

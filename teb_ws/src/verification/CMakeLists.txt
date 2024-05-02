@@ -87,13 +87,23 @@ catkin_install_python(PROGRAMS
 src/robot_reachability.py
 src/human_reachability.py
 src/marker_pub.py
+
 src/collision_tb3_0.py
 src/collision_tb3_1.py
 src/collision_tb3_2.py
+
 src/clustering_tb3_0.py
 src/clustering_tb3_1.py
 src/clustering_tb3_2.py
+
 src/multi_yolo_depth.py
+
+src/goal_tb3_0.py
+src/goal_tb3_1.py
+src/goal_tb3_2.py
+
+src/case0.py
+src/collision.py
 
 DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )

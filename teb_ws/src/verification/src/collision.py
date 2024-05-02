@@ -52,62 +52,13 @@ y = []
 prev_time = 0.0
 dt = 0.0
 
-class kalmanFilter:
-    
-    def __init__(self):
-        
-        self.H = np.array([[1, 0, 0, 0], [0, 1, 0, 0]]) #2x4
-        self.Q = np.diag([1.0, 1.0, 1.0, 1.0]) #4x4
-        self.R = np.diag([1.0, 1.0]) #2x2
-        
-        # self.x = np.array([[0.0],[0.0],[0.0]]) #3x1
-        self.z = np.array([[0.0],[0.0]])
-        self.P   = np.array([[0.0,0.0,0.0, 0.0],[0.0,0.0,0.0,0.0],[0.0,0.0,0.0,0.0],[0.0,0.0,0.0,0.0]])
-        self.P_k = np.array([[0.0,0.0,0.0, 0.0],[0.0,0.0,0.0,0.0],[0.0,0.0,0.0,0.0],[0.0,0.0,0.0,0.0]])
-        
-        
-    def predict_update(self, probstar, dt):
-        
-        if isinstance(probstar, ProbStar):
-            
-            # Process model
-            self.A = np.array([[1, 0, 3*dt, 0],
-                                [0, 1, 0, 3*dt],
-                                [0, 0, 1, 0],
-                                [0, 0, 0, 1]])
-            
-            self.x_ps = probstar
-            
-            
-            #update error covariance p_k
-            self.x_k_ps = self.x_ps.affineMap(self.A)
-            # print(self.x_k_ps)
-            T = np.matmul(self.P, self.A.transpose())
-            self.p_k = np.matmul(self.A, T) + self.Q
-            
-            # Compute Kalman gain : K
-            T = np.matmul(self.P_k, self.H.transpose())
-            T = np.linalg.inv(np.matmul(self.H, T) + self.R)
-            T = np.matmul(self.H.transpose(), T)
-            self.K = np.matmul(self.P_k, T)
-            I = np.eye(4)
-            self.M = I - np.matmul(self.K, self.H)
-            self.N = np.matmul(self.K, self.z).flatten()
-            
-            #prediction        
-            self.x_ps = self.x_k_ps.affineMap(self.M, self.N)
-            # print(self.x_k_ps)
-            self.P = np.matmul((np.eye(self.H.shape[1]) - np.matmul(self.K, self.H)), self.P_k)
-            
-            # print("Estimated pose:", self.x_ps.C[0], self.x_ps.C[1])
-        return self.x_ps
 
 
 class marker:
  
-    def publish_pose_marker(frame, name, cord_x, cord_y, cord_z, std_x, std_y, std_z, or_x, or_y, or_z, or_w):
+    def publish_pose_marker(frame, name, cord_x, cord_y, cord_z, std_x, std_y, std_z):
         
-        human_marker = rospy.Publisher(name, Marker, queue_size=0)
+        human_marker = rospy.Publisher(name, Marker, queue_size=100)
         prediction_marker_cube = Marker()
     
         
@@ -119,10 +70,10 @@ class marker:
         prediction_marker_cube.pose.position.x = cord_x 
         prediction_marker_cube.pose.position.y = cord_y
         prediction_marker_cube.pose.position.z = cord_z 
-        prediction_marker_cube.pose.orientation.x = or_x
-        prediction_marker_cube.pose.orientation.y =  or_y
-        prediction_marker_cube.pose.orientation.z = or_z
-        prediction_marker_cube.pose.orientation.w = or_w
+        prediction_marker_cube.pose.orientation.x = 1.0
+        prediction_marker_cube.pose.orientation.y = 0.0
+        prediction_marker_cube.pose.orientation.z = 0.0
+        prediction_marker_cube.pose.orientation.w = 1.0
         prediction_marker_cube.scale.x = std_x
         prediction_marker_cube.scale.y = std_y
         prediction_marker_cube.scale.z = std_z
@@ -191,10 +142,9 @@ def probstar_halfspace_intersection_2d(P1, P2):
         new_pred_ub = P1.pred_ub[0:2]
         
         intersection = ProbStar(V_new,C_new,d_new,new_mu, new_sig,new_pred_lb,new_pred_ub)
-        plot_probstar(intersection)
+  
         collision_probability = intersection.estimateProbability()
-        if collision_probability>0:
-            print(intersection.__str__())
+     
         
         return collision_probability
     
@@ -208,29 +158,25 @@ class robot_human_state:
         
         rospy.init_node('tb3_0_collision_node', anonymous=True)
         
-        self.odom_sub1 = rospy.Subscriber('tb3_0/odom', Odometry, self.odom_callback_tb3_0,queue_size=10)
-        self.pc_human_sub = rospy.Subscriber("tb3_0/position_h1",position,self.human1_pc_callback,queue_size=10)
-        self.flag_sub = rospy.Subscriber("tb3_0/cp_flag", String, self.cp_flag_callback_tb3_0, queue_size=10 )
-        self.prev_time = 0.0
-        self.dt = 0.0
         
-        self.H = np.array([[1, 0, 0], [0, 1, 0]]) #2x3
-        self.Q = np.diag([0.01, 0.01, 0.01]) #3x3
-        self.R = np.diag([0.01, 0.01]) #2x2
+        self.pc_human_sub = rospy.Subscriber("tb3_0/position_h1",position,self.human1_pc_callback,queue_size=100)
+        self.flag_sub = rospy.Subscriber("tb3_0/cp_flag", String, self.cp_flag_callback_tb3_0, queue_size=100 )
         
-        self.x = np.array([[0.0],[0.0],[0.0]]) #3x1
-        self.z = np.array([[0.0],[0.0]])
-        self.u = 0
-        self.P   = np.array([[0.0,0.0,0.0],[0.0,0.0,0.0],[0.0,0.0,0.0]])
-        self.P_k = np.array([[0.0,0.0,0.0],[0.0,0.0,0.0],[0.0,0.0,0.0]])
-        self.v_x = 0
-        self.v_y = 0
+        self.odom_sub0 = rospy.Subscriber('tb3_0/odom', Odometry, self.odom_callback_tb3_0,queue_size=100)
+        # self.odom_sub1 = rospy.Subscriber('tb3_1/odom', Odometry, self.odom_callback_tb3_1,queue_size=100)
+        # self.odom_sub2 = rospy.Subscriber('tb3_2/odom', Odometry, self.odom_callback_tb3_2,queue_size=100)
+         
+     
+        self.init_probstar_human = None
         
         self.probstars_human = []
         self.probstars_tb3_0 = []
+        self.probstars_tb3_1 = []
+        self.probstars_tb3_2 = []
         self.flag = "no"
         
-        self.collision_prob_tb3_0 = rospy.Publisher("tb3_0/collision_prob", Float32,queue_size=100 )
+        # self.collision_prob_tb3_01 = rospy.Publisher("tb3_01/collision_prob", Float32,queue_size=100 )
+        # self.collision_prob_tb3_02 = rospy.Publisher("tb3_02/collision_prob", Float32,queue_size=100 )
         
     def cp_flag_callback_tb3_0(self, msg):
         self.flag = msg.data
@@ -238,89 +184,39 @@ class robot_human_state:
         
     def human1_pc_callback(self, pose_msg):       
         
-        
-        self.current_time = rospy.Time.now().to_sec()      
-       
-        
-        # self.dt = (self.current_time - self.prev_time)
-        self.dt = 1
       
-        self.prev_time = self.current_time
-        
-
         
         self.pose_x = pose_msg.x
-        self.pose_y = pose_msg.z
+        self.pose_z = pose_msg.z    
+    
 
-        x.append(self.pose_x)
-        y.append(self.pose_y)
+        self.z = np.array([[self.pose_x], [self.pose_z]])
+        self.x_human = np.array([[self.z[0, 0]], [self.z[1, 0]]])
 
-        # Calculate velocities if there are enough data points
-        if len(x) > 1 and len(y) > 1 :
-            
-            # if self.dt == 0.0:
-            #     self.dt == 0.01            
-            self.v_x = (x[-1] - x[-2]) / self.dt
-            self.v_y = (y[-1] - y[-2]) / self.dt
-        else:
-            self.v_x = 0.0
-            self.v_y = 0.0
-            
-        # print(self.v_x, self.v_y)
-        self.dt = round(self.dt, 2)
-        # print("dt:", self.dt)
-        # print("vx:", self.v_x)
-        # print("vy:", self.v_y)
-
-        self.z = np.array([[self.pose_x], [self.pose_y]])
-        self.x_human = np.array([[self.z[0, 0]], [self.z[1, 0]], [self.v_x], [self.v_y]])
-        # print(self.x_human)
         
         #initial probstar  
         self.c_human = self.x_human
-        self.dev_human = np.array([human_length, human_width, 0.001, 0.001])    
+        self.dev_human = np.array([human_length, human_width])    
         self.v_human = np.diag(self.dev_human)
         self.V_human = np.concatenate([self.c_human, self.v_human], axis =1)
-        self.mu_human = np.zeros(4)
-        self.sigma_human = np.diag(np.ones(4))        
-        self.pred_lb_human = np.ones(4) * 4.5 * -1
-        self.pred_ub_human = np.ones(4) * 4.5 
+        self.mu_human = np.zeros(2)
+        self.sigma_human = np.diag(np.ones(2))        
+        self.pred_lb_human = np.ones(2) * 4.5 * -1
+        self.pred_ub_human = np.ones(2) * 4.5 
         
         self.C_human = []
         self.d_human = []
         
-        init_probstar_human = ProbStar(self.V_human, self.C_human, self.d_human,self.mu_human, 
+        self.init_probstar_human = ProbStar(self.V_human, self.C_human, self.d_human,self.mu_human, 
                                        self.sigma_human, self.pred_lb_human,self.pred_ub_human)
+        print(self.init_probstar_human.__str__())
+        i = 1
+        marker.publish_pose_marker("tb3_0_tf/camera_rgb_optical_frame", name = "human", cord_x= self.pose_x, cord_y=0.0, 
+                                                        cord_z= self.pose_z, std_x=0.5,
+                                                        std_y = 0.5, std_z = 0.5) 
        
         
-        
-        kf = kalmanFilter()        
-        next_probstar_human = kf.predict_update(init_probstar_human, self.dt)    
-     
-        
-        for i in range(7):
-            next_probstar_human = kf.predict_update(next_probstar_human,self.dt)
-            self.probstars_human.append(next_probstar_human)
-            new_x =  next_probstar_human.V[0][0]
-            new_y = next_probstar_human.V[1][0]
-            # print("probability ", i, " : ", next_probstar_human.estimateProbability())
-            # print(new_x, new_y)
-            
-            # Write the values to a CSV file            
-            # with open('data.csv', mode='a', newline='') as file:
-            #     writer = csv.writer(file)
-            #     if file.tell() == 0:  # Check if file is empty
-            #         writer.writerow(['new_x', 'new_y'])
-            #     writer.writerow([new_x, new_y])
-          
-          
-           
-            marker.publish_prediction_marker("tb3_0_tf/camera_rgb_optical_frame",i, name = "tb3_0_pred_human1", cord_x= new_x, cord_y=0.0, 
-                                                        cord_z= new_y, std_x=0.5,
-                                                        std_y = 0.5, std_z = 0.5,
-                                                        or_x = 1.0,or_y =1.0,
-                                                        or_z=0.0,or_w=0.0)  
-        print("-----------------------------------------------------------------------------")
+       
             
       
         
@@ -342,13 +238,10 @@ class robot_human_state:
     
         
         _, _, theta = euler_from_quaternion(quaternion)  
-        # theta = 0.5             
+      
     
         self.X_tb0 = np.array([x, y, theta])  
-     
-        
-        # self.U_tb0 = np.array([input_vel_tb0, input_omega_tb0])
-        # print("u: ", self.U) 
+   
         self.U_tb0 = np.array([current_vel_tb0, current_omega_tb0])   
         
         self.c_tb0 = (np.expand_dims(self.X_tb0, axis=0)).transpose()
@@ -361,8 +254,7 @@ class robot_human_state:
         self.mu_tb0 = np.zeros(3)        
         self.sigma_tb0 = np.diag(np.ones(3))         
         self.pred_lb_tb0 = np.ones(3) * 4.5 * -1
-        self.pred_ub_tb0 = np.ones(3) * 4.5 
-        
+        self.pred_ub_tb0 = np.ones(3) * 4.5        
         
         
         self.A_tb0= np.array([[1.0, 0.0, 0.0],
@@ -384,9 +276,6 @@ class robot_human_state:
         
         self.bu_tb0 = np.matmul(self.b_tb0, self.U_tb0).flatten()
         
-        
-        
-        
         next_prob_star_tb0 = init_probstar_tb0.affineMap(self.A_tb0, self.bu_tb0)
      
         for i in range(7):
@@ -402,31 +291,30 @@ class robot_human_state:
                                                         std_y = robot_width, std_z = robot_height,
                                                         or_x = new_quaternion[0],or_y = new_quaternion[1],
                                                         or_z=new_quaternion[2],or_w=new_quaternion[3])    
-        prob_msg = Float32()    
-        p_set = []
-        for i in range(7) :
-            if self.flag == "yes":
-                p = probstar_halfspace_intersection_2d(self.probstars_tb3_0[i], self.probstars_human[i])
+            print(next_prob_star_tb0.__str__())
+        # prob_msg1 = Float32()  
+        # prob_msg2 = Float32()   
+        # p_set1 = []
+        # p_set2 = []
+        # for i in range(7) :
+        #     if isinstance(self.init_probstar_human, ProbStar):
+        #         p = probstar_halfspace_intersection_2d(self.probstars_tb3_0[i], self.init_probstar_human)
                 
-                p_set.append(p)
-                print(p)
+        #         # p_set.append(p)
+        #         print(p)
                 
-            else:
-                p = 0
-                p_set.append(p)
-                print(p)
-               
-        p_max =  max(p_set)             
-        prob_msg.data = p_max
-        self.collision_prob_tb3_0.publish(prob_msg)
-                
+        #     else:
+        #         print("nopee")
+                # p = 0
+                # p_set.append(p)
+                # print(p)s
+
                 
         
-   
-    
+  
 
 if __name__ == '__main__':
-   
+
     robot_state_calc = robot_human_state()
     rospy.spin()
     

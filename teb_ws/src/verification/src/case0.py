@@ -191,10 +191,10 @@ def probstar_halfspace_intersection_2d(P1, P2):
         new_pred_ub = P1.pred_ub[0:2]
         
         intersection = ProbStar(V_new,C_new,d_new,new_mu, new_sig,new_pred_lb,new_pred_ub)
-        plot_probstar(intersection)
+        # plot_probstar(intersection)
         collision_probability = intersection.estimateProbability()
-        if collision_probability>0:
-            print(intersection.__str__())
+        # if collision_probability>0:
+            # print(intersection.__str__())
         
         return collision_probability
     
@@ -208,9 +208,14 @@ class robot_human_state:
         
         rospy.init_node('tb3_0_collision_node', anonymous=True)
         
-        self.odom_sub1 = rospy.Subscriber('tb3_0/odom', Odometry, self.odom_callback_tb3_0,queue_size=10)
-        self.pc_human_sub = rospy.Subscriber("tb3_0/position_h1",position,self.human1_pc_callback,queue_size=10)
-        self.flag_sub = rospy.Subscriber("tb3_0/cp_flag", String, self.cp_flag_callback_tb3_0, queue_size=10 )
+        
+        self.pc_human_sub = rospy.Subscriber("tb3_0/position_h1",position,self.human1_pc_callback,queue_size=100)
+        self.flag_sub = rospy.Subscriber("tb3_0/cp_flag", String, self.cp_flag_callback_tb3_0, queue_size=100 )
+        
+        self.odom_sub0 = rospy.Subscriber('tb3_0/odom', Odometry, self.odom_callback_tb3_0,queue_size=100)
+        self.odom_sub1 = rospy.Subscriber('tb3_1/odom', Odometry, self.odom_callback_tb3_1,queue_size=100)
+        self.odom_sub2 = rospy.Subscriber('tb3_2/odom', Odometry, self.odom_callback_tb3_2,queue_size=100)
+         
         self.prev_time = 0.0
         self.dt = 0.0
         
@@ -228,9 +233,12 @@ class robot_human_state:
         
         self.probstars_human = []
         self.probstars_tb3_0 = []
+        self.probstars_tb3_1 = []
+        self.probstars_tb3_2 = []
         self.flag = "no"
         
-        self.collision_prob_tb3_0 = rospy.Publisher("tb3_0/collision_prob", Float32,queue_size=100 )
+        self.collision_prob_tb3_01 = rospy.Publisher("tb3_01/collision_prob", Float32,queue_size=100 )
+        self.collision_prob_tb3_02 = rospy.Publisher("tb3_02/collision_prob", Float32,queue_size=100 )
         
     def cp_flag_callback_tb3_0(self, msg):
         self.flag = msg.data
@@ -241,8 +249,7 @@ class robot_human_state:
         
         self.current_time = rospy.Time.now().to_sec()      
        
-        
-        # self.dt = (self.current_time - self.prev_time)
+
         self.dt = 1
       
         self.prev_time = self.current_time
@@ -258,23 +265,20 @@ class robot_human_state:
         # Calculate velocities if there are enough data points
         if len(x) > 1 and len(y) > 1 :
             
-            # if self.dt == 0.0:
-            #     self.dt == 0.01            
+          
             self.v_x = (x[-1] - x[-2]) / self.dt
             self.v_y = (y[-1] - y[-2]) / self.dt
         else:
             self.v_x = 0.0
             self.v_y = 0.0
             
-        # print(self.v_x, self.v_y)
+ 
         self.dt = round(self.dt, 2)
-        # print("dt:", self.dt)
-        # print("vx:", self.v_x)
-        # print("vy:", self.v_y)
+    
 
         self.z = np.array([[self.pose_x], [self.pose_y]])
         self.x_human = np.array([[self.z[0, 0]], [self.z[1, 0]], [self.v_x], [self.v_y]])
-        # print(self.x_human)
+
         
         #initial probstar  
         self.c_human = self.x_human
@@ -303,15 +307,9 @@ class robot_human_state:
             self.probstars_human.append(next_probstar_human)
             new_x =  next_probstar_human.V[0][0]
             new_y = next_probstar_human.V[1][0]
-            # print("probability ", i, " : ", next_probstar_human.estimateProbability())
-            # print(new_x, new_y)
+          
             
-            # Write the values to a CSV file            
-            # with open('data.csv', mode='a', newline='') as file:
-            #     writer = csv.writer(file)
-            #     if file.tell() == 0:  # Check if file is empty
-            #         writer.writerow(['new_x', 'new_y'])
-            #     writer.writerow([new_x, new_y])
+        
           
           
            
@@ -402,28 +400,197 @@ class robot_human_state:
                                                         std_y = robot_width, std_z = robot_height,
                                                         or_x = new_quaternion[0],or_y = new_quaternion[1],
                                                         or_z=new_quaternion[2],or_w=new_quaternion[3])    
-        prob_msg = Float32()    
-        p_set = []
+        prob_msg1 = Float32()  
+        prob_msg2 = Float32()   
+        p_set1 = []
+        p_set2 = []
+        # for i in range(7) :
+        #     if self.flag == "yes":
+        #         p = probstar_halfspace_intersection_2d(self.probstars_tb3_0[i], self.probstars_human[i])
+                
+        #         p_set.append(p)
+        #         print(p)
+                
+        #     else:
+        #         p = 0
+        #         p_set.append(p)
+        #         print(p)
+        
         for i in range(7) :
-            if self.flag == "yes":
-                p = probstar_halfspace_intersection_2d(self.probstars_tb3_0[i], self.probstars_human[i])
-                
-                p_set.append(p)
-                print(p)
-                
-            else:
-                p = 0
-                p_set.append(p)
-                print(p)
+           
+            p1 = probstar_halfspace_intersection_2d(self.probstars_tb3_0[i], self.probstars_tb3_1[i])
+            p2 = probstar_halfspace_intersection_2d(self.probstars_tb3_0[i], self.probstars_tb3_2[i])
+            
+            p_set1.append(p1)
+            p_set2.append(p2)
+            print("prob1: ", p1)
+         
                
-        p_max =  max(p_set)             
-        prob_msg.data = p_max
-        self.collision_prob_tb3_0.publish(prob_msg)
+        p_max1 =  max(p_set1)        
+        p_max2 =  max(p_set2)       
+        prob_msg1.data = p_max1
+        prob_msg2.data = p_max2
+        self.collision_prob_tb3_01.publish(prob_msg1)
+        self.collision_prob_tb3_02.publish(prob_msg2)
                 
                 
         
-   
+    def odom_callback_tb3_1(self, odom_msg):
+       
+        # Extract pose and twist information from odometry message
+        x = odom_msg.pose.pose.position.x
+        y = odom_msg.pose.pose.position.y
+        quaternion = (
+            odom_msg.pose.pose.orientation.x,
+            odom_msg.pose.pose.orientation.y,
+            odom_msg.pose.pose.orientation.z,
+            odom_msg.pose.pose.orientation.w
+        )
+        _, _, theta = euler_from_quaternion(quaternion)  
+        # theta = 0.5             
     
+        self.X_tb1 = np.array([x, y, theta])  
+     
+        current_vel_tb1 = odom_msg.twist.twist.linear.x
+        current_omega_tb1 = odom_msg.twist.twist.angular.z 
+        
+      
+        
+        self.U_tb1 = np.array([current_vel_tb1, current_omega_tb1]) 
+        
+        
+        # print("input:", self.U_tb1)
+        
+        
+        self.c_tb1 = (np.expand_dims(self.X_tb1, axis=0)).transpose()
+        self.dev_tb1 = np.array([0.281, 0.306, 0.001])
+        self.v_tb1 = np.diag(self.dev_tb1)
+        
+        self.V_tb1 = np.concatenate([self.c_tb1 ,self.v_tb1], axis =1)
+        self.C_tb1 = []
+        self.d_tb1 = []
+        self.mu_tb1 = np.zeros(3)        
+        self.sigma_tb1 = np.diag(np.ones(3))         
+        self.pred_lb_tb1 = np.ones(3) * 4.5 * -1
+        self.pred_ub_tb1 = np.ones(3) * 4.5 
+        
+        
+        
+        self.A_tb1= np.array([[1.0, 0.0, 0.0],
+                           [0.0, 1.0, 0.0],
+                           [0.0, 0.0, 1.0]])
+        
+        self.dtm_tb1 = 0.7 #odom time period = 0.03 / no of obs #0.7, 0.9
+        
+        self.b_tb1 = np.array([[cos(theta)*self.dtm_tb1, 0.0],
+                              [sin(theta)*self.dtm_tb1, 0.0],
+                              [0.0, 1.0]])
+        
+       
+    
+        init_probstar_tb1 = ProbStar(self.V_tb1, self.C_tb1, self.d_tb1, self.mu_tb1,
+                                     self.sigma_tb1, self.pred_lb_tb1, self.pred_ub_tb1)
+      
+        
+        
+        self.bu_tb1 = np.matmul(self.b_tb1, self.U_tb1).flatten()
+        
+        
+        
+        
+        next_prob_star_tb1 = init_probstar_tb1.affineMap(self.A_tb1, self.bu_tb1)
+     
+        for i in range(5):
+            next_prob_star_tb1  = next_prob_star_tb1.affineMap(self.A_tb1, self.bu_tb1)
+            self.probstars_tb3_1.append(next_prob_star_tb1)
+            new_x =  next_prob_star_tb1.V[0][0]
+            new_y = next_prob_star_tb1.V[1][0]
+            new_theta = next_prob_star_tb1.V[2][0]
+            new_quaternion = quaternion_from_euler(0,0,new_theta)
+            # print(new_x, new_y)
+            
+               
+            marker.publish_prediction_marker("map", i, name = "pred_robot_tb3_1", cord_x= new_x, cord_y=new_y, 
+                                                        cord_z= 0.0, std_x=robot_length,
+                                                        std_y = robot_width, std_z = robot_height,
+                                                        or_x = new_quaternion[0],or_y = new_quaternion[1],
+                                                        or_z=new_quaternion[2],or_w=new_quaternion[3])     
+          
+        # print("------------------------------------")        
+    
+    
+    def odom_callback_tb3_2(self, odom_msg):
+        
+        # Extract pose and twist information from odometry message
+        x = odom_msg.pose.pose.position.x
+        y = odom_msg.pose.pose.position.y
+        quaternion = (
+            odom_msg.pose.pose.orientation.x,
+            odom_msg.pose.pose.orientation.y,
+            odom_msg.pose.pose.orientation.z,
+            odom_msg.pose.pose.orientation.w
+        )
+        _, _, theta = euler_from_quaternion(quaternion)  
+        # theta = 0.5             
+
+        self.X_tb2 = np.array([x, y, theta])  
+        
+        current_vel_tb2 = odom_msg.twist.twist.linear.x
+        current_omega_tb2 = odom_msg.twist.twist.angular.z 
+            
+        self.U_tb2 = np.array([current_vel_tb2, current_omega_tb2]) 
+        
+        self.c_tb2 = (np.expand_dims(self.X_tb2, axis=0)).transpose()
+        self.dev_tb2 = np.array([0.281, 0.306, 0.001])
+        self.v_tb2 = np.diag(self.dev_tb2)
+        
+        self.V_tb2 = np.concatenate([self.c_tb2, self.v_tb2], axis =1)
+        self.C_tb2 = []
+        self.d_tb2 = []
+        self.mu_tb2 = np.zeros(3)        
+        self.sigma_tb2 = np.diag(np.ones(3))         
+        self.pred_lb_tb2 = np.ones(3) * 4.5 * -1
+        self.pred_ub_tb2 = np.ones(3) * 4.5 
+        
+        
+        
+        self.A_tb2 = np.array([[1.0, 0.0, 0.0],
+                            [0.0, 1.0, 0.0],
+                            [0.0, 0.0, 1.0]])
+        
+        self.dtm_tb2 = 0.9 #odom time period = 0.03 / no of obs
+        
+        self.b_tb2 = np.array([[cos(theta)*self.dtm_tb2, 0.0],
+                                [sin(theta)*self.dtm_tb2, 0.0],
+                                [0.0, 1.0]])
+        
+        
+
+        init_probstar_tb2 = ProbStar(self.V_tb2, self.C_tb2, self.d_tb2, self.mu_tb2,
+                                        self.sigma_tb2, self.pred_lb_tb2, self.pred_ub_tb2)
+        
+        
+        
+        self.bu_tb2 = np.matmul(self.b_tb2, self.U_tb2).flatten()
+        
+        
+        
+        
+        next_prob_star_tb2 = init_probstar_tb2.affineMap(self.A_tb2, self.bu_tb2)
+        
+        for i in range(5):
+            next_prob_star_tb2  = next_prob_star_tb2.affineMap(self.A_tb2, self.bu_tb2)
+            self.probstars_tb3_2.append(next_prob_star_tb2)
+            new_x =  next_prob_star_tb2.V[0][0]
+            new_y = next_prob_star_tb2.V[1][0]
+            new_theta = next_prob_star_tb2.V[2][0]
+            new_quaternion = quaternion_from_euler(0,0,new_theta)   
+            marker.publish_prediction_marker("map", i, name = "pred_robot_tb3_2", cord_x= new_x, cord_y=new_y, 
+                                                        cord_z= 0.0, std_x=robot_length,
+                                                        std_y = robot_width, std_z = robot_height,
+                                                        or_x = new_quaternion[0],or_y = new_quaternion[1],
+                                                        or_z=new_quaternion[2],or_w=new_quaternion[3])     
+                
 
 if __name__ == '__main__':
    

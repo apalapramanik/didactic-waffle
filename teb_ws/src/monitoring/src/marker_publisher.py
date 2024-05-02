@@ -10,7 +10,7 @@ class marker:
     
     def publish_human_marker(name, cord_x, cord_y, cord_z):
         
-        human_marker = rospy.Publisher(name, Marker, queue_size=0)
+        human_marker = rospy.Publisher(name, Marker, queue_size=100)
         prediction_marker_cube = Marker()
     
         

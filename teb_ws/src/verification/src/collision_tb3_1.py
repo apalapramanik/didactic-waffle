@@ -295,9 +295,6 @@ class robot_human_state:
                                                         or_z=0.0,or_w=0.0)  
             
       
-         
-   
-      
         
     def odom_callback_tb3_1(self, odom_msg):
        
@@ -318,32 +315,7 @@ class robot_human_state:
         current_vel_tb1 = odom_msg.twist.twist.linear.x
         current_omega_tb1 = odom_msg.twist.twist.angular.z 
         
-        
-        
-        # if(len(v_tb1))==0:
-        #     v_tb1.append(current_vel_tb1)
-        #     w_tb1.append(current_omega_tb1)
-           
-        #     input_vel_tb1 = current_vel_tb1
-        #     input_omega_tb1 = current_omega_tb1
-            
-        # elif(len(v_tb1)==1):
-        #     v_tb1.append(current_vel_tb1)
-        #     w_tb1.append(current_omega_tb1)
-            
-        #     input_vel_tb1 = v_tb1[1] - v_tb1[0]
-        #     input_omega_tb1 = w_tb1[1] - w_tb1[0]
-            
-        # else:
-        #     v_tb1.pop(0)
-        #     w_tb1.pop(0)
-        #     v_tb1.append(current_vel_tb1)
-        #     w_tb1.append(current_omega_tb1)
-            
-        #     input_vel_tb1 = v_tb1[1] - v_tb1[0]
-        #     input_omega_tb1 = w_tb1[1] - w_tb1[0]  
-            
-        # self.U_tb1 = np.array([input_vel_tb1, input_omega_tb1]) 
+      
         
         self.U_tb1 = np.array([current_vel_tb1, current_omega_tb1]) 
         

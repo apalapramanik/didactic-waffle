@@ -471,7 +471,132 @@ def test_prob3():
     
     p = probstar_halfspace_intersection_2d(p, p2)
     print(p)
+  
+  
+def test_prob4():  
+    A_2d= np.array([[1.0, 0.0, 0.0],
+                            [0.0, 1.0, 0.0]])
+        
+        
+    ############# initial probstar 1 #####################################
+    
+    vel = 0.26
+    omega = 0.2
+    theta=1.6257967346611615   
+    x = np.array([11.59,-7.28,1.62])
+    
+    U = np.array([vel, omega]) 
+    deviation = np.array([0.281, 0.306, 0.001])    
+    c = (np.expand_dims(x, axis=0)).transpose()
+    V = np.diag(deviation)
+    c_V = np.concatenate([c, V], axis =1)
+    C = []
+    d = []
+    
+    mu = np.zeros(x.shape[0])
+    sigma = np.diag(np.ones(x.shape[0]))
+    pred_lb = np.ones(x.shape[0]) * 4.5 * -1
+    pred_ub = np.ones(x.shape[0]) * 4.5
+    p = ProbStar(c_V, C, d, mu, sigma, pred_lb, pred_ub)
+    print("first pstar prob:", p.estimateProbability())
+    
+
+    
+
+
+    
+    ##################### affine map init probstar 1 ######################################
+    
+    
+    A_rob= np.array([[1.0, 0.0, 0.0],
+                        [0.0, 1.0, 0.0],
+                        [0.0, 0.0, 1.0]])
+    
+    dtm = 0.7 #odom time period = 0.03 / no of obs
+    
+    b_rob = np.array([[cos(theta)*dtm, 0.0],
+                            [sin(theta)*dtm, 0.0],
+                            [0.0, 1.0]])
+    
+    bu = np.matmul(b_rob, U).flatten() 
+    
+    p_set1 = []
+    for i in range(5):
+        next = p.affineMap(A_rob,bu)  
+        next_2d = next.affineMap(A_2d)
+        p_set1.append(next_2d)
+        
+
+    
+    
+    #################### initial  probstar 2  ############################################
+    
+    vel2 = 0.26
+    omega2 = 0.2
+    theta2=1.6257967346611615   
+    
+    
+    U2 = np.array([vel2, omega2])
+        
+    x2 = np.array([12.99,-7.78,2.92])
+    
+    deviation2 = np.array([0.281, 0.306, 0.001])    
+    c2 = (np.expand_dims(x2, axis=0)).transpose()
+    V2 = np.diag(deviation2)
+    c_V2 = np.concatenate([c2, V2], axis =1)
+    C2 = []
+    d2 = []
+    
+    mu2 = np.zeros(x2.shape[0])
+    sigma2 = np.diag(np.ones(x2.shape[0]))
+    pred_lb2 = np.ones(x2.shape[0]) * 4.5 * -1
+    pred_ub2 = np.ones(x2.shape[0]) * 4.5
+    p2 = ProbStar(c_V2, C2, d2, mu2, sigma2, pred_lb2, pred_ub2)
    
+    
+
+    
+    
+
+    
+    
+    ########### init probstar 2 affine map ############################################
+    
+    A_rob2 = np.array([[1.0, 0.0, 0.0],
+                        [0.0, 1.0, 0.0],
+                        [0.0, 0.0, 1.0]])
+    
+    dtm2 = 0.7 #odom time period = 0.03 / no of obs
+    
+    b_rob2 = np.array([[cos(theta2)*dtm2, 0.0],
+                            [sin(theta2)*dtm2, 0.0],
+                            [0.0, 1.0]])
+    
+    bu2 = np.matmul(b_rob2, U2).flatten() 
+    p_set2 =[]
+    for i in range(5):
+    
+        next2 = p2.affineMap(A_rob2,bu2)
+        next_2d2 = next2.affineMap(A_2d)
+        # p_set1.append(next_2d2)
+        
+    p_total = []
+    # p_total.append(p_set1)
+    # p_total.append(p_set2)
+    # for i in range(5):
+    #     int, prob = probstar_halfspace_intersection_2d (p_set1[i], p_set2[i])
+    #     p_total.append(int)
+    plot_probstar(p_set1)
+        
+        
+    
+ 
+    
+    ################################################# half space intersection ############################################################
+    
+    
+    
+    
     
 def probstar_halfspace_intersection_2d(P1, P2):
     if isinstance(P1, ProbStar) and isinstance(P2, ProbStar):
@@ -503,7 +628,7 @@ def probstar_halfspace_intersection_2d(P1, P2):
         
         intersection = ProbStar(V_new,C_new,d_new,new_mu, new_sig,new_pred_lb,new_pred_ub)
         collision_probability = intersection.estimateProbability()
-        return collision_probability
+        return intersection, collision_probability
     
     else:
         return("Error: Input is not a probstar")
@@ -516,7 +641,7 @@ def probstar_halfspace_intersection_2d(P1, P2):
 
     
 if __name__ == "__main__":
-    test_prob3()
+    test_prob4()
     
 
     

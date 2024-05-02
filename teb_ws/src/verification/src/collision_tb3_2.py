@@ -314,28 +314,6 @@ class robot_human_state:
         
         current_vel_tb2 = odom_msg.twist.twist.linear.x
         current_omega_tb2 = odom_msg.twist.twist.angular.z 
-        
-        
-        
-        # if(len(v_tb2))==0:
-        #     v_tb2.append(current_vel_tb2)
-        #     w_tb2.append(current_omega_tb2)
-        #     input_vel_tb2 = current_vel_tb2
-        #     input_omega_tb2 = current_omega_tb2
-            
-        # elif(len(v_tb2)==1):
-        #     v_tb2.append(current_vel_tb2)
-        #     w_tb2.append(current_omega_tb2)
-        #     input_vel_tb2 = v_tb2[1] - v_tb2[0]
-        #     input_omega_tb2 = w_tb2[1] - w_tb2[0]
-            
-        # else:
-        #     v_tb2.pop(0)
-        #     w_tb2.pop(0)
-        #     v_tb2.append(current_vel_tb2)
-        #     w_tb2.append(current_omega_tb2)
-        #     input_vel_tb2 = v_tb2[-1] - v_tb2[-2]
-        #     input_omega_tb2 = w_tb2[-1] - w_tb2[-2]  
             
         self.U_tb2 = np.array([current_vel_tb2, current_omega_tb2]) 
         
@@ -387,7 +365,8 @@ class robot_human_state:
                                                         cord_z= 0.0, std_x=robot_length,
                                                         std_y = robot_width, std_z = robot_height,
                                                         or_x = new_quaternion[0],or_y = new_quaternion[1],
-                                                        or_z=new_quaternion[2],or_w=new_quaternion[3])     
+                                                        or_z=new_quaternion[2],or_w=new_quaternion[3])  
+               
                 
 
       
