@@ -163,7 +163,7 @@ class predict:
             '''
             
             #start db scan:
-            DBSCAN_cluster = DBSCAN(eps=0.3, min_samples=25).fit(xz_np_array) #0.5, 30
+            DBSCAN_cluster = DBSCAN(eps=0.3, min_samples=20).fit(xz_np_array) #0.5, 30
             labels = DBSCAN_cluster.labels_
             components = DBSCAN_cluster.components_ #copy of each core sample found by training
             # feature = DBSCAN_cluster.n_features_in_ #number of features seen during fit

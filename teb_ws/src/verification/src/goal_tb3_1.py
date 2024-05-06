@@ -106,13 +106,13 @@ if __name__ == '__main__':
     try:
       
        
-        # orientation = [-0.000148, 0.003514, 1.100914]
-        # position = {'x': 15.323753, 'y' : 0.079101} 
-        # quaternion = {'r1' : -0.000, 'r2' : 0.000, 'r3' : 0.508, 'r4' : 0.861} #run command : rosrun tf tf_echo /map /base_link
+        orientation = [-0.000148, 0.003514, 1.100914]
+        position = {'x': 15.323753, 'y' : 0.079101} 
+        quaternion = {'r1' : -0.000, 'r2' : 0.000, 'r3' : 0.508, 'r4' : 0.861} #run command : rosrun tf tf_echo /map /base_link
 
-        orientation = [0.000765, 0.003132, 2.965275]
-        position = {'x': 7.478013, 'y' :-6.061655} 
-        quaternion = {'r1' : -0.000, 'r2' : 0.000, 'r3' : 0.997, 'r4' : 0.079} #run command : rosrun tf tf_echo /map /base_link
+        # orientation = [0.000765, 0.003132, 2.965275]
+        # position = {'x': 7.478013, 'y' :-6.061655} 
+        # quaternion = {'r1' : -0.000, 'r2' : 0.000, 'r3' : 0.997, 'r4' : 0.079} #run command : rosrun tf tf_echo /map /base_link
         
         
         again = 0
