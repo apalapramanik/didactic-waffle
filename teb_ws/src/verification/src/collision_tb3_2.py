@@ -355,7 +355,7 @@ class robot_human_state:
         
         next_prob_star_tb2 = init_probstar_tb2.affineMap(self.A_tb2, self.bu_tb2)
         
-        for i in range(5):
+        for i in range(4):
             next_prob_star_tb2  = next_prob_star_tb2.affineMap(self.A_tb2, self.bu_tb2)
             new_x =  next_prob_star_tb2.V[0][0]
             new_y = next_prob_star_tb2.V[1][0]

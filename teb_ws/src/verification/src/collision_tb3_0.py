@@ -249,9 +249,7 @@ class robot_human_state:
         
         self.pose_x = pose_msg.x
         self.pose_y = pose_msg.z
-        # self.human_x = pose_msg.x + self.robot_x
-        # self.human_y = pose_msg.z + self.robot_y
-
+      
         x.append(self.pose_x)
         y.append(self.pose_y)
 
@@ -380,7 +378,7 @@ class robot_human_state:
         
         next_prob_star_tb0 = init_probstar_tb0.affineMap(self.A_tb0, self.bu_tb0)
      
-        for i in range(7):
+        for i in range(4):
             next_prob_star_tb0  = next_prob_star_tb0.affineMap(self.A_tb0, self.bu_tb0)
             self.probstars_tb3_0.append(next_prob_star_tb0)
             new_x =  next_prob_star_tb0.V[0][0]

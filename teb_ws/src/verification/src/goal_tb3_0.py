@@ -109,10 +109,20 @@ if __name__ == '__main__':
         Location 1:
         
         """
-       
+        #case 2:
         orientation = [-0.003284, -0.003284, 2.642751]
-        position = {'x': 7.972651, 'y' :0.070677} 
+        position = {'x':18.376935, 'y' :-1.841782} 
         quaternion = {'r1' :-0.000, 'r2' : -0.000, 'r3' : 0.960, 'r4' : 0.281} #run command : rosrun tf tf_echo /map /base_link
+       
+        
+        #case 1:
+        # orientation = [-0.003284, -0.003284, 2.642751]
+        # position = {'x': 7.972651, 'y' :0.070677} 
+        # quaternion = {'r1' :-0.000, 'r2' : -0.000, 'r3' : 0.960, 'r4' : 0.281} #run command : rosrun tf tf_echo /map /base_link
+        
+       
+       
+        
       
         
         

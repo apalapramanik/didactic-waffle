@@ -7,61 +7,49 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import pypoman
 
-def probstar_halfspace_intersection_2d(P1, P2):
-    if isinstance(P1, ProbStar) and isinstance(P2, ProbStar):
-        
-        l, u = P2.getRanges()
-        
-        H = np.array([[1,0], 
-                  [-1,0],
-                  [0,1],
-                  [0,-1]])
-        
-        g = np.array([u[0], -l[0], u[1], -l[1]])
-        
-        g = g.reshape(4,1)
-        
-        
-        V = P1.V
-        v_new = V[0:2, 1:3] #new basis vector
-        c_new =  np.array([[V[0][0]], [V[1][0]]]) # new center
-        V_new = np.concatenate([c_new, v_new], axis =1) #new combined V 
-        C_new = np.matmul(H, v_new) #new constarint matrix
-        d_new = g-np.matmul(H,c_new) 
-        d_new = d_new.reshape(4,) #new constraint vector
-        new_mu = P1.mu[0:2]
-        new_sig = P1.Sig[0:2,0:2]
-        new_pred_lb = P1.pred_lb[0:2]
-        
-        new_pred_ub = P1.pred_ub[0:2]
-        
-        intersection = ProbStar(V_new,C_new,d_new,new_mu, new_sig,new_pred_lb,new_pred_ub)
-  
-        collision_probability = intersection.estimateProbability()
-     
-        
-        return collision_probability
-    
-    else:
-        return("Error: Input is not a probstar")
+
 
 
 def plot():
     
     
     data = [
-    {'V': np.array([[11.42803, 0.281, 0., 0.],
-                     [-2.504509, 0., 0.306, 0.],
-                     [1.62037, 0., 0., 0.001]])},
+   
     
+    {'V': np.array([[18.37316, 0.281, 0., 0.],
+                     [-1.83922, 0., 0.306, 0.],
+                     [2.46924, 0., 0., 0.001]])},
+    {'V': np.array([[18.37316, 0.281, 0., 0.],
+                     [-1.83922, 0., 0.306, 0.],
+                     [2.46924, 0., 0., 0.001]])},
+    {'V': np.array([[18.37316, 0.281, 0., 0.],
+                     [-1.83922, 0., 0.306, 0.],
+                     [2.46924, 0., 0., 0.001]])},
+    {'V': np.array([[18.37316, 0.281, 0., 0.],
+                     [-1.83922, 0., 0.306, 0.],
+                     [2.46924, 0., 0., 0.001]])},
    
     
     
     
-    {'V': np.array([[11.80491, 1.79, 0., 0.],
-                     [-3.37093, 0., 1.79, 0.],
-                     [1.62002, 0., 0., 0.001]])}
     
+    
+    {'V': np.array([[16.06583, 0.281, 0., 0.],
+                     [-1.85549, 0., 0.306, 0.],
+                     [-0.11448, 0., 0., 0.001]])},
+    
+    {'V': np.array([[16.41723, 0.281, 0., 0.],
+                     [-1.84815, 0., 0.306, 0.],
+                     [-0.18216, 0., 0., 0.001]])},
+    
+    {'V': np.array([[ 16.76862, 0.281, 0., 0.],
+                     [-1.84081, 0., 0.306, 0.],
+                     [-0.24983, 0., 0., 0.001]])},
+    
+    
+    {'V': np.array([[17.12002, 0.281, 0., 0.],
+                     [-1.83348, 0., 0.306, 0.],
+                     [-0.31751, 0., 0., 0.001]])}
    
     ]
 
@@ -79,10 +67,8 @@ def plot():
     
     p = []
     
-    # angle = np.radians(45)  # Convert 45 degrees to radians
-    # dir_mat = np.array([[1/np.cos(angle), np.sin(angle)],
-    #                     [-np.sin(angle), 1/np.cos(angle)]])
-    dir_mat = np.array([[1, 0], [0,1]])
+
+    dir_mat = np.array([[1, 0.25], [0.25,1]])
     
    
     

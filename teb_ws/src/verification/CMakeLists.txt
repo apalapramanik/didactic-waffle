@@ -103,8 +103,9 @@ src/goal_tb3_1.py
 src/goal_tb3_2.py
 
 src/case1.py
-src/case0.py
 src/case2.py
+src/case3.py
+
 
 
 DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
