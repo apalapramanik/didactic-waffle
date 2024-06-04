@@ -67,6 +67,7 @@
 #include <pcl/filters/crop_hull.h>
 #include <pcl/surface/concave_hull.h>
 #include <pcl/point_types.h>
+#include <ros/time.h>
 
 // std
 #include <sstream>
@@ -140,6 +141,7 @@ int counter = 0 ;
 
 
 
+
 //////////////////////////////////////*****function definitions**********////////////////////////////////////////////////
 
 void save_pcd(sensor_msgs::PointCloud2 ros_msg, int counter,string file_name ){
@@ -155,7 +157,8 @@ void callback(const sensor_msgs::PointCloud2ConstPtr& cloud_msg) {
    
 
    if (cp_flag == "yes")//if human is present 
-   {
+   {  
+      // ross::Time begin = ros::Time::now();
       ROS_INFO("Processing Cloud now....");
       //start timer
       auto start1 = high_resolution_clock::now(); 

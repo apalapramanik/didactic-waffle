@@ -68,7 +68,7 @@ def plot():
     p = []
     
 
-    dir_mat = np.array([[1, 0.25], [0.25,1]])
+    dir_mat = np.array([[1, 0.27], [0.27,1]])
     
    
     

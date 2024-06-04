@@ -14,11 +14,11 @@ from std_msgs.msg import String
 import quaternion # https://github.com/moble/quaternion
 from nav_msgs.msg import Odometry
 import numpy as np
-from verification.msg import position
+from monitoring.msg import position
 import struct
 from visualization_msgs.msg import Marker
 # from marker_publisher import marker
-# from kf_predictors import FilterEstimator
+from kf_predictors import FilterEstimator
 from std_msgs.msg import Float32MultiArray
 from cv2 import HuMoments
 import rospy
@@ -47,22 +47,23 @@ class predict:
     def __init__(self):
         
         #subscribers
-        rospy.Subscriber("tb3_0/projected",pc2,self.cloud_callback_tb3_0,queue_size=10)  
-        rospy.Subscriber("tb3_0/cp_flag", String, self.cp_flag_callback_tb3_0, queue_size=10 )
-        rospy.Subscriber("tb3_0/odom", Odometry, self.odom_callback_tb3_0,queue_size=10)
+        rospy.Subscriber("tb3_0/projected",pc2,self.cloud_callback,queue_size=10)  
+        rospy.Subscriber("tb3_0/cp_flag", String, self.cp_flag_callback, queue_size=10 )
+        rospy.Subscriber("tb3_0/odom", Odometry, self.odom_callback,queue_size=10)
         
         #publishers
-        self.pose_human1 = rospy.Publisher("tb3_0/position_h1", position,queue_size=10)
-        self.pose_human2 = rospy.Publisher("tb3_0/position_h2", position,queue_size=10)
-        
+        self.pose_human1 = rospy.Publisher("position_h1", position,queue_size=10)
+        self.pose_human2 = rospy.Publisher("position_h2", position,queue_size=10)
+        self.pred1_array = rospy.Publisher("pred1_array",Float32MultiArray,queue_size=10)
+        self.pred2_array = rospy.Publisher("pred2_array",Float32MultiArray,queue_size=10)
         
         self.flag = "no"
         
-    def cp_flag_callback_tb3_0(self, msg):
+    def cp_flag_callback(self, msg):
         self.flag = msg.data
         
    
-    def odom_callback_tb3_0(self, data):
+    def odom_callback(self, data):
         
         # unpack pose x,y,z
         self.curr_pose_x = data.pose.pose.position.x
@@ -87,45 +88,40 @@ class predict:
             odom_pose.append([self.curr_pose_x, self.curr_pose_y,self.curr_pose_z])
             odom_or.pop(0)
             odom_or.append([self.curr_or_x, self.curr_or_y,self.curr_or_z,self.curr_or_w])
+    
         
-        if len(odom_pose)>1:   
+        # convert orientation into quaternion 
+        q_old = np.quaternion(odom_or[0][3], odom_or[0][0], odom_or[0][1], odom_or[0][2])
+        p_old = [odom_pose[0][0], odom_pose[0][1], odom_pose[0][2]]
         
-            # convert orientation into quaternion 
-            q_old = np.quaternion(odom_or[0][3], odom_or[0][0], odom_or[0][1], odom_or[0][2])
-            p_old = [odom_pose[0][0], odom_pose[0][1], odom_pose[0][2]]
-            
-            q_new = np.quaternion(odom_or[1][3], odom_or[1][0], odom_or[1][1], odom_or[1][2])
-            p_new = [odom_pose[1][0], odom_pose[1][1], odom_pose[1][2]]
-            
-            #calculate rotation quaternion: q_rotation = q_current * ((q_previous)transpose)
-            q_old_inv = np.conjugate(q_old)
-            global q_rot 
-            q_rot = q_new * q_old_inv
-            
-            # compute translation matrix : x, y, z
-            translation_x = odom_pose[1][0] - odom_pose[0][0]
-            translation_y = odom_pose[1][1] - odom_pose[0][1]
-            translation_z = odom_pose[1][2] - odom_pose[0][2]
+        q_new = np.quaternion(odom_or[1][3], odom_or[1][0], odom_or[1][1], odom_or[1][2])
+        p_new = [odom_pose[1][0], odom_pose[1][1], odom_pose[1][2]]
+        
+        #calculate rotation quaternion: q_rotation = q_current * ((q_previous)transpose)
+        q_old_inv = np.conjugate(q_old)
+        global q_rot 
+        q_rot = q_new * q_old_inv
+        
+        # compute translation matrix : x, y, z
+        translation_x = odom_pose[1][0] - odom_pose[0][0]
+        translation_y = odom_pose[1][1] - odom_pose[0][1]
+        translation_z = odom_pose[1][2] - odom_pose[0][2]
 
-            global translation
-            translation = [translation_x, translation_y, translation_z]
-            
-            #save 10 rotations and translations in array
-            if len(rot_array)<10:
-                rot_array.append(q_rot)
-                trans_array.append(translation)
-            else:
-                rot_array.pop(0)
-                rot_array.append(q_rot)
-                trans_array.pop(0)
-                trans_array.append(translation)
+        global translation
+        translation = [translation_x, translation_y, translation_z]
+        
+        #save 10 rotations and translations in array
+        if len(rot_array)<10:
+            rot_array.append(q_rot)
+            trans_array.append(translation)
         else:
-            print("Wait for odometry")
+            rot_array.pop(0)
+            rot_array.append(q_rot)
+            trans_array.pop(0)
+            trans_array.append(translation)
             
          
-    def cloud_callback_tb3_0(self, data):
-        
-        start_time = rospy.get_time()
+    def cloud_callback(self, data):
         
         position_msg1 = position()
         pred1_array_msg = Float32MultiArray()   
@@ -165,11 +161,11 @@ class predict:
             '''
             
             #start db scan:
-            DBSCAN_cluster = DBSCAN(eps=0.3, min_samples=20).fit(xz_np_array) #0.5, 30
+            DBSCAN_cluster = DBSCAN(eps=0.3, min_samples=25).fit(xz_np_array) #0.5, 30
             labels = DBSCAN_cluster.labels_
             components = DBSCAN_cluster.components_ #copy of each core sample found by training
             # feature = DBSCAN_cluster.n_features_in_ #number of features seen during fit
-            # rospy.loginfo("Clustered point cloud")
+            rospy.loginfo("Clustered point cloud")
             
             
            ########################## convex hull ####################################### 
@@ -219,7 +215,6 @@ class predict:
             # rospy.loginfo("Predicting now")
                 
             for i in range(len(components)):
-                
                 if labels[i] == 0 :
                     useful_cluster1.append(components[i])
                     point1 = components[i] 
@@ -259,9 +254,31 @@ class predict:
                     position_msg1.z = meanz1 
                     self.pose_human1.publish(position_msg1)
                     
-                    # marker.publish_human_marker(name = "tb3_0/human1", cord_x = meanx1, cord_y = 0.0, cord_z = meanz1)
+                    # marker.publish_human_marker(name = "human1", cord_x = meanx1, cord_y = 0.0, cord_z = meanz1)
                     
+                    filter_estimator1 = FilterEstimator(transform_array1, steps)
+                    predictions_array1, error1= filter_estimator1.kf_caller1()
+                    rospy.loginfo("Prediction done!")
                     
+            
+                    
+                    print(predictions_array1)
+                    b = 0
+                    for pt in range(len(predictions_array1)):                        
+                        point = predictions_array1[pt]
+                        b = b+1
+                        # marker.publish_prediction_marker(b, name = "pred_human1", cord_x= point[0], cord_y=0.0, cord_z= point[1])
+                        
+                     
+                    pred1_distance_array = []
+
+
+                    for x in predictions_array1:
+                        pred1_distance = ((x[0]**2 + x[1]**2)**0.5)
+                        pred1_distance_array.append(pred1_distance)
+                   
+                    pred1_array_msg.data = pred1_distance_array
+                    self.pred1_array.publish(pred1_array_msg)   
                             
          
                 if labels[i] == 1 :
@@ -278,7 +295,7 @@ class predict:
                     pos2 = [meanx2,meanz2,0.0] 
                     pos2b = [meanx2,meanz2] 
                     human2_array.append(pos2b)
-                    # np.savetxt("org2.txt", human2_array, delimiter=",")
+                    np.savetxt("org2.txt", human2_array, delimiter=",")
                     
                     # add positions to array and transform :
                     if len(transform_array2)<15:
@@ -303,12 +320,31 @@ class predict:
                     position_msg2.z = meanz2 
                     self.pose_human2.publish(position_msg2)
                     
-                    # marker.publish_human_marker(name = "tb3_0/human2", cord_x = meanx1, cord_y = 0.0, cord_z = meanz1)
-            end_time = rospy.get_time()
-            processing_time =end_time -start_time
-            print("clustering time:", processing_time)
+                    # marker.publish_human_marker(name = "human2", cord_x = meanx1, cord_y = 0.0, cord_z = meanz1)
                      
+                    filter_estimator2 = FilterEstimator(transform_array2, steps)
+                    predictions_array2, error2= filter_estimator2.kf_caller2()
+                    
+                  
+                    
+                    
+                    a = 0
+                    for pt in range(len(predictions_array2)):  
+                        point = predictions_array2[pt]
+                        a = a+1                     
+                        # marker.publish_prediction_marker(a, name = "pred_human2", cord_x= point[0], cord_y=0.0, cord_z= point[1])
+                    
+                    pred2_distance_array = []
+
+
+                    for y in predictions_array2:
+                        pred2_distance = ((y[0]**2 + y[1]**2)**0.5)
+                        pred2_distance_array.append(pred2_distance)
                    
+                    pred2_array_msg.data = pred2_distance_array
+                    self.pred2_array.publish(pred2_array_msg)   
+                    
+                # rospy.loginfo("Prediction done!")
             
 
 
@@ -327,7 +363,7 @@ def pointcloud2_to_numpy(pointcloud_msg):
     return points
 
 def main():
-        rospy.init_node('tb3_0_clustering_node', anonymous=False)         
+        rospy.init_node('clustering_prediction_node', anonymous=False)         
         pr = predict()        
         while not rospy.is_shutdown():
             rospy.spin()      

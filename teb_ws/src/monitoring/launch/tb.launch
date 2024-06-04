@@ -10,13 +10,13 @@
 		
 	
 	
-		<node pkg="tb_apala" name= "Depth_calculation" type="yolo_depth.py"/>
+		<node pkg="monitoring" name= "Depth_calculation" type="yolo_depth.py"/>
 
 		<env name="GMON_OUT_PREFIX" value="organize" />
 
-		<node pkg="tb_apala" name= "cloud_processing" type = "organize" />	
+		<node pkg="monitoring" name= "cloud_processing" type = "organize" />	
 
-		<node pkg="tb_apala" name= "clustering_prediction_node" type="prediction.py"/> 
+		<node pkg="monitoring" name= "clustering_prediction_node" type="prediction.py"/> 
 
 		
 	 

@@ -105,6 +105,11 @@ src/goal_tb3_2.py
 src/case1.py
 src/case2.py
 src/case3.py
+src/case3b.py
+src/case4.py
+
+src/monitor.py
+src/prediction.py
 
 
 

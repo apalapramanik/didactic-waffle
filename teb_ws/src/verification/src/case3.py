@@ -232,7 +232,7 @@ class robot_human_state:
         self.v_y = 0
         
         self.probstars_human = []
-        self.probstars_tb3_0 = []
+        
  
         self.flag = "no"
         
@@ -410,6 +410,7 @@ class robot_human_state:
         
         next_prob_star_tb0 = init_probstar_tb0.affineMap(self.A_tb0, self.bu_tb0)
         p_set = []
+        self.probstars_tb3_0 = []
         print("robot: ", next_prob_star_tb0.V)
         for i in range(4):
             next_prob_star_tb0  = next_prob_star_tb0.affineMap(self.A_tb0, self.bu_tb0)
@@ -418,27 +419,27 @@ class robot_human_state:
             new_y = next_prob_star_tb0.V[1][0]
             new_theta = next_prob_star_tb0.V[2][0]
             new_quaternion = quaternion_from_euler(0,0,new_theta)
-            print("robot: ", next_prob_star_tb0.V)
+            # print("robot: ", next_prob_star_tb0.V)
             # marker.publish_prediction_marker("tb3_0_tf/camera_rgb_optical_frame", i, name = "pred_robot_tb3_0", cord_x= new_x, cord_y=0.0, 
             #                                             cord_z= new_y, std_x=robot_length,
             #                                             std_y = robot_width, std_z = robot_height,
-            #                                             or_x = new_quaternion[0],or_y =new_quaternion[1] ,
-            #                                             or_z=new_quaternion[2],or_w=new_quaternion[3]) 
+            #                                             or_x = 1.0,or_y =1.0 ,
+            #                                             or_z=0.0,or_w=0.0) 
             
             
             if (self.flag == "no" ):
                 print("no human found")
             else:
                 
-                ps, p = probstar_halfspace_intersection_2d( self.init_probstar_human,self.probstars_tb3_0[i])                
+                ps, p = probstar_halfspace_intersection_2d( self.probstars_tb3_0[i],self.init_probstar_human)                
                 p_set.append(p)
                 
                 if (p>0):
                     print("probability:", p*100)
                     # print("--------------------------------------------------------------")
-                    print("tb0 probstar:",self.probstars_tb3_0[i].V[:,0] )
+                    print("tb0 probstar:",self.probstars_tb3_0[i].V )
                     # print("--------------------------------------------------------------")
-                    print("tb1 probstar: ", self.init_probstar_human.V[:,0])
+                    print("human probstar: ", self.init_probstar_human.V)
                     
                     print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^")
                     print()

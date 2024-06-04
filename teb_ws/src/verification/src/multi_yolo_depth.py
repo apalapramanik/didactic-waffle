@@ -73,12 +73,16 @@ class ObjectDetectionNode:
         
         
     def color_image_callback_tb3_0(self, msg):
+        start_time = rospy.get_time()
+
         # Convert ROS Image to OpenCV image
         self.color_image_0 = self.bridge_0.imgmsg_to_cv2(msg, "bgr8")
 
         # Perform object detection if both color and depth images are available
         if self.color_image_0 is not None and self.depth_image_0 is not None:
             self.detect_objects_tb3_0()
+        end_time = rospy.get_time()
+        print("yolo timing in seconds: ", end_time - start_time)
 
     def depth_image_callback_tb3_0(self, msg):
         # Convert ROS Image to OpenCV image

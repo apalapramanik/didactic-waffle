@@ -150,8 +150,8 @@ class marker:
         pred_marker_cube.scale.y = std_y
         pred_marker_cube.scale.z = std_z
         pred_marker_cube.color.a = 1.0
-        pred_marker_cube.color.r = 0.0
-        pred_marker_cube.color.g = 1.0
+        pred_marker_cube.color.r = 1.0
+        pred_marker_cube.color.g = 0.0
         pred_marker_cube.color.b = 0.0
         
         #publish marker at predicted positions of human:
@@ -341,7 +341,7 @@ class robot_human_state:
                            [0.0, 1.0, 0.0],
                            [0.0, 0.0, 1.0]])
         
-        self.dtm_tb1 = 0.7 #odom time period = 0.03 / no of obs #0.7, 0.9
+        self.dtm_tb1 = 0.5 #odom time period = 0.03 / no of obs #0.7, 0.9
         
         self.b_tb1 = np.array([[cos(theta)*self.dtm_tb1, 0.0],
                               [sin(theta)*self.dtm_tb1, 0.0],
@@ -361,7 +361,7 @@ class robot_human_state:
         
         next_prob_star_tb1 = init_probstar_tb1.affineMap(self.A_tb1, self.bu_tb1)
      
-        for i in range(4):
+        for i in range(6):
             next_prob_star_tb1  = next_prob_star_tb1.affineMap(self.A_tb1, self.bu_tb1)
             new_x =  next_prob_star_tb1.V[0][0]
             new_y = next_prob_star_tb1.V[1][0]

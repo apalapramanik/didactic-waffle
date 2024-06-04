@@ -28,8 +28,8 @@ class operator:
     def __init__(self):
         
         
-        rospy.Subscriber("cp_flag", String, self.cp_flag_callback, queue_size=10 )
-        rospy.Subscriber("cmd_vel", Twist,self.vel_callback,queue_size=10) 
+        rospy.Subscriber("tb3_0/cp_flag", String, self.cp_flag_callback, queue_size=10 )
+        rospy.Subscriber("tb3_0/cmd_vel", Twist,self.vel_callback,queue_size=10) 
         rospy.Subscriber("pred1_array",Float32MultiArray,self.pred1_callback,queue_size=10)
         rospy.Subscriber("pred2_array",Float32MultiArray,self.pred2_callback,queue_size=10)
         # rospy.Subscriber("pred3_array",Float32MultiArray,self.pred3_callback,queue_size=10)
@@ -77,7 +77,7 @@ class operator:
         self.turtle_vel.publish(self.velocity)   
         
     def pred1_callback(self, msg):
-        start_time= rospy.get_time()
+        start_time = rospy.get_time()  
         self.pred_dist1 = list(msg.data)
         
         #always operator
@@ -110,8 +110,8 @@ class operator:
         else:
             self.velocity = 0.0
         self.spec3a = max(-self.max_val1, self.velocity)
-        # with open('vel.txt', 'a') as file:
-        #     file.write(str(self.velocity) + '\n')
+        with open('vel.txt', 'a') as file:
+            file.write(str(self.velocity) + '\n')
         implies_msg1 = Float32()
         implies_msg1.data = self.spec3a
         self.implies1.publish(implies_msg1)
@@ -146,6 +146,8 @@ class operator:
             self.until1.publish(until_msg1)
             # with open('until_human1.txt', 'a') as file:
             #     file.write(str(min_before1) + '\n')
+         
+    
         end_time = rospy.get_time()
         processing_time = end_time - start_time  
         print("monitoring time:", processing_time)
@@ -220,67 +222,17 @@ class operator:
             self.until2.publish(until_msg2)
             # with open('until_human2.txt', 'a') as file:
             #     file.write(str(min_before2) + '\n')
+            
+            
     
-            
-            
-    # def pred3_callback(self, msg):
-    #     self.pred_dist3 = list(msg.data)  
-         
-
-    #     #always operator
-    #     self.result_array3 = [value - 1.25 for value in self.pred_dist3]
-    #     self.min_val3 = min(self.result_array3)
-    #     always_msg3 = Float32()
-    #     always_msg3.data = self.min_val3
-    #     self.always3.publish(always_msg3)
-        
-    #     #eventually operator   
-    #     self.result_array3 = [1.25 - value for value in self.pred_dist3]
-    #     self.max_val3 = max(self.result_array3)
-    #     eventually_msg3 = Float32()
-    #     eventually_msg3.data = self.max_val3
-    #     self.eventually3.publish(eventually_msg3)
-        
-    #     #implies operator
-    #     if self.velocity:
-    #         pass
-    #     else:
-    #         self.velocity = 0.0
-    #     self.spec3c = max(-self.max_val3, self.velocity)
-    #     implies_msg3 = Float32()
-    #     implies_msg3.data = self.spec3c
-    #     self.implies3.publish(implies_msg3)
-        
-    #     #until operator:
-    #     # self.until_op3 = min(self.min_val3,self.max_val3)
-    #     # until_msg3 = Float32()
-    #     # until_msg3.data = self.until_op3
-    #     # self.until1.publish(until_msg3)
-        
-    #     #until operator:
-    #     index3 = next((i for i, x in enumerate(self.pred_dist3) if x <= 1.25), None)
-        
-
-    #     if index3 is not None:
-    #         # calculate max of values after index
-    #         max_after3 = max(1.25 - value for value in self.pred_dist1[index3:])
-    #         until_msg3 = Float32()            
-    #         until_msg3.data = max_after3
-    #         self.until3.publish(until_msg3)
-            
-    #     else: 
-    #         # calculate min of values before index
-    #         min_before3 = min(value - 1.25 for value in self.pred_dist1)
-    #         until_msg3 = Float32()
-    #         until_msg3.data = min_before3
-    #         self.until3.publish(until_msg3)
  
    
     
 def main():
 
-    rospy.init_node('monitoring_node', anonymous=False)     
+    rospy.init_node('monitoring_node', anonymous=False) 
     mon =  operator()
+    
 
     while not rospy.is_shutdown():
         rospy.spin()
