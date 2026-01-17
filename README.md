@@ -1,6 +1,6 @@
-# didactic-waffle
 
-**TurtleBot3 Monitoring and Verification System**
+
+# TurtleBot3 Monitoring and Verification System**
 
 A ROS-based framework for autonomous robot monitoring, human detection, trajectory prediction, and safety verification using TurtleBot3 in Gazebo simulation.
 
